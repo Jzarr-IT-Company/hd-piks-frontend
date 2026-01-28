@@ -1,0 +1,41 @@
+.home-gallery{max-width:1200px;margin:40px auto;padding:0 16px;display:flex;flex-direction:column;gap:16px;}
+.home-gallery__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.home-gallery__eyebrow{text-transform:uppercase;letter-spacing:0.6px;color:#2563eb;font-weight:700;margin:0;font-size:12px;}
+.home-gallery__title{margin:4px 0 6px;font-weight:800;font-size:24px;color:#0f172a;}
+.home-gallery__sub{margin:0;color:#475569;font-size:14px;}
+.home-gallery__status{display:flex;align-items:center;gap:8px;}
+.home-gallery__pill{background:#e2e8f0;color:#0f172a;border-radius:999px;padding:6px 12px;font-weight:700;font-size:12px;}
+.home-gallery__pill--error{background:#fee2e2;color:#991b1b;}
+.home-gallery__loading,.home-gallery__error{padding:18px;border:1px dashed #cbd5e1;border-radius:12px;text-align:center;color:#475569;}
+.home-gallery__empty{padding:32px;border:1px dashed #cbd5e1;border-radius:12px;text-align:center;color:#111827;font-weight:700;display:flex;flex-direction:column;gap:12px;align-items:center;}
+.home-gallery__more{background:#5c0b63;color:#fff;border-radius:999px;padding:12px 22px;font-weight:800;text-decoration:none;box-shadow:0 10px 24px rgba(92,11,99,0.25);} 
+.home-gallery__more:hover{background:#4b0952;color:#fff;}
+.home-gallery__grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;justify-items:center;}
+.home-gallery__card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 8px 24px rgba(15,23,42,0.06);transition:transform .15s ease,box-shadow .15s ease;cursor:pointer;max-width:420px;width:100%;}
+.home-gallery__card:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(15,23,42,0.1);}
+.home-gallery__thumb{background:#f8fafc;aspect-ratio:4/3;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;}
+.home-gallery__thumb img,.home-gallery__thumb video{width:100%;height:100%;object-fit:cover;}
+.home-gallery__hover-actions{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:flex-end;gap:8px;padding:12px;background:linear-gradient(180deg,rgba(15,23,42,0.45) 0%,rgba(15,23,42,0.08) 55%,rgba(15,23,42,0.4) 100%);opacity:0;pointer-events:none;transition:opacity .2s ease;}
+.home-gallery__card:hover .home-gallery__hover-actions,.home-gallery__card:focus-within .home-gallery__hover-actions{opacity:1;pointer-events:auto;}
+.home-gallery__icon-btn{border:none;background:rgba(255,255,255,0.94);color:#0f172a;border-radius:50%;width:38px;height:38px;display:grid;place-items:center;box-shadow:0 6px 18px rgba(15,23,42,0.18);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease;}
+.home-gallery__icon-btn:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(15,23,42,0.24);} 
+.home-gallery__icon-btn:active{transform:scale(0.97);}
+.home-gallery__meta{padding:12px 14px;display:flex;flex-direction:column;gap:8px;}
+.home-gallery__labels{display:flex;gap:6px;flex-wrap:wrap;}
+.home-gallery__badge{background:#eef2ff;color:#1d4ed8;border-radius:10px;padding:4px 8px;font-weight:700;font-size:11px;text-transform:capitalize;}
+.home-gallery__badge--alt{background:#fef3c7;color:#92400e;}
+.home-gallery__name{margin:0;font-size:16px;font-weight:800;color:#0f172a;}
+.home-gallery__desc{margin:0;color:#475569;font-size:13px;line-height:1.4;}
+.home-gallery__actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.home-gallery__link{color:#2563eb;font-weight:700;text-decoration:none;font-size:13px;border:none;background:transparent;cursor:pointer;padding:0;}
+.home-gallery__btn{background:#2563eb;color:#fff;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;text-decoration:none;border:none;cursor:pointer;}
+.home-gallery__btn:hover{background:#1d4ed8;}
+.home-gallery__filters{display:flex;flex-wrap:wrap;gap:10px;margin:6px 0 10px;}
+.home-gallery__filter{border:1px solid #111827;background:#111827;color:#f8fafc;border-radius:6px;padding:10px 14px;font-weight:700;font-size:13px;cursor:pointer;transition:all .15s ease;}
+.home-gallery__filter--active{background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 8px 20px rgba(37,99,235,0.18);}
+.home-gallery__filter:hover{border-color:#2563eb;color:#fff;}
+
+@media (max-width:600px){
+  .home-gallery{margin:28px auto;}
+  .home-gallery__title{font-size:20px;}
+}

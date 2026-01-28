@@ -1,0 +1,14 @@
+ .active-btn:hover{
+    background-color: black !important;
+    color: white !important;
+}
+
+.active-btn:active {
+    background-color: black !important;
+    color: white !important;
+}
+
+.active-btn:focus {
+    background-color: black !important;
+    color: white !important;
+}

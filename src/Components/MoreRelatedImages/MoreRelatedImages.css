@@ -1,0 +1,44 @@
+.more-related-images-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.more-related-images-container {
+    overflow: auto;
+    gap: 0px 20px;
+    scrollbar-width: none;
+}
+
+.more-related-images-card-wrapper {
+    width: 280px;
+}
+
+.more-related-images-card {
+    height: 250px;  
+    overflow: hidden;
+}
+
+.more-related-images-img {
+    height: 100%;
+    width: 100%;
+    object-fit: cover; 
+}
+
+.more-related-images-overlay {
+    background: rgba(0, 0, 0, 0.4); 
+    color: white;
+}
+
+.more-related-images-category {
+    color: white;
+}
+
+.more-related-images-download-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center; 
+    justify-content: center;
+    background: linear-gradient(90deg, rgba(85, 36, 163, 1) 0%, rgba(163, 85, 217, 1) 100%);
+    color: white;
+}

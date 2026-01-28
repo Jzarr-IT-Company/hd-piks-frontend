@@ -1,0 +1,41 @@
+.star {
+    font-size: 24px; /* Size of stars */
+}
+
+.gold {
+    color: gold; /* Gold color for full stars */
+}
+
+.gray {
+    color: gray !important; /* Gray color for empty stars */
+}
+
+/* Optional: Add for half stars if required */
+.gold-half::before {
+    content: "★"; /* You can replace this with a half-star icon or different styling */
+    color: gold;
+    position: relative;
+    display: inline-block;
+}
+
+.custome-btn-css{
+    background-color: white;
+    color: gold;
+    border-color: gold;
+}
+
+.custome-btn-css:hover{
+    background-color: gold;
+    color: white !important;
+    border-color: gold;
+}
+.custome-btn-css:active{
+    background-color: gold;
+    color: white !important;
+    border-color: gold;
+}
+.custome-btn-css:focus{
+    background-color: gold;
+    color: white !important;
+    border-color: gold;
+}

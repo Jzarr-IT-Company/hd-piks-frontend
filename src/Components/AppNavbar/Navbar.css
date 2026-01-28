@@ -1,0 +1,127 @@
+.navbar {
+    z-index: 3;
+}
+
+.dropdown-menu {
+    display: none;
+    opacity: 0;
+    transform: translateY(-30px);
+    transition: all 0.5s ease-in-out;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.3);
+    width: 70vw;
+}
+
+.dropdown:hover .dropdown-menu {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.dropdown-menu a {
+    display: block;
+    padding: 12px;
+    font-weight: 500;
+    color: #000;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+    border-radius: 5px;
+    background-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.hover_link:hover {
+    background: linear-gradient(90deg, rgba(85, 36, 163, 1) 0%, rgba(163, 85, 217, 1) 100%);
+    color: white !important;
+    border-left: 4px solid black;
+}
+
+.dropdown-menu {
+    font-family: 'Helvetica', sans-serif;
+    color: #333;
+    max-height: 400px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #6a0dad #fff;
+}
+
+.dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+    background-color: #6a0dad;
+    border-radius: 10px;
+}
+
+.main-div-custmoe-css {
+    height: 550px;
+}
+
+.custome-css-card {
+    height: 100% !important;
+}
+
+.custme-css-background-card {
+    height: 100%;
+}
+
+#coustome-img-css {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: relative;
+}
+
+.custome-css {
+    height: 550px !important;
+    position: relative;
+    position: relative;
+    bottom: 60px;
+}
+
+.card-img-overlay-css {
+    background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+.text-container h1 {
+    font-size: 2rem;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+}
+
+.text-container p {
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 576px) {
+    .main-div-custmoe-css{
+        height: 500px !important;
+    }
+    .custome-css {
+        height: 500px !important;
+    }
+
+    .custome-css-card {
+        height: 500px !important;
+    }
+
+    #coustome-img-css {
+        height: 500px !important;
+    }
+
+    .card-img-overlay {
+        height: 500px !important;
+    }
+
+    .card-img-overlay-css {
+        height: 500px !important;
+    }
+
+    .custme-css-background-card {
+        height: 500px !important;
+    }
+}

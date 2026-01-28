@@ -1,0 +1,94 @@
+.image-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+    max-width: 100%;
+    max-height: 100%;
+    aspect-ratio: auto;
+}
+
+.image-container:hover {
+    cursor: pointer;
+    transform: scale(1.003);
+}
+
+.image-container img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+.overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    color: white;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.image-container:hover .overlay {
+    
+    opacity: 1;
+}
+
+.overlay h5 {
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.overlay .d-flex {
+    margin-bottom: 10px;
+}
+
+.overlay img {
+    width: 30px;
+    height: 30px;
+}
+
+.card-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.card-img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+}
+
+.content-hide {
+    opacity: 0;
+    transition: opacity 0.4s;
+}
+
+.card-container:hover .content-hide {
+    opacity: 1;
+    background-color: rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+}
+
+@media (min-width: 576px) {
+    .modal-dialog {
+        padding: 3px 18px;
+        height: 100vh !important;
+    }
+}
+
+.modal-content {
+    border-radius: 13px !important;
+    height: 100% !important;
+    overflow: auto !important;
+}
+
+.modal-header {
+    padding: 20px 30px !important;
+}

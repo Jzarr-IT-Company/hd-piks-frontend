@@ -1,0 +1,16 @@
+.customized-css {
+    background-color: white;
+    color: #b8860b;  
+    border-color: #b8860b;
+    font-weight: bold;  
+    padding: 10px 20px;  
+    border-radius: 5px;  
+    transition: all 0.3s ease;  
+    cursor: pointer;
+}
+
+.customized-css:hover {
+    background-color: #b8860b !important;  
+    color: white !important;  
+    border-color: #b8860b !important;
+}

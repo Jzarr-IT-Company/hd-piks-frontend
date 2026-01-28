@@ -1,0 +1,44 @@
+{
+  "title": "The Future of AI & Machine Learning in Technology",
+  "slug": "future-of-ai-machine-learning",
+  "description": "<p>Artificial Intelligence (AI) and Machine Learning (ML) are transforming the technology landscape. From automating mundane tasks to enabling advanced analytics, these technologies are at the forefront of innovation.</p><h2>Key Trends</h2><ul><li>AI-powered automation in business processes</li><li>Advancements in natural language processing</li><li>Ethical considerations and responsible AI</li></ul><h2>Applications</h2><p>AI and ML are being used in healthcare, finance, transportation, and more. Their ability to analyze large datasets and make predictions is revolutionizing industries.</p>",
+  "status": "published",
+  "allowComments": true,
+  "categories": ["Technology", "Ai& machine learning"],
+  "tags": ["AI", "Machine Learning", "Technology", "Innovation"],
+  "featureImage": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+  "seoTitle": "The Future of AI & Machine Learning in Technology",
+  "metaDescription": "Explore how AI and Machine Learning are shaping the future of technology across industries.",
+  "canonicalUrl": "https://yourdomain.com/blog/future-of-ai-machine-learning",
+  "publishedAt": "2026-01-27T10:00:00.000Z",
+  "isFeatured": true,
+  "language": "en",
+  "attachments": [],
+  "media": [],
+  "schemaCode": {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    "headline": "The Future of AI & Machine Learning in Technology",
+    "image": "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
+    "author": {
+      "@type": "Person",
+      "name": "demo-author-id"
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "Your Site Name",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://yourdomain.com/path-to-logo.png"
+      }
+    },
+    "datePublished": "2026-01-27T10:00:00.000Z",
+    "dateModified": "2026-01-27T10:00:00.000Z",
+    "description": "Explore how AI and Machine Learning are shaping the future of technology across industries.",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://yourdomain.com/blog/future-of-ai-machine-learning"
+    }
+  },
+  "author": "demo-author-id"
+}

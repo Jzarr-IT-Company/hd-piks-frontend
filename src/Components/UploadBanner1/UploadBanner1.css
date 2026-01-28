@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
+.upload-grid{display:grid;grid-template-columns:1fr 1.1fr;gap:18px;align-items:start;font-family:'Inter',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+.upload-card{background:#fff;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 10px 26px rgba(15,23,42,0.08);padding:18px;}
+.upload-card--drop{position:relative;}
+.upload-heading{font-weight:800;margin-bottom:4px;}
+.upload-sub{color:#475569;margin-bottom:14px;}
+.upload-dropzone{border:2px dashed #cbd5e1;border-radius:14px;min-height:360px;display:flex;align-items:center;justify-content:center;padding:18px;background:#f8fafc;transition:border-color .2s,background .2s;}
+.upload-dropzone:hover{border-color:#2563eb;background:#f1f5f9;}
+.upload-card--form{padding:20px;}
+.upload-form{display:flex;flex-direction:column;gap:14px;}
+.upload-field{display:flex;flex-direction:column;gap:6px;}
+.upload-label{font-weight:700;font-size:13px;color:#0f172a;}
+.upload-control{border-radius:10px;border:1px solid #e2e8f0;padding:12px 14px;box-shadow:none;}
+.upload-control:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.upload-keyword-row{display:flex;gap:10px;align-items:center;}
+.upload-btn-minimal{white-space:nowrap;padding:10px 14px;border-radius:10px;font-weight:700;}
+.upload-chips{display:flex;flex-wrap:wrap;gap:8px;}
+.upload-chip{background:#e2e8f0;color:#0f172a;padding:8px 10px;border-radius:999px;font-weight:600;font-size:12px;display:inline-flex;align-items:center;gap:6px;}
+.upload-chip__close{background:transparent;border:none;color:#0f172a;cursor:pointer;font-weight:800;line-height:1;}
+.upload-terms{display:flex;flex-direction:column;gap:10px;background:#f8fafc;padding:12px;border-radius:12px;border:1px solid #e2e8f0;}
+.upload-terms__item{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:#334155;}
+.upload-terms__item input{margin-top:4px;}
+.upload-card .ant-spin{color:#2563eb;}
+
+@media (max-width:1024px){
+  .upload-grid{grid-template-columns:1fr;}
+  .upload-dropzone{min-height:280px;}
+}
+  

@@ -1,0 +1,23 @@
+/* Container for images inside card */
+.image-container {
+    position: relative;
+    overflow: hidden; /* Hide overflow to keep image inside the container */
+}
+
+/* Blog Image hover effect */
+.blog-image {
+    width: 100%;
+    height: 100%;
+    transition: transform 0.4s ease;
+    object-fit: cover;
+}
+
+/* Hover Effect only on Image */
+.image-container:hover .blog-image {
+    transform: scale(1.1); /* Zoom effect on image */
+}
+
+/* Optional: Add subtle hover effect on card to show it's interactive */
+.card:hover {
+    cursor: pointer;
+}
