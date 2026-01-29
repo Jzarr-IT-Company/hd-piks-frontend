@@ -76,26 +76,25 @@ const BlogsList = () => {
         <meta property="og:url" content={window.location.href} />
         <link rel="canonical" href={window.location.href} />
       </Helmet>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 0, px: 2  }}>
-        <Typography variant="h3" sx={{ mb: 6, fontWeight: 800, textAlign: 'center', fontSize: { xs: 28, md: 36 } }}>Latest Blogs</Typography>
-        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
-          <TextField
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search by keyword, category, or tag..."
-            variant="outlined"
-            sx={{ width: { xs: '100%', sm: 400 }, background: '#fff', borderRadius: 2 }}
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton>
-                    <SearchIcon />
-                  </IconButton>
-                </InputAdornment>
-              )
-            }}
-          />
-        </Box>
+          <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 0, px: 2  }}>
+            <Typography variant="h3" sx={{ mt: 6, fontWeight: 800, textAlign: 'center', fontSize: { xs: 28, md: 36 }, mb: 3 }}>Latest Blogs</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
+              <TextField
+                placeholder="Search by keyword, category, or tag..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                sx={{ width: { xs: '100%', sm: 400 }, background: '#fff', borderRadius: 2 }}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton>
+                        <SearchIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
         <Grid container spacing={4}>
           {filteredBlogs.length === 0 ? (
             <Grid item xs={12}>

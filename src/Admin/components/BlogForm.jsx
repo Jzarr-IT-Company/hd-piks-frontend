@@ -382,23 +382,6 @@ export default function BlogForm({ blog, onClose, onSave }) {
         onChange={setContent}
         modules={quillModules}
         style={{ minHeight: 200, marginBottom: 40 }}
-        ref={editor => {
-          if (editor && editor.editor && !editor._customPasteHandler) {
-            editor._customPasteHandler = true;
-            editor.editor.root.addEventListener('paste', (e) => {
-              if (e.clipboardData && e.clipboardData.getData) {
-                const html = e.clipboardData.getData('text/html');
-                if (html) {
-                  e.preventDefault();
-                  // Use Quill clipboard to convert HTML to Delta
-                  const quill = editor.getEditor();
-                  const delta = quill.clipboard.convert(html);
-                  quill.setContents(delta, 'user');
-                }
-              }
-            });
-          }
-        }}
       />
 
       {/* Media Gallery Section */}
