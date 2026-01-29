@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
+import TopNavOnly from '../Components/AppNavbar/TopNavOnly';
+import AppFooter from '../Components/AppFooter/AppFooter';
 import { useNavigate } from 'react-router-dom';
 import { fetchPublicBlogs } from '../Services/blog';
 import { Card, CardMedia, CardContent, Typography, Button, Grid, Box, CircularProgress, TextField, InputAdornment, IconButton, Chip, Stack } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import Pagination from '@mui/material/Pagination';
 import { Helmet } from 'react-helmet-async';
 
 function getExcerpt(html, lines = 3) {
@@ -18,6 +21,8 @@ const BlogsList = () => {
   const [search, setSearch] = useState('');
   const [filteredBlogs, setFilteredBlogs] = useState([]);
   const navigate = useNavigate();
+  const [page, setPage] = useState(1);
+  const blogsPerPage = 6;
 
   useEffect(() => {
     fetchPublicBlogs()
@@ -48,6 +53,10 @@ const BlogsList = () => {
     return <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}><CircularProgress /></Box>;
   }
 
+  // Pagination logic
+  const pageCount = Math.ceil(filteredBlogs.length / blogsPerPage);
+  const paginatedBlogs = filteredBlogs.slice((page - 1) * blogsPerPage, page * blogsPerPage);
+
   // Use the latest blog for dynamic meta tags if available
   const latestBlog = blogs && blogs.length > 0 ? blogs[0] : null;
   const seoTitle = latestBlog ? `${latestBlog.seoTitle || latestBlog.title} | HDpiks` : 'Latest Blogs | HDpiks';
@@ -56,6 +65,7 @@ const BlogsList = () => {
 
   return (
     <>
+      <TopNavOnly />
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={metaDescription} />
@@ -66,8 +76,8 @@ const BlogsList = () => {
         <meta property="og:url" content={window.location.href} />
         <link rel="canonical" href={window.location.href} />
       </Helmet>
-      <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 4, px: 2 }}>
-        <Typography variant="h3" sx={{ mb: 4, fontWeight: 800, textAlign: 'center', fontSize: { xs: 28, md: 36 } }}>Latest Blogs</Typography>
+      <Box sx={{ maxWidth: 1200, mx: 'auto', mt: 0, px: 2  }}>
+        <Typography variant="h3" sx={{ mb: 6, fontWeight: 800, textAlign: 'center', fontSize: { xs: 28, md: 36 } }}>Latest Blogs</Typography>
         <Box sx={{ display: 'flex', justifyContent: 'center', mb: 4 }}>
           <TextField
             value={search}
@@ -94,7 +104,7 @@ const BlogsList = () => {
               </Typography>
             </Grid>
           ) : (
-            filteredBlogs.map(blog => (
+            paginatedBlogs.map(blog => (
               <Grid item xs={12} sm={6} md={4} key={blog._id}>
                 <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', boxShadow: 3, borderRadius: 3 }}>
                   {blog.featureImage && (
@@ -120,7 +130,7 @@ const BlogsList = () => {
                         {blog.categories.map(cat => <Chip key={cat._id || cat.name} label={cat.name} size="small" color="primary" />)}
                       </Stack>
                     )} */}
-                    <Button variant="contained" sx={{ mt: 2 }} onClick={() => navigate(`/blog/${blog.slug}`)}>
+                    <Button variant="contained" sx={{ mt: 2 }} onClick={() => navigate(`/blog/${encodeURIComponent(blog.slug)}`)}>
                       Read More
                     </Button>
                   </CardContent>
@@ -129,7 +139,19 @@ const BlogsList = () => {
             ))
           )}
         </Grid>
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={pageCount}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+            shape="rounded"
+            showFirstButton
+            showLastButton
+          />
+        </Box>
       </Box>
+      <AppFooter />
     </>
   );
 };

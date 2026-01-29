@@ -220,7 +220,7 @@ function SidebarCompo() {
                     <Link class="nav-link fw-semibold text-white active" style={{ fontSize: "14px" }} to={`/collection/Mockups`}>Mockups</Link>
                 </li>
                 <li className="nav-item">
-                    <Link class="nav-link fw-semibold text-white active" style={{ fontSize: "14px" }} to={'/blog'}>Blogs</Link>
+                    <Link class="nav-link fw-semibold text-white active" style={{ fontSize: "14px" }} to={'/blog'}>Blog</Link>
                 </li>
             </ul>
         </>

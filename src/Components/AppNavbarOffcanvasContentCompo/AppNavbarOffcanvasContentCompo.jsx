@@ -169,6 +169,9 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
                 <div className="text-start w-100 border-bottom border-end border-start">
                     <Link className='btn  w-100 fw-semibold py-3 text-start' onClick={handleCLoseBtn} to={`/pricing`}>Pricing</Link>
                 </div>
+                <div className="text-start w-100 border-bottom border-end border-start">
+                    <Link className='btn  w-100 fw-semibold py-3 text-start' onClick={handleCLoseBtn} to={`/blog`}>Blog</Link>
+                </div>
             </div>
         </>
     )

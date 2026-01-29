@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, FormControlLabel, Switch, MenuItem, Select, InputLabel, FormControl, Typography, Chip, OutlinedInput, Stack, IconButton, Card, CardContent, CardMedia, Paper, CircularProgress } from '@mui/material';
+// Slugify utility: converts a string to a URL-friendly slug with hyphens
+function slugify(text) {
+  return text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, '') // Remove invalid chars
+    .replace(/\s+/g, '-')         // Replace spaces with -
+    .replace(/-+/g, '-');          // Collapse multiple -
+}
+import { TextField, Button, Box, FormControlLabel, Switch, MenuItem, Select, InputLabel, FormControl, Typography, Chip, OutlinedInput, Stack, IconButton, Card, CardContent, CardMedia, Paper, CircularProgress, Snackbar, Alert } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import { getCategoryMenuItems } from './CategorySelectTree';
 import AttachmentList from './AttachmentList';
@@ -40,8 +50,9 @@ const statusOptions = ['draft', 'published', 'scheduled', 'archived'];
 const languageOptions = ['en', 'es', 'fr', 'de', 'zh', 'ar', 'ru', 'hi'];
 
 export default function BlogForm({ blog, onClose, onSave }) {
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [title, setTitle] = useState(blog?.title || '');
-  const [slug, setSlug] = useState(blog?.slug || '');
+  const [slug, setSlug] = useState(blog?.slug || (blog?.title ? slugify(blog.title) : ''));
   const [content, setContent] = useState(blog?.description || '');
   const [status, setStatus] = useState(blog?.status || 'draft');
   const [allowComments, setAllowComments] = useState(blog?.allowComments ?? true);
@@ -67,6 +78,13 @@ export default function BlogForm({ blog, onClose, onSave }) {
       }
     };
   }, [featureImagePreview]);
+
+  // Auto-generate slug from title when title changes (unless editing an existing blog with a custom slug)
+  useEffect(() => {
+    if (!blog || !blog.slug) {
+      setSlug(slugify(title));
+    }
+  }, [title]);
   const [seoTitle, setSeoTitle] = useState(blog?.seoTitle || '');
   const [metaDescription, setMetaDescription] = useState(blog?.metaDescription || '');
   const [canonicalUrl, setCanonicalUrl] = useState(blog?.canonicalUrl || '');
@@ -140,24 +158,49 @@ export default function BlogForm({ blog, onClose, onSave }) {
     e.preventDefault();
     setSlugError('');
     setCheckingSlug(true);
+    // Validation
+    if (!title.trim()) {
+      setSnackbar({ open: true, message: 'Title is required.', severity: 'error' });
+      setCheckingSlug(false);
+      return;
+    }
+    if (!slug.trim()) {
+      setSnackbar({ open: true, message: 'Slug is required.', severity: 'error' });
+      setCheckingSlug(false);
+      return;
+    }
+    if (!content || content.replace(/<[^>]+>/g, '').trim().length < 10) {
+      setSnackbar({ open: true, message: 'Content/Description is too short.', severity: 'error' });
+      setCheckingSlug(false);
+      return;
+    }
+    if (!categories || categories.length === 0) {
+      setSnackbar({ open: true, message: 'At least one category is required.', severity: 'error' });
+      setCheckingSlug(false);
+      return;
+    }
+    // Always slugify before submit (in case user edited slug manually)
+    const finalSlug = slugify(slug || title);
     try {
       // Only check uniqueness if slug changed or creating new
-      if (!blog || slug !== blog.slug) {
+      if (!blog || finalSlug !== blog.slug) {
         let existing = null;
         try {
-          existing = await fetchBlogBySlug(slug);
+          existing = await fetchBlogBySlug(finalSlug);
         } catch (err) {
           // If 404, slug is available; any other error, show error
           if (err.response && err.response.status === 404) {
             existing = null;
           } else {
             setSlugError('Error checking slug uniqueness.');
+            setSnackbar({ open: true, message: 'Error checking slug uniqueness.', severity: 'error' });
             setCheckingSlug(false);
             return;
           }
         }
         if (existing && (!blog || existing._id !== blog._id)) {
           setSlugError('Slug already exists. Please choose a unique slug.');
+          setSnackbar({ open: true, message: 'Slug already exists. Please choose a unique slug.', severity: 'error' });
           setCheckingSlug(false);
           return;
         }
@@ -165,7 +208,7 @@ export default function BlogForm({ blog, onClose, onSave }) {
       setCheckingSlug(false);
       onSave({
         title,
-        slug,
+        slug: finalSlug,
         description: content,
         status,
         allowComments,
@@ -182,15 +225,27 @@ export default function BlogForm({ blog, onClose, onSave }) {
         media,
         schemaCode,
       });
+      setSnackbar({ open: true, message: blog ? 'Blog updated successfully!' : 'Blog created successfully!', severity: 'success' });
       onClose();
     } catch (err) {
       setSlugError('Error checking slug uniqueness.');
+      setSnackbar({ open: true, message: 'Error checking slug uniqueness.', severity: 'error' });
       setCheckingSlug(false);
     }
   };
 
   return (
     <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, maxWidth: 700, mx: 'auto' }}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
       <Typography variant="h5" sx={{ mb: 2 }}>Blog Details</Typography>
       <TextField label="Title" fullWidth margin="normal" value={title} onChange={e => setTitle(e.target.value)} required />
       <TextField

@@ -5,7 +5,8 @@ import { Box, Typography, CircularProgress, Chip, Stack } from '@mui/material';
 import { Helmet } from 'react-helmet-async';
 
 export default function BlogDetail() {
-  const { slug } = useParams();
+  const { slug: rawSlug } = useParams();
+  const slug = decodeURIComponent(rawSlug);
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
