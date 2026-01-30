@@ -1,4 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+// Ref for ReactQuill instance
+const quillRef = React.createRef();
 // Slugify utility: converts a string to a URL-friendly slug with hyphens
 function slugify(text) {
   return text
@@ -24,15 +26,36 @@ import { fetchBlogCategories } from '../../Services/blogCategory';
 import { fetchBlogBySlug } from '../../Services/blog';
 import BlogCategories from '../pages/BlogCategories';
 import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
 import { uploadMedia } from '../../Services/media';
 
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
+// Custom styles for sticky toolbar
+const quillCustomStyles = `
+.ql-container.ql-snow {
+  height: 350px !important;
+  overflow-y: auto;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+}
+.ql-toolbar.ql-snow {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+}
+`;
+
 
 const quillModules = {
   toolbar: [
-    [{ 'header': [1, 2, 3, false] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
     [{ 'font': [] }],
     [{ 'size': ['small', false, 'large', 'huge'] }],
     ['bold', 'italic', 'underline', 'strike'],
@@ -50,6 +73,60 @@ const statusOptions = ['draft', 'published', 'scheduled', 'archived'];
 const languageOptions = ['en', 'es', 'fr', 'de', 'zh', 'ar', 'ru', 'hi'];
 
 export default function BlogForm({ blog, onClose, onSave }) {
+  // Track last selection in Quill
+  const lastSelectionRef = useRef(null);
+  // Ref for ReactQuill instance (must be inside component for SSR)
+  const quillEditorRef = useRef(null);
+      // Ensure focus stays in editor after paste or toolbar actions
+  useEffect(() => {
+    const quill = quillEditorRef.current && quillEditorRef.current.getEditor && quillEditorRef.current.getEditor();
+    if (!quill) return;
+
+    // Track last selection
+    const handleSelectionChange = (range, oldRange, source) => {
+      if (range) {
+        lastSelectionRef.current = range;
+      }
+    };
+    quill.on('selection-change', handleSelectionChange);
+
+    // Helper to scroll to end (only inside .ql-container, never modal)
+    const scrollToEndIfAtEnd = () => {
+      const selection = quill.getSelection();
+      const length = quill.getLength();
+      // Only scroll if cursor is at the end
+      if (selection && selection.index >= length - 1) {
+        const container = quill.root.closest('.ql-container');
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      }
+    };
+
+    // On paste, move cursor/scroll to end
+    const handlePaste = () => {
+      setTimeout(moveCursorAndScrollToEnd, 0);
+    };
+
+    // On Enter key, move cursor/scroll to end
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter') {
+        setTimeout(scrollToEndIfAtEnd, 0);
+      }
+    };
+    quill.root.addEventListener('keydown', handleKeyDown);
+    quill.root.addEventListener('paste', handlePaste);
+
+    return () => {
+      quill.root.removeEventListener('paste', handlePaste);
+      quill.root.removeEventListener('keydown', handleKeyDown);
+      quill.off('selection-change', handleSelectionChange);
+    };
+  }, []);
+
+  // Remove onBlur focus management to avoid focus loops
+    // State for exit confirmation dialog
+    const [exitDialogOpen, setExitDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
   const [title, setTitle] = useState(blog?.title || '');
   const [slug, setSlug] = useState(blog?.slug || (blog?.title ? slugify(blog.title) : ''));
@@ -234,8 +311,43 @@ export default function BlogForm({ blog, onClose, onSave }) {
     }
   };
 
+  // Handler for dialog close (clicking outside or pressing Esc)
+  const handleDialogClose = (event, reason) => {
+    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+      setExitDialogOpen(true);
+    } else if (typeof onClose === 'function') {
+      onClose();
+    }
+  };
+
+  // Handler for confirming exit
+  const handleExitConfirm = () => {
+    setExitDialogOpen(false);
+    if (typeof onClose === 'function') {
+      onClose();
+    }
+  };
+
+  // Handler for canceling exit
+  const handleExitCancel = () => {
+    setExitDialogOpen(false);
+  };
+
   return (
-    <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, maxWidth: 700, mx: 'auto' }}>
+    <>
+      {/* Confirmation dialog for exit */}
+      <Dialog open={exitDialogOpen} onClose={handleExitCancel}>
+        <DialogContent>
+          <DialogContentText>
+            Do you want to exit without saving your blog?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleExitConfirm} color="error">Exit</Button>
+          <Button onClick={handleExitCancel} color="primary" autoFocus>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+      <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2, maxWidth: 700, mx: 'auto' }}>
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
@@ -376,12 +488,15 @@ export default function BlogForm({ blog, onClose, onSave }) {
       </Card>
       <Typography sx={{ mt: 2, mb: 1 }}>Content</Typography>
 
+      {/* Inject custom styles for sticky toolbar */}
+      <style>{quillCustomStyles}</style>
       <ReactQuill
+        ref={quillEditorRef}
         theme="snow"
         value={content}
         onChange={setContent}
         modules={quillModules}
-        style={{ minHeight: 200, marginBottom: 40 }}
+        style={{ marginBottom: 40 }}
       />
 
       {/* Media Gallery Section */}
@@ -567,5 +682,6 @@ export default function BlogForm({ blog, onClose, onSave }) {
       <FormControlLabel control={<Switch checked={allowComments} onChange={e => setAllowComments(e.target.checked)} />} label="Allow Comments" sx={{ mt: 2 }} />
       <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2, width: '100%' }} disabled={featureImageUploading}>Save Blog</Button>
     </Box>
+    </>
   );
 }

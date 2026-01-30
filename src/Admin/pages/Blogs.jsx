@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Button, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress, DialogContentText } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -14,6 +14,8 @@ export default function Blogs() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [editBlog, setEditBlog] = useState(null);
+  const [confirmExitOpen, setConfirmExitOpen] = useState(false);
+  const pendingCloseRef = useRef(false);
 
   useEffect(() => {
     const fetchBlogs = async () => {
@@ -53,6 +55,32 @@ export default function Blogs() {
     setEditBlog(blog);
     setOpen(true);
   };
+  // This will be called when user tries to close the dialog (backdrop click or Esc)
+  const handleDialogClose = (event, reason) => {
+    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+      setConfirmExitOpen(true);
+      pendingCloseRef.current = true;
+    } else {
+      setOpen(false);
+      setEditBlog(null);
+    }
+  };
+
+  // Called when user confirms exit
+  const handleExitConfirm = () => {
+    setConfirmExitOpen(false);
+    setOpen(false);
+    setEditBlog(null);
+    pendingCloseRef.current = false;
+  };
+
+  // Called when user cancels exit
+  const handleExitCancel = () => {
+    setConfirmExitOpen(false);
+    pendingCloseRef.current = false;
+  };
+
+  // Used for explicit close (e.g. Cancel button or after save)
   const handleClose = () => {
     setOpen(false);
     setEditBlog(null);
@@ -129,13 +157,25 @@ export default function Blogs() {
           </Table>
         </TableContainer>
       )}
-      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+      <Dialog open={open} onClose={handleDialogClose} maxWidth="md" fullWidth>
         <DialogTitle>{editBlog ? 'Edit Blog' : 'Add Blog'}</DialogTitle>
         <DialogContent>
           <BlogForm blog={editBlog} onClose={handleClose} onSave={handleSave} />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+      {/* Confirmation dialog for exit */}
+      <Dialog open={confirmExitOpen} onClose={handleExitCancel}>
+        <DialogContent>
+          <DialogContentText>
+            Do you want to exit without saving your blog?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleExitConfirm} color="error">Exit</Button>
+          <Button onClick={handleExitCancel} color="primary" autoFocus>Cancel</Button>
         </DialogActions>
       </Dialog>
     </Box>
