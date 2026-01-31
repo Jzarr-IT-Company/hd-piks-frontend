@@ -13,6 +13,7 @@ import AnalyticsPage from '../Admin/pages/Analytics';
 import AdminSidebar from '../Admin/components/Sidebar';
 import AdminTopbar from '../Admin/components/Topbar';
 import CategoryDetail from '../Pages/CategoryDetail';
+import WordpressBlogRedirect from '../Pages/WordpressBlogRedirect';
 // Admin Protected Route
 function AdminProtectedRoute({ children }) {
     const isAdmin = !!Cookies.get('token');
@@ -237,7 +238,8 @@ function Routing() {
         },
         { 
             path: "/blog",
-            element: <BlogsList />
+            // element: <BlogsList />
+            element: <WordpressBlogRedirect />
         },
         {
             path: "/blog/:slug",
