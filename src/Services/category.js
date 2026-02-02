@@ -1,17 +1,25 @@
-
 import api from '../Services/api';
-
 import { API_ENDPOINTS } from '../config/api.config';
-// Fetch all categories (tree) from public endpoint
-// Use public endpoint so all users (including creators) can fetch categories
-// Fetch all categories (tree) from admin endpoint if creatorData exists
+
 export const fetchCategories = async (isCreator) => {
-  if (isCreator) {
-    const res = await api.get(API_ENDPOINTS.ADMIN_CATEGORIES);
-    return res.data.data || [];
+  if (!isCreator) return [];
+
+  try {
+    // Uses backend route: GET /categories (auth + creatorId required)
+    const res = await api.get(API_ENDPOINTS.PUBLIC_CATEGORIES);
+    console.log(res.data.data);
+  
+    return res.data?.data || res.data || [];
+  } catch (error) {
+    if (error.response?.status === 404) {
+      console.error('[fetchCategories] /categories not implemented on backend.');
+    } else if (error.response?.status === 403) {
+      console.error('[fetchCategories] Forbidden: current user is not allowed to read categories.', error);
+    } else {
+      console.error('[fetchCategories] Failed to load categories', error);
+    }
+    return [];
   }
-  // If not creator, return empty array (or you could fetch public if needed)
-  return [];
 };
 
 // Build a tree from flat category list

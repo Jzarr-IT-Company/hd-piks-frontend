@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './UploadBanner1.css';
 import axios from 'axios';
-import { fetchCategories, buildCategoryTree } from '../../Services/category';
+import { fetchCategories } from '../../Services/category';
 import { multipartUploadToS3 } from '../../Services/S3Service';
 import UploadBanner1ImageCompo from '../UploadBanner1ImageCompo/UploadBanner1ImageCompo';
 import { useGlobalState } from '../../Context/Context';
@@ -38,23 +38,18 @@ function UploadBanner1() {
         creatorData,
         ...rest
     } = useGlobalState();
-    // ...existing code...
     const [loading, setLoading] = useState(false);
     const [keywordInput, setKeywordInput] = useState('');
-    // Add state for image preview and meta
     const [imageUrl, setImageUrl] = useState('');
     const [imagetype, setImageType] = useState('');
     const [imagesize, setImageSize] = useState('');
-    // Dynamic categories
-    const [allCategories, setAllCategories] = useState([]); // flat list
-    const [categoryTree, setCategoryTree] = useState([]); // tree
+    const [categoryTree, setCategoryTree] = useState([]); // tree returned from backend
 
     // Fetch categories from backend only if creatorData exists
     useEffect(() => {
         if (!creatorData) return;
         fetchCategories(true).then((cats) => {
-            setAllCategories(cats);
-            setCategoryTree(buildCategoryTree(cats));
+            setCategoryTree(cats || []); // cats is already a tree: [{ _id, name, children: [...] }, ...]
         });
     }, [creatorData]);
 
@@ -91,8 +86,11 @@ function UploadBanner1() {
     const handleCategoryChange = (event) => {
         const selectedId = event.target.value;
         setCategory(selectedId);
-        // Find children for subcategories
-        const subCats = allCategories.filter(c => c.parent === selectedId);
+
+        // Find selected parent in tree and use its children as subcategories
+        const selectedCat = categoryTree.find(c => c._id === selectedId);
+        const subCats = selectedCat?.children || [];
+
         setSubCategories(subCats);
         setSelectedSubCategory('');
         setSubSubCategories([]);
@@ -102,7 +100,13 @@ function UploadBanner1() {
     const handleSubCategoryChange = (event) => {
         const selectedId = event.target.value;
         setSelectedSubCategory(selectedId);
-        const subSubCats = allCategories.filter(c => c.parent === selectedId);
+
+        // Find current parent
+        const parentCat = categoryTree.find(c => c._id === category);
+        // Find selected subcategory under that parent and use its children as sub-subcategories
+        const selectedSubCat = parentCat?.children?.find(c => c._id === selectedId);
+        const subSubCats = selectedSubCat?.children || [];
+
         setSubSubCategories(subSubCats);
         setSelectedSubSubCategory('');
     };

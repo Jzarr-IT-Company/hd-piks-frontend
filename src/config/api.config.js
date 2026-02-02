@@ -1,15 +1,26 @@
 // (GET_USER_IMAGES is defined below inside API_ENDPOINTS)
 // API Configuration for Development and Production
 const API_CONFIG = {
-    development: 'http://localhost:5000',
-    production: 'https://hdpicks-main-server.vercel.app'
+    development: 'http://localhost:4000',
+    production: 'https://hd-piks-backend02.vercel.app/',
 };
 
+const APP_ENV = import.meta.env.VITE_APP_ENV || import.meta.env.MODE; // 'development' or 'production'
+const IS_DEV = APP_ENV === 'development';
+
 // Get API base URL based on environment
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
-    (import.meta.env.MODE === 'development' 
-        ? API_CONFIG.development 
-        : API_CONFIG.production);
+export const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ||
+    (IS_DEV ? API_CONFIG.development : API_CONFIG.production);
+
+if (IS_DEV) {
+    // Helps verify that dev is actually using the expected URL
+    console.log('[API_CONFIG] MODE:', import.meta.env.MODE);
+    console.log('[API_CONFIG] VITE_APP_ENV:', import.meta.env.VITE_APP_ENV);
+    console.log('[API_CONFIG] APP_ENV (used):', APP_ENV);
+    console.log('[API_CONFIG] VITE_API_BASE_URL:', import.meta.env.VITE_API_BASE_URL);
+    console.log('[API_CONFIG] Resolved API_BASE_URL:', API_BASE_URL);
+}
 
 // Export individual endpoints for better organization
 export const API_ENDPOINTS = {
@@ -76,6 +87,9 @@ export const API_ENDPOINTS = {
     // Admin Categories CRUD
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_CATEGORY: id => `/admin/categories/${id}`,
+
+    // Public categories (creator-accessible, uses GET /categories)
+    PUBLIC_CATEGORIES: '/categories',
 
     // Blog (Admin)
     ADMIN_BLOGS: '/blogs',
