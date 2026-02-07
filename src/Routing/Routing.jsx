@@ -21,6 +21,7 @@ import AdminTopbar from "../Admin/components/Topbar";
 import NotFound from "../Pages/NotFound"; // Adjust the path if needed
 // import CategoryDetail from '../Pages/CategoryDetail';
 import WordpressBlogRedirect from "../Pages/WordpressBlogRedirect";
+import AiToolPage from "../Pages/AiToolPage"; // NEW
 // Admin Protected Route
 function AdminProtectedRoute({ children }) {
   const isAdmin = !!Cookies.get("token");
@@ -307,12 +308,20 @@ function Routing() {
       element: <Search />,
     },
     {
+      path: "/search/:term",
+      element: <Search />,
+    },
+    {
+      path: "/asset/:categorySlug/:subSlug?/:subSubSlug?/:id",
+      element: <AssetDetail />,
+    },
+    {
       path: "/asset/:id",
       element: <AssetDetail />,
     },
     {
-      path: "/detial/:name/:id/:userId",
-      element: <AssetDetail />,
+      path: "/ai/:id",
+      element: <AiToolPage />,
     },
   ]);
 

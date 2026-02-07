@@ -6,14 +6,17 @@ import { API_ENDPOINTS } from '../config/api.config.js';
 // Fetch all approved images (all creators)
 export const getAllImages = async () => {
     try {
-      const response = await api.get(API_ENDPOINTS.GET_ALL_IMAGES);
-       return response.data?.data || [];
+        console.log('[getAllImages] Requesting:', API_ENDPOINTS.GET_ALL_IMAGES);
+        const response = await api.get(API_ENDPOINTS.GET_ALL_IMAGES);
+        console.log('[getAllImages] Status:', response.status);
+        return response.data?.data || [];
     } catch (error) {
-         console.error("Error fetching data:", error);
-        throw error;
+        const status = error.response?.status;
+        const backendMessage = error.response?.data?.message || error.response?.data;
+        console.error('[getAllImages] Error fetching data:', status, backendMessage || error);
+        // Avoid crashing UI; return empty list when backend fails
+        return [];
     }
-  
-
 };
 
 // Fetch all images for a specific creator
@@ -27,7 +30,9 @@ export const getAllDataFromDb = async () => {
         const response = await api.get(API_ENDPOINTS.GET_ALL_IMAGES);
         return response.data.data;
     } catch (error) {
-        console.error("Error fetching data:", error);
-        throw error;
+        const status = error.response?.status;
+        const backendMessage = error.response?.data?.message || error.response?.data;
+        console.error('[getAllDataFromDb] Error fetching data:', status, backendMessage || error);
+        return [];
     }
 };

@@ -4,7 +4,7 @@ import { useGlobalState } from '../../Context/Context';
 import api from '../../Services/api.js';
 import { API_ENDPOINTS } from '../../config/api.config.js';
 import { message, Spin } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 function UploadBtn() {
     const {
@@ -43,31 +43,33 @@ function UploadBtn() {
         s3Urls,
         fileMetadata
     } = useGlobalState();
-    const [loading, setLoading] = useState(false)
+    const [loading, setLoading] = useState(false);
 
     const id = Cookies.get('id');
     const navigate = useNavigate();
+    const location = useLocation();
+    const params = new URLSearchParams(location.search);
+    const editId = params.get('edit');
+    const isEditing = !!editId;
 
     const handleUpload = async () => {
-        // Check if editing
-        const editAsset = sessionStorage.getItem('editAsset');
-        const isEditing = !!editAsset;
-        const editId = isEditing ? JSON.parse(editAsset)._id : null;
         const normalizedPlan = selectPlan ? selectPlan.toLowerCase() : null;
-        const errors = []
+        const errors = [];
 
         if (!category) errors.push("Please select a category");
         if (!title || title.trim().length < 3) errors.push("Title must be at least 3 characters");
         if (!description || description.trim().length < 20) errors.push("Description must be at least 20 characters");
         if (!keywords || keywords.length < 5) errors.push("Add at least 5 keywords");
         if (!selectPlan) errors.push("Please select a plan");
-        if (!imageUrl) errors.push("Please upload an image");
+        // Only require new image in create mode
+        if (!imageUrl && !isEditing) errors.push("Please upload an image");
         if (!termsChecked) errors.push("Please accept Terms and Conditions");
         if (!contentChecked) errors.push("Please confirm permission letter condition");
 
         const lastIndex = s3Keys.length ? s3Keys.length - 1 : -1;
         const meta = lastIndex >= 0 ? fileMetadata[lastIndex] : null;
-        if (!meta) errors.push("Missing file metadata, re-upload the file");
+        // Only require file metadata in create mode
+        if (!meta && !isEditing) errors.push("Missing file metadata, re-upload the file");
 
         if (errors.length) {
             message.error(errors[0]);
@@ -76,15 +78,13 @@ function UploadBtn() {
 
         setLoading(true);
         try {
-            // Log the payload for debugging
-            // category, subcategory, subsubcategory are now ObjectIds (from dynamic selection)
             const uploadPayload = {
                 imagesize: imageSize,
                 imagetype: imageType,
                 imageUrl: imageUrl,
                 s3Key: s3Keys[lastIndex] || null,
                 s3Url: s3Urls[lastIndex] || null,
-                fileMetadata: meta,
+                fileMetadata: meta || null,
                 creatorId: creatorData?._id,
                 category: category || null,
                 subcategory: selectedSubCategory || null,
@@ -101,23 +101,25 @@ function UploadBtn() {
                 imageData: imageData
             };
             console.log('UPLOAD PAYLOAD:', uploadPayload);
+
             let response;
             if (isEditing && editId) {
+                // PATCH existing asset
                 response = await api.patch(`/images/${editId}`, uploadPayload);
             } else {
+                // CREATE new asset
                 response = await api.post(API_ENDPOINTS.SAVE_IMAGES, uploadPayload);
             }
+
             if (response.data.status === 200) {
                 message.success(isEditing ? 'Asset updated successfully' : 'Picture upload successful');
-                sessionStorage.removeItem('editAsset');
                 resetForm();
                 navigate('/dashboard');
             } else {
                 message.error(response.data.message || 'Upload failed, please try again.');
             }
         } catch (error) {
-            // Log full backend error response for debugging
-            console.log('UPLOAD ERROR RESPONSE:', error?.response?.data); 
+            console.log('UPLOAD ERROR RESPONSE:', error?.response?.data);
             const apiErrors = error?.response?.data?.errors;
             if (apiErrors && Array.isArray(apiErrors)) {
                 message.error('Validation errors: ' + apiErrors.join(', '));
@@ -147,16 +149,14 @@ function UploadBtn() {
     };
 
     return (
-        <>
-            <button
-                type="button"
-                className="btn btn-primary w-100 py-3 fw-semibold mt-3"
-                onClick={handleUpload}
-                disabled={!termsChecked || !contentChecked}
-            >
-                {loading ? <Spin /> : "Upload"}
-            </button>
-        </>
+        <button
+            type="button"
+            className="btn btn-primary w-100 py-3 fw-semibold mt-3"
+            onClick={handleUpload}
+            disabled={!termsChecked || !contentChecked}
+        >
+            {loading ? <Spin /> : (isEditing ? 'Save changes' : 'Upload')}
+        </button>
     );
 }
 

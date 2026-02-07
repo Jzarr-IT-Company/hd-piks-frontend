@@ -7,7 +7,9 @@ import UploadBanner1ImageCompo from '../UploadBanner1ImageCompo/UploadBanner1Ima
 import { useGlobalState } from '../../Context/Context';
 import UploadBtn from '../UploadBtn/UploadBtn';
 import { message, Spin } from 'antd';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import api from '../../Services/api';
+import { API_ENDPOINTS } from '../../config/api.config';
 
 function UploadBanner1() {
     const {
@@ -36,29 +38,52 @@ function UploadBanner1() {
         keywords,
         setKeywords,
         creatorData,
-        ...rest
+        imageUrl,
+        setImageUrl,
+        imageType,
+        setImageType,
+        imageSize,
+        setImageSize,
+        s3Keys,
+        setS3Keys,
+        s3Urls,
+        setS3Urls,
+        fileMetadata,
+        setFileMetadata,
+        imageData,
+        setImageData,
     } = useGlobalState();
+
     const [loading, setLoading] = useState(false);
     const [keywordInput, setKeywordInput] = useState('');
-    const [imageUrl, setImageUrl] = useState('');
-    const [imagetype, setImageType] = useState('');
-    const [imagesize, setImageSize] = useState('');
-    const [categoryTree, setCategoryTree] = useState([]); // tree returned from backend
+    const [categoryTree, setCategoryTree] = useState([]);
+    const location = useLocation();
+    const searchParams = new URLSearchParams(location.search);
+    const editId = searchParams.get('edit');
 
     // Fetch categories from backend only if creatorData exists
     useEffect(() => {
         if (!creatorData) return;
         fetchCategories(true).then((cats) => {
-            setCategoryTree(cats || []); // cats is already a tree: [{ _id, name, children: [...] }, ...]
+            setCategoryTree(cats || []);
         });
     }, [creatorData]);
 
-    // Prefill for edit (if needed, can be extended to use ObjectIds)
+    // Prefill for edit mode using API (GET /images/:id)
     useEffect(() => {
-        const editAsset = sessionStorage.getItem('editAsset');
-        if (editAsset) {
+        if (!editId) {
+            // Not editing: ensure preview cleared if needed
+            setImageUrl('');
+            setImageType('');
+            setImageSize('');
+            return;
+        }
+        const fetchAsset = async () => {
             try {
-                const asset = JSON.parse(editAsset);
+                const res = await api.get(API_ENDPOINTS.GET_IMAGE_BY_ID(editId));
+                const asset = res.data?.data;
+                if (!asset) return;
+
                 setCategory(asset.category || '');
                 setSelectedSubCategory(asset.subcategory || '');
                 setSelectedSubSubCategory(asset.subsubcategory || '');
@@ -67,50 +92,45 @@ function UploadBanner1() {
                 setDescription(asset.description || '');
                 setZipFolder(asset.zipfolder || '');
                 setZipFolderUrl(asset.zipfolderurl || '');
-                setTermsChecked(asset.termsConditions || false);
-                setContentChecked(asset.permissionLetter || false);
+                setTermsChecked(!!asset.termsConditions);
+                setContentChecked(!!asset.permissionLetter);
                 setKeywords(asset.keywords || []);
+
+                // Image + S3 data
                 setImageUrl(asset.imageUrl || '');
-                setImageType(asset.imagetype || '');
-                setImageSize(asset.imagesize || '');
-            } catch {}
-        } else {
-            setImageUrl('');
-            setImageType('');
-            setImageSize('');
-        }
-    }, []);
+                setImageType(asset.imagetype || asset.fileMetadata?.mimeType || '');
+                setImageSize(asset.imagesize || asset.fileMetadata?.fileSizeFormatted || '');
+                setS3Keys(asset.s3Key ? [asset.s3Key] : []);
+                setS3Urls(asset.s3Url ? [asset.s3Url] : []);
+                setFileMetadata(asset.fileMetadata ? [asset.fileMetadata] : []);
+                setImageData(asset.imageData || []);
+            } catch (err) {
+                console.error('[UploadBanner1] Failed to load asset for edit', err);
+            }
+        };
+        fetchAsset();
+    }, [editId, setCategory, setSelectedSubCategory, setSelectedSubSubCategory, setSelectPlan, setTitle, setDescription, setZipFolder, setZipFolderUrl, setTermsChecked, setContentChecked, setKeywords, setImageUrl, setImageType, setImageSize, setS3Keys, setS3Urls, setFileMetadata, setImageData]);
 
     // Dynamic category selection handlers
-    // Top-level category
     const handleCategoryChange = (event) => {
         const selectedId = event.target.value;
         setCategory(selectedId);
-
-        // Find selected parent in tree and use its children as subcategories
         const selectedCat = categoryTree.find(c => c._id === selectedId);
         const subCats = selectedCat?.children || [];
-
         setSubCategories(subCats);
         setSelectedSubCategory('');
         setSubSubCategories([]);
         setSelectedSubSubCategory('');
     };
-    // Subcategory
     const handleSubCategoryChange = (event) => {
         const selectedId = event.target.value;
         setSelectedSubCategory(selectedId);
-
-        // Find current parent
         const parentCat = categoryTree.find(c => c._id === category);
-        // Find selected subcategory under that parent and use its children as sub-subcategories
         const selectedSubCat = parentCat?.children?.find(c => c._id === selectedId);
         const subSubCats = selectedSubCat?.children || [];
-
         setSubSubCategories(subSubCats);
         setSelectedSubSubCategory('');
     };
-    // Subsubcategory
     const handleSubSubCategoryChange = (event) => {
         setSelectedSubSubCategory(event.target.value);
     };
@@ -123,15 +143,11 @@ function UploadBanner1() {
         setContentChecked(!contentChecked);
     };
 
-    // S3 Multipart ZIP upload
     const handleZipFolders = async (file) => {
         if (!file) return;
         setLoading(true);
         try {
-            const result = await multipartUploadToS3(file, category, (progress) => {
-                // Optionally show progress
-                // setProgress(progress);
-            });
+            const result = await multipartUploadToS3(file, category, () => {});
             setZipFolderUrl(result.s3Url);
             setZipFolder(result.s3Key);
             message.success('ZIP uploaded successfully!');
@@ -162,17 +178,14 @@ function UploadBanner1() {
         }
     };
 
-    // Track if a new file has been selected in UploadBanner1ImageCompo
-    // If imageUrl is set (from edit) but UploadBanner1ImageCompo sets a new image, only show the new image
-    // We'll use imageUrl as the single source of truth for preview
     return (
         <div className="upload-grid">
             <div className="upload-card upload-card--drop">
                 <h4 className="upload-heading">Upload files</h4>
                 <p className="upload-sub">Drag & drop or click to choose files from your device.</p>
-                {/* Show preview only if imageUrl is set (from edit or new upload) */}
-                {imageUrl && imagetype ? (
-                    imagetype.startsWith('video/') ? (
+                {/* Show preview from global imageUrl/imageType (edit or new upload) */}
+                {imageUrl && imageType ? (
+                    imageType.startsWith('video/') ? (
                         <video src={imageUrl} controls style={{ width: '100%', borderRadius: '8px' }} />
                     ) : (
                         <img src={imageUrl} alt="Preview" style={{ width: '100%', borderRadius: '8px' }} />

@@ -97,8 +97,7 @@ function ContributorFilesList({ items = [], loading, error, emptyTitle, emptyBod
                       type="button"
                       className="file-card__action file-card__action--edit"
                       onClick={() => {
-                        // Store edit data in sessionStorage and navigate to /upload
-                        sessionStorage.setItem('editAsset', JSON.stringify(item));
+                        // Just navigate with ?edit, no sessionStorage
                         navigate(`/upload?edit=${item._id}`);
                       }}
                     >

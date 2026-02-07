@@ -1,6 +1,6 @@
 .navbar {
     z-index: 3;
-    background: #232946 !important; /* dark blue background */
+    background: #221122 !important; /* dark blue background */
 }
 
 .navbar .nav-link, .navbar .navbar-brand, .navbar .dropdown-toggle, .navbar .dropdown-item {

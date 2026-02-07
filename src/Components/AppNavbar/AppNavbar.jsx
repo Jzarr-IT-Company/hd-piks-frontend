@@ -5,13 +5,14 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import AppNavbarOffcanvas from '../AppNavbarOffcanvas/AppNavbarOffcanvas';
+import HomeBannerSearchbarFilterationCompo from '../HomeBannerSearchbarFilterationCompo/HomeBannerSearchbarFilterationCompo';
+import HomeBannerSearchFilterationCompo2 from '../HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
+import AppNavbarBanner1Compo from '../AppNavbarBanner1Compo/AppNavbarBanner1Compo';
+import AiToolsCards from '../AiToolsCards/AiToolsCards';
 
-const HomeBannerSearchbarFilterationCompo = lazy(() => import('../HomeBannerSearchbarFilterationCompo/HomeBannerSearchbarFilterationCompo'));
 const CreateImagesLikeCanva = lazy(() => import('../CreateImagesLikeCanva/CreateImagesLikeCanva'));
 const NavbarProfileCompo = lazy(() => import('../NavbarProfileCompo/NavbarProfileCompo'));
 const SidebarCompo = lazy(() => import('../SidebarCompo/SidebarCompo'));
-const AppNavbarBanner1Compo = lazy(() => import('../AppNavbarBanner1Compo/AppNavbarBanner1Compo'));
-const HomeBannerSearchFilterationCompo2 = lazy(() => import('../HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2'));
 
 function AppNavbar() {
     return (
@@ -57,11 +58,21 @@ function AppNavbar() {
                                 id='coustome-img-css' alt="banner-img" />
                             <div className="card-img-overlay card-img-overlay-css d-flex flex-column justify-content-center align-items-center">
                                 <div className="mt-5 text-container">
+                                    <div className="mt-5 text-container">
+
                                     <h1 className="text-white text-center fw-bold">Free Stunning Stock Photos & Videos for Your Projects</h1>
                                     <p className="text-white text-center">
                                         Explore high-quality, royalty-free images and videos for all your creative needs.
                                     </p>
+                                    </div>
                                     <HomeBannerSearchbarFilterationCompo />
+                                    <div className=" mb-2 px-2 px-md-0">
+                                        <AiToolsCards
+                                            onSelect={(tool) => {
+                                                console.log("AI tool clicked:", tool.id);
+                                            }}
+                                        />
+                                    </div>
                                     <HomeBannerSearchFilterationCompo2 />
                                     <AppNavbarBanner1Compo />
                                 </div>

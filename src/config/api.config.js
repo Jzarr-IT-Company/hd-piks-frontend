@@ -2,7 +2,7 @@
 // API Configuration for Development and Production
 const API_CONFIG = {
     development: 'http://localhost:4000',
-    production: 'https://hd-piks-backend02.vercel.app/',
+    production: 'https://hd-piks-backend02.vercel.app', // no trailing slash
 };
 
 const APP_ENV = import.meta.env.VITE_APP_ENV || import.meta.env.MODE; // 'development' or 'production'
@@ -55,8 +55,11 @@ export const API_ENDPOINTS = {
     // Images
     GET_ALL_IMAGES: '/AllImagesfromDB', // GET: all approved images and videos and othes assets 
     GET_IMAGES_BY_CREATOR_ID: '/getAllImages', // POST: { id: creatorId }
+    GET_IMAGE_BY_ID: id => `/images/${id}`, // NEW
     SAVE_IMAGES: '/saveImages',
     DELETE_IMAGE: '/fileObjectDelete',
+    // Search images by keyword/category/title/description.
+    // Backend expects a query param, e.g. GET /searchFilterationImages?searchQuery=term
     SEARCH_IMAGES: '/searchFilterationImages',
     FILTER_BY_WORD: '/filterationByWord',
     APPROVE_IMAGES: '/approvedimages',
@@ -88,7 +91,7 @@ export const API_ENDPOINTS = {
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_CATEGORY: id => `/admin/categories/${id}`,
 
-    // Public categories (creator-accessible, uses GET /categories)
+    // Public categories (no auth, GET /categories -> getPublicCategories)
     PUBLIC_CATEGORIES: '/categories',
 
     // Blog (Admin)

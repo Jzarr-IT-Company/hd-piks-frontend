@@ -1,10 +1,12 @@
 import React from 'react'
 import './HomeBanner4.css'
+import sellerBrandingImg from '../../assets/sellerbrandingImg.png' // NEW local asset
+
 function HomeBanner4() {
     return (
         <>
-            <section >
-                <div className="container rounded-3 my-4 " style={{ backgroundColor: "#2c012c" }}>
+            <section  >
+                <div className="container d-none d-md-block " style={{ backgroundColor: "#2c012c" }}>
                     <div className="row d-flex justify-content-center align-items-center">
                         <div className="col-md-6">
                             <div className="py-5 px-3">
@@ -24,8 +26,13 @@ function HomeBanner4() {
                                 </div>
                             </div>
                         </div>
-                        <div className="col-md-6 px-0">
-                            <img src={"https://res.cloudinary.com/ds819uy6o/image/upload/v1730807489/file_plxiwd.webp"} className='img-fluid rounded-end-3 w-100' style={{ height: "550px", objectFit: "cover" }} alt="" />
+                        <div className="col-md-6 px-0" >
+                            <img
+                                src={sellerBrandingImg}
+                                className="img-fluid rounded-end-3 w-100"
+                                style={{ height: '550px', objectFit: 'cover' }}
+                                alt="Seller branding"
+                            />
                         </div>
                     </div>
                 </div>

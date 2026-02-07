@@ -1,25 +1,19 @@
 import api from '../Services/api';
 import { API_ENDPOINTS } from '../config/api.config';
 
-export const fetchCategories = async (isCreator) => {
-  if (!isCreator) return [];
-
-  try {
-    // Uses backend route: GET /categories (auth + creatorId required)
-    const res = await api.get(API_ENDPOINTS.PUBLIC_CATEGORIES);
-    console.log(res.data.data);
-  
-    return res.data?.data || res.data || [];
-  } catch (error) {
-    if (error.response?.status === 404) {
-      console.error('[fetchCategories] /categories not implemented on backend.');
-    } else if (error.response?.status === 403) {
-      console.error('[fetchCategories] Forbidden: current user is not allowed to read categories.', error);
-    } else {
-      console.error('[fetchCategories] Failed to load categories', error);
-    }
-    return [];
-  }
+// Fetch public categories tree from /categories (no auth required)
+export const fetchCategories = async () => {
+	// Public: GET /categories -> { success: true, data: tree }
+	try {
+		const res = await api.get(API_ENDPOINTS.PUBLIC_CATEGORIES);
+		const payload = res.data;
+		if (Array.isArray(payload)) return payload;
+		if (payload && Array.isArray(payload.data)) return payload.data;
+		return [];
+	} catch (err) {
+		console.error('[fetchCategories] failed', err?.response?.data || err.message);
+		return [];
+	}
 };
 
 // Build a tree from flat category list

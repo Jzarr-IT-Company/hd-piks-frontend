@@ -1,13 +1,18 @@
 import api from './api';
-
-const API_ENDPOINTS = {
-    GET_ALL_CREATORS: '/creators', // get all creators
-    GET_CREATOR_BY_ID: id => `/creators/${id}` // get creator by ID
-};
+import { API_ENDPOINTS } from '../config/api.config';
 
 export const getAllCreatorsData = async () => {
-    const response = await api.get(API_ENDPOINTS.GET_ALL_CREATORS);
-    return response.data.data;
+    try {
+        const res = await api.get(API_ENDPOINTS.GET_ALL_CREATORS);
+        return res.data?.data || [];
+    } catch (error) {
+        if (error.response?.status === 404) {
+            console.warn('[creator] /creators endpoint not found; returning empty creator list.');
+            return [];
+        }
+        console.error('[creator] Failed to load creators:', error);
+        throw error;
+    }
 };
 
 export const getCreatorById = async (id) => {
