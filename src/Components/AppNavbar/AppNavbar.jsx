@@ -66,15 +66,12 @@ function AppNavbar() {
                                     </p>
                                     </div>
                                     <HomeBannerSearchbarFilterationCompo />
-                                    <div className=" mb-2 px-2 px-md-0">
+                                    <div className=" mb-5 px-2 px-md-0" >
                                         <AiToolsCards
-                                            onSelect={(tool) => {
-                                                console.log("AI tool clicked:", tool.id);
-                                            }}
                                         />
                                     </div>
-                                    <HomeBannerSearchFilterationCompo2 />
-                                    <AppNavbarBanner1Compo />
+                                    {/* <HomeBannerSearchFilterationCompo2 />   yaghan glti thi */}
+                                    {/* <AppNavbarBanner1Compo /> */}
                                 </div>
                             </div>
                         </div>

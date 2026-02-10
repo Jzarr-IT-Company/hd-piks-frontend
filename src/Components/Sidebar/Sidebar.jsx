@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import ImagsNavbar from '../ImagsNavbar/ImagsNavbar';
 import FilterationComponent from '../FilterationComponent/FilterationComponent';
 import FilterationImages from '../FilterationImages/FilterationImages';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import VideoCompo from '../VideoCompo/VideoCompo';
 import { Layers, ArrowDownUp, BadgeCheck, Sparkles, Palette, Tags, Grid, X } from 'lucide-react';
 import './Sidebar.css';
@@ -14,36 +14,157 @@ function Sidebar() {
     const [categoryname, setCategoryName] = useState('');
     const [subcategories, setSubcategories] = useState([]);
     const [presetSubcategory, setPresetSubcategory] = useState('all');
+    const [collectionAssetIds, setCollectionAssetIds] = useState(null);
+    const [collectionTitle, setCollectionTitle] = useState('');          // NEW
     const { name } = useParams();
-    useEffect(() => {
-        setCategoryName(name)
-        setPresetSubcategory('all');
-    }, [name])
+    const [searchParams] = useSearchParams();
+    const collectionSlug = searchParams.get('collection');             // NEW
 
+    // Resolve route param 'name' to parent or subcategory using /categories
+    useEffect(() => {
+        if (!name) return;
+
+        const initFromRoute = async () => {
+            try {
+                const res = await api.get(API_ENDPOINTS.PUBLIC_CATEGORIES);
+                const tree = res.data?.data || [];
+                const lower = name.toLowerCase();
+
+                const parentMatch = tree.find(
+                    (p) => p.name?.toLowerCase() === lower
+                );
+                if (parentMatch) {
+                    setCategoryName(parentMatch.name);
+                    setPresetSubcategory('all');
+                    return;
+                }
+
+                for (const parent of tree) {
+                    if (!Array.isArray(parent.children)) continue;
+                    const child = parent.children.find(
+                        (c) => c.name?.toLowerCase() === lower
+                    );
+                    if (child) {
+                        setCategoryName(parent.name);
+                        setPresetSubcategory(child.name);
+                        return;
+                    }
+                }
+
+                setCategoryName(name);
+                setPresetSubcategory('all');
+            } catch (err) {
+                console.error('Sidebar: failed to resolve route category', err);
+                setCategoryName(name);
+                setPresetSubcategory('all');
+            }
+        };
+
+        initFromRoute();
+    }, [name]);
+
+    // When a collection slug is present, load that collection and
+    // restrict results to its assetIds.
+    useEffect(() => {
+        if (!collectionSlug) {
+            setCollectionAssetIds(null);
+            setCollectionTitle('');                                      // NEW
+            return;
+        }
+
+        const loadCollection = async () => {
+            try {
+                const res = await api.get(
+                    API_ENDPOINTS.SUBCATEGORY_COLLECTION_BY_SLUG(collectionSlug)
+                );
+                const col = res.data?.data;
+                if (!col) {
+                    setCollectionAssetIds(null);
+                    setCollectionTitle('');
+                    return;
+                }
+
+                // Override category + preset subcategory from collection definition
+                if (col.parentCategory?.name) {
+                    setCategoryName(col.parentCategory.name);
+                }
+                if (col.subcategory?.name) {
+                    setPresetSubcategory(col.subcategory.name);
+                }
+
+                const ids = Array.isArray(col.assetIds)
+                    ? col.assetIds.map((a) => (a._id || a).toString())
+                    : [];
+                setCollectionAssetIds(ids);
+                setCollectionTitle(col.name || '');                       // NEW
+            } catch (err) {
+                console.error('Sidebar: failed to load collection by slug', err);
+                setCollectionAssetIds(null);
+                setCollectionTitle('');                                  // NEW
+            }
+        };
+
+        loadCollection();
+    }, [collectionSlug]);
+
+    // Load available subcategories for current category from images
     useEffect(() => {
         const fetchSubs = async () => {
             try {
-                const res = await api.get(API_ENDPOINTS.GET_ALL_IMAGES_RAW);
+                const res = await api.get(API_ENDPOINTS.GET_ALL_IMAGES);
                 const raw = res.data?.data || [];
-                const approved = raw.filter((item) => item.approved === true && item.rejected !== true);
-                const filtered = approved.filter((item) => (item.category || '').toLowerCase() === (name || '').toLowerCase());
-                const uniqueSubs = Array.from(new Set(filtered.map((item) => item.subcategory).filter(Boolean)));
+
+                const approved = raw.filter(
+                    (item) => item.approved === true && item.rejected !== true
+                );
+
+                const filtered = approved.filter((item) => {
+                    const cat = item.category;
+                    const catName =
+                        typeof cat === 'string'
+                            ? cat
+                            : (cat && cat.name) || '';
+                    return catName.toLowerCase() === (categoryname || '').toLowerCase();
+                });
+
+                const uniqueSubs = Array.from(
+                    new Set(
+                        filtered
+                            .map((item) => {
+                                const sub = item.subcategory;
+                                return typeof sub === 'string'
+                                    ? sub
+                                    : (sub && sub.name) || '';
+                            })
+                            .filter(Boolean)
+                    )
+                );
+
                 setSubcategories(uniqueSubs);
             } catch (err) {
                 console.error('Failed to load subcategories', err.message);
                 setSubcategories([]);
             }
         };
-        if (name) {
+
+        if (categoryname) {
             fetchSubs();
         }
-    }, [name]);
+    }, [categoryname]);
+
     const toggleSidebar = () => {
         setIsExpanded(!isExpanded);
     };
+
     const handleCategoryChange = (category) => {
         setCategoryName(category);
     };
+
+    // Decide heading text
+    const headingLabel = collectionSlug && collectionTitle
+        ? collectionTitle                                     // e.g. "top wallpapers"
+        : (name || categoryname || '');                       // fallback
+
     return (
         <>
             <div className="">
@@ -316,9 +437,13 @@ function Sidebar() {
                                 categoryname={categoryname}
                             />
                             <h2 className='fw-semibold mt-4'>
-                                Results for "<span className='fw-bold'>{name}</span>"
+                                Results for "<span className='fw-bold'>{headingLabel}</span>"
                             </h2>
-                            <FilterationImages name={categoryname} presetSubcategory={presetSubcategory} />
+                            <FilterationImages
+                                name={categoryname}
+                                presetSubcategory={presetSubcategory}
+                                collectionAssetIds={collectionAssetIds}   // NEW
+                            />
                         </div>
                     </div>
                 </div>

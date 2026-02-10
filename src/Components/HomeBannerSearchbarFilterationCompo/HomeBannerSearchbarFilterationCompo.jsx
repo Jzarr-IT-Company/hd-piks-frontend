@@ -143,14 +143,14 @@ function HomeBannerSearchbarFilterationCompo() {
 
     return (
         <>
-            <div className="container d-none d-md-block">
+            <div className="container">
                 <div className="row d-flex justify-content-center align-items-center">
                     <div className="col-sm-12 col-md-9">
                         <div className="mb-0 pb-5">
                             {/* Search bar + autocomplete */}
                             <div style={{ position: 'relative' }} ref={wrapperRef}>
                                 <div
-                                    className="d-none d-md-flex d-lg-flex align-items-center my-4 w-100"
+                                    className="d-flex align-items-center my-4 w-100"
                                     style={{
                                         minHeight: 60,
                                         background: '#ffffff',

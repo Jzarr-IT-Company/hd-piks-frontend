@@ -15,6 +15,7 @@ const menu = [
   { label: 'Images', icon: <ImageIcon />, to: '/admin/images' },
   { label: 'Blogs', icon: <CategoryIcon />, to: '/admin/blogs' },
   { label: 'Analytics', icon: <BarChartIcon />, to: '/admin/analytics' },
+  { label: 'Collections', icon: <CategoryIcon />, to: '/admin/collections' },
 ];
 
 export default function Sidebar() {

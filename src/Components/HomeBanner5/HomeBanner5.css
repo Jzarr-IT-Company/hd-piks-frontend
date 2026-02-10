@@ -71,3 +71,114 @@
         height: 150px; /* Adjust image height for smaller screens */
     }
 }
+
+.home-banner-5 {
+  background: #2c012c;
+  color: white;
+}
+
+/* CTA button */
+.home-banner-5 .button {
+  background: linear-gradient(90deg,#7b3fe4,#e14bbf);
+  color: #fff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: 0 8px 26px rgba(17,17,17,0.12);
+  transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+}
+.home-banner-5 .button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 36px rgba(17,17,17,0.14);
+  opacity: 0.98;
+}
+
+/* Scroll container (outer wrapper) */
+.scroll-container {
+  overflow: hidden;
+  position: relative;
+  margin-left: -12px;
+  margin-right: -12px;
+  padding: 12px 0;
+}
+
+/* The track that scrolls horizontally */
+/* We use transform-based animation for smoothness */
+.scroll-images {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  width: max-content;
+  animation: marquee 18s linear infinite;
+  will-change: transform;
+}
+
+/* Pause state */
+.scroll-images.paused {
+  animation-play-state: paused;
+}
+
+/* Each logo wrapper */
+.partner-logo-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  padding: 6px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  min-width: 140px;
+  max-width: 220px;
+  height: 84px;
+  box-shadow: 0 8px 28px rgba(2,6,23,0.04), inset 0 -6px 14px rgba(0,0,0,0.06);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+/* Slight scale on hover for each logo */
+.partner-logo-wrapper:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 18px 44px rgba(2,6,23,0.10);
+}
+
+/* Logo image */
+.partner-logo-img {
+  max-height: 56px;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
+  filter: none;
+}
+
+/* Make marquee visually seamless by duplicating the logos (we do that in JSX) */
+/* Keyframes moves from 0 to -50% of the width (because we duplicate logos) */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Responsive tweaks */
+@media (max-width: 991px) {
+  .partner-logo-wrapper {
+    min-width: 120px;
+    height: 72px;
+  }
+  .partner-logo-img { max-height: 48px; }
+  .scroll-images { gap: 18px; animation-duration: 20s; }
+}
+
+@media (max-width: 575px) {
+  .partner-logo-wrapper {
+    min-width: 100px;
+    height: 64px;
+    padding: 4px;
+  }
+  .partner-logo-img { max-height: 40px; }
+  .home-banner-5 .display-5 { font-size: 1.75rem; }
+  .scroll-images { animation-duration: 22s; gap: 12px; }
+}
+
+/* Accessibility: reduce-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-images { animation: none !important; transform: none !important; }
+}

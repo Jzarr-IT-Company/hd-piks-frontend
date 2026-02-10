@@ -74,7 +74,7 @@ function HomeBanner1Compo() {
     ];
 
     return (
-        <div className="container d-block d-md-none">
+        <div className="container d-block d-md-none mb-20">
             <h3 className="fw-bold display-5">Explore Our</h3>
             <p className="fw-semibold">Find the perfect visuals for every project.</p>
             <div className="row home-banner-coutmoe-css" style={{ display: 'flex' }}>

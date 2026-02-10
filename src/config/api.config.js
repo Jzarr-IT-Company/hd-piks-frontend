@@ -52,8 +52,21 @@ export const API_ENDPOINTS = {
     GET_CREATOR_BY_ID: id => `/creators/${id}`,
     COLLECTIONS: '/collections',
     COLLECTION_ADD_ASSET: '/collections/addAsset',
+
+    // NEW: public sub‑category collections (for HomeBanner, etc.)
+    SUBCATEGORY_COLLECTIONS: '/subcategory-collections',
+    SUBCATEGORY_COLLECTION_TOP: '/subcategory-collections-top',
+    SUBCATEGORY_COLLECTION_BY_SLUG: slug => `/subcategory-collections/${slug}`,
+
+    // NEW: admin sub‑category collections CRUD
+    ADMIN_SUBCATEGORY_COLLECTIONS: '/admin/sub-category-collections',
+    ADMIN_SUBCATEGORY_COLLECTION: id => `/admin/sub-category-collections/${id}`,
+
     // Images
-    GET_ALL_IMAGES: '/AllImagesfromDB', // GET: all approved images and videos and othes assets 
+    GET_ALL_IMAGES: '/AllImagesfromDB', // legacy full fetch, avoid in new components
+    // NEW: paginated public assets endpoint for galleries
+    ASSETS: '/assets',
+
     GET_IMAGES_BY_CREATOR_ID: '/getAllImages', // POST: { id: creatorId }
     GET_IMAGE_BY_ID: id => `/images/${id}`, // NEW
     SAVE_IMAGES: '/saveImages',

@@ -134,3 +134,74 @@
         height: 500px !important;
     }
 }
+
+@media (max-width: 767.98px) {
+	.text-container {
+		padding-top: 3.5rem;   /* push text down below navbar */
+		padding-inline: 1rem;  /* avoid text touching edges */
+	}
+
+	.text-container h1 {
+		font-size: 1.4rem;     /* smaller, mobile-friendly */
+		line-height: 1.3;
+	}
+
+	.text-container p {
+		font-size: 0.9rem;
+		margin-bottom: 0;
+	}
+
+	.custome-css {
+		height: 500px !important;
+	}
+
+	.custme-css-background-card {
+		height: 500px !important;
+	}
+
+	.card-img-overlay-css {
+		height: 500px !important;
+	}
+
+	.dropdown-menu {
+		max-height: 400px;
+		overflow-y: auto;
+		scrollbar-width: thin;
+		scrollbar-color: #6a0dad #fff;
+	}
+
+	.dropdown-menu::-webkit-scrollbar {
+		display: none;              /* Chrome/Safari */
+	}
+}
+
+.asset-type-carousel {
+	scrollbar-width: none;         /* Firefox */
+	-ms-overflow-style: none;      /* IE / Edge */
+}
+
+.asset-type-carousel::-webkit-scrollbar {
+	display: none;                 /* Chrome / Safari */
+}
+
+/* Prevent horizontal scrollbar on desktop for asset type band */
+.asset-type-wrapper {
+	overflow-x: hidden;
+}
+
+/* On mobile allow horizontal scroll inside the carousel only */
+@media (max-width: 767.98px) {
+	.asset-type-wrapper {
+		overflow-x: visible;
+	}
+}
+
+/* Hide inner scrollbar for mobile carousel while keeping swipe */
+.asset-type-carousel {
+	scrollbar-width: none;      /* Firefox */
+	-ms-overflow-style: none;   /* IE/Edge */
+}
+
+.asset-type-carousel::-webkit-scrollbar {
+	display: none;              /* Chrome/Safari */
+}

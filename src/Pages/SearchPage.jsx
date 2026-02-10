@@ -5,7 +5,9 @@ import FilterationImages from '../Components/FilterationImages/FilterationImages
 import { getAllImages } from '../Services/getImages';
 import { fetchCategories } from '../Services/category';
 import HomeBannerSearchFilterationCompo2 from '../Components/HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
-
+import AppFooter from '../Components/AppFooter/AppFooter'; // NEW
+import { Link } from "react-router-dom"; // if not already imported
+import logo from "../assets/logo1.webp";
 function SearchPage() {
   // :term from /search/:term  e.g. "wallpapers"
   const { term } = useParams();
@@ -194,9 +196,25 @@ function SearchPage() {
   return (
     <>
       {/* Search bar from homepage, visible on desktop as well */}
-      <HomeBannerSearchFilterationCompo2 showOnDesktop />
+     <div className="container pt-4">
+      <div className="d-flex align-items-center">
+        <Link to="/">
+          <img
+            src={logo}
+            alt="Hdpiks"
+            style={{ height: 40, cursor: 'pointer' }}
+          />
+        </Link>
+
+        <div className="flex-grow-1 ms-3">
+          {/* Search bar from homepage, visible on desktop as well */}
+          <HomeBannerSearchFilterationCompo2 showOnDesktop />
+        </div>
+      </div>
+    </div>
 
       <div className="container py-4">
+
         <div className="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-3 text-center text-md-start">
           <div className="w-100">
             <h2 className="h4 mb-1">
@@ -242,6 +260,9 @@ function SearchPage() {
           />
         )}
       </div>
+
+      {/* Keep same footer as home page */}
+      <AppFooter />
     </>
   );
 }

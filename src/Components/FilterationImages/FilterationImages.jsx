@@ -16,6 +16,7 @@ function FilterationImages({
     searchSubcategory = undefined,
     subSubcategoryNames = [],
     searchSubSubcategory = undefined,
+    collectionAssetIds = undefined,   // NEW: limit to these asset IDs
 }) {
     const [imagesdata, setImagesdata] = useState([]);
     const [creatorData, setCreatorData] = useState({});
@@ -129,10 +130,17 @@ function FilterationImages({
             // Only approved images
             const approved = images.filter((item) => item.approved === true && item.rejected !== true);
 
+            // If a curated collection is selected, restrict to its assetIds
+            let base = approved;
+            if (Array.isArray(collectionAssetIds) && collectionAssetIds.length) {
+                const idSet = new Set(collectionAssetIds.map(String));
+                base = approved.filter((item) => idSet.has(String(item._id)));
+            }
+
             // Filter by main category name (string or populated object)
             let filtered = name
-                ? approved.filter((item) => normalize(getCategoryName(item.category)) === normalize(name))
-                : approved;
+                ? base.filter((item) => normalize(getCategoryName(item.category)) === normalize(name))
+                : base;
 
             // Restrict to searched subcategory when in search mode
             if (searchSubcategory) {
@@ -142,11 +150,12 @@ function FilterationImages({
                 );
             }
 
-            // NEW: restrict further to specific sub‑subcategory (e.g. "nature wallpaper")
+            // Restrict to specific sub‑subcategory if provided
             if (searchSubSubcategory) {
                 const targetSubSub = normalize(searchSubSubcategory);
                 filtered = filtered.filter(
-                    (item) => normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
+                    (item) => normalize(getSubSubcategoryName(item.subsubcategory)) ===
+                    targetSubSub
                 );
             }
 
@@ -196,7 +205,7 @@ function FilterationImages({
         } finally {
             setLoading(false);
         }
-    }, [name, normalize, creatorId, getCategoryName, getSubcategoryName, getSubSubcategoryName, searchSubcategory, searchSubSubcategory]);
+    }, [name, normalize, creatorId, getCategoryName, getSubcategoryName, getSubSubcategoryName, searchSubcategory, searchSubSubcategory, collectionAssetIds]);
 
     useEffect(() => {
         if (!loading) {
@@ -231,20 +240,15 @@ function FilterationImages({
         return 4;
     }, []);
 
-    // Build SEO-friendly URL: /asset/:categorySlug/:subSlug?/:subSubSlug?/:id
+    // Build SEO-friendly URL: /asset/:categorySlug/:subSlug/:id
     const buildAssetUrl = useCallback(
         (img) => {
-            const categorySlug = slugify(getCategoryName(img.category));
-            const subSlug = slugify(getSubcategoryName(img.subcategory));
-            const subSubSlug = slugify(getSubSubcategoryName(img.subsubcategory));
-            const segments = ['/asset'];
-            if (categorySlug) segments.push(categorySlug);
-            if (subSlug) segments.push(subSlug);
-            if (subSubSlug) segments.push(subSubSlug);
-            if (img._id) segments.push(img._id);
-            return segments.join('/');
+            const categorySlug = slugify(getCategoryName(img.category)) || 'image';
+            const subSlug = slugify(getSubcategoryName(img.subcategory)) || 'all';
+            const id = img._id;
+            return `/asset/${categorySlug}/${subSlug}/${id}`;
         },
-        [slugify, getCategoryName, getSubcategoryName, getSubSubcategoryName]
+        [slugify, getCategoryName, getSubcategoryName]
     );
 
     const handleImageClick = useCallback(

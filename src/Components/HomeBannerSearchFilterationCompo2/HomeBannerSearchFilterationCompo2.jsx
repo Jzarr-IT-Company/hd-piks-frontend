@@ -225,13 +225,13 @@ function HomeBannerSearchFilterationCompo2({ showOnDesktop = false }) {
 				<div className="w-100" style={{ maxWidth: 900 }}>
 					{/* Search bar */}
 					<div
-						 className="d-none d-md-flex d-lg-flex align-items-center my-4 w-100"
-                                    style={{
-                                        minHeight: 60,
-                                        background: '#ffffff',
-                                        borderRadius: 999,
-                                        paddingInline: 14,
-                                        border: '1px solid rgba(236,72,153,0.6)',
+						className="d-flex align-items-center my-4 w-100"
+						style={{
+							minHeight: 60,
+							background: '#ffffff',
+							borderRadius: 999,
+							paddingInline: 14,
+							border: '1px solid rgba(236,72,153,0.6)',
 						}}
 					>
 						<React.Fragment>
