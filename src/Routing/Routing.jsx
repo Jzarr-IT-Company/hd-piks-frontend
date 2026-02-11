@@ -421,6 +421,7 @@ import  ContactUs  from '../Pages/Company/ContactUs';
 import  Faq  from '../Pages/Company/Faq';
 import  Terms from '../Pages/Company/Terms';
 import  Privacy  from '../Pages/Company/Privacy';
+import DesignHdpiks from "../Pages/DesignHdpiks";
 
 function ProtectedRoute({ children }) {
   const token = Cookies.get("token");
@@ -535,6 +536,10 @@ function Routing() {
     {
       path: "/signup",
       element: <Signup />,
+    },
+    {
+      path: "/design-hdpiks",
+      element: <DesignHdpiks />,
     },
     {
       path: "/collection/:name",

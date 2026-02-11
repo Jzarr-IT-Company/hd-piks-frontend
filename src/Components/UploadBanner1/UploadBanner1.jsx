@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import './UploadBanner1.css';
-import axios from 'axios';
 import { fetchCategories } from '../../Services/category';
 import { multipartUploadToS3 } from '../../Services/S3Service';
 import UploadBanner1ImageCompo from '../UploadBanner1ImageCompo/UploadBanner1ImageCompo';
@@ -12,6 +11,9 @@ import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 
 function UploadBanner1() {
+    const ZIP_REQUIRED_NAMES = ['mockups', 'vector', 'psd', 'templates', 'icons', 'nft'];
+    const ZIP_OPTIONAL_NAMES = ['image'];
+
     const {
         category,
         setCategory,
@@ -29,7 +31,9 @@ function UploadBanner1() {
         setTitle,
         description,
         setDescription,
+        zipFolder,
         setZipFolder,
+        zipFolderUrl,
         setZipFolderUrl,
         termsChecked,
         setTermsChecked,
@@ -61,6 +65,69 @@ function UploadBanner1() {
     const searchParams = new URLSearchParams(location.search);
     const editId = searchParams.get('edit');
 
+    const selectedCategoryNode = useMemo(
+        () => categoryTree.find((c) => c._id === category),
+        [categoryTree, category]
+    );
+
+    const selectedSubCategoryNode = useMemo(
+        () => selectedCategoryNode?.children?.find((c) => c._id === selectedSubCategory),
+        [selectedCategoryNode, selectedSubCategory]
+    );
+
+    const selectedSubSubCategoryNode = useMemo(
+        () => selectedSubCategoryNode?.children?.find((c) => c._id === selectedSubSubCategory),
+        [selectedSubCategoryNode, selectedSubSubCategory]
+    );
+
+    const selectedNames = useMemo(() => {
+        return [
+            selectedCategoryNode?.name,
+            selectedSubCategoryNode?.name,
+            selectedSubSubCategoryNode?.name,
+        ]
+            .filter(Boolean)
+            .map((name) => name.trim().toLowerCase());
+    }, [selectedCategoryNode, selectedSubCategoryNode, selectedSubSubCategoryNode]);
+
+    const isZipRequired = useMemo(() => {
+        return selectedNames.some((name) => ZIP_REQUIRED_NAMES.includes(name));
+    }, [selectedNames]);
+
+    const isZipVisible = useMemo(() => {
+        return selectedNames.some((name) =>
+            ZIP_REQUIRED_NAMES.includes(name) || ZIP_OPTIONAL_NAMES.includes(name)
+        );
+    }, [selectedNames]);
+
+    const currentZipKey = useMemo(() => {
+        if (Array.isArray(zipFolder)) {
+            const first = zipFolder[0];
+            if (typeof first === 'string') return first;
+            return first?.s3Key || first?.key || '';
+        }
+        if (typeof zipFolder === 'string') return zipFolder;
+        return zipFolder?.s3Key || zipFolder?.key || '';
+    }, [zipFolder]);
+
+    const currentZipUrl = useMemo(() => {
+        if (typeof zipFolderUrl === 'string' && zipFolderUrl) return zipFolderUrl;
+        if (Array.isArray(zipFolder)) {
+            const first = zipFolder[0];
+            if (typeof first === 'object' && first?.url) return first.url;
+        } else if (zipFolder?.url) {
+            return zipFolder.url;
+        }
+        return '';
+    }, [zipFolder, zipFolderUrl]);
+
+    const currentZipName = useMemo(() => {
+        const source = currentZipKey || currentZipUrl;
+        if (!source) return '';
+        const withoutQuery = source.split('?')[0];
+        return withoutQuery.split('/').pop() || source;
+    }, [currentZipKey, currentZipUrl]);
+
     // Fetch categories from backend only if creatorData exists
     useEffect(() => {
         if (!creatorData) return;
@@ -68,6 +135,13 @@ function UploadBanner1() {
             setCategoryTree(cats || []);
         });
     }, [creatorData]);
+
+    useEffect(() => {
+        if (!isZipVisible) {
+            setZipFolder([]);
+            setZipFolderUrl('');
+        }
+    }, [isZipVisible, setZipFolder, setZipFolderUrl]);
 
     // Prefill for edit mode using API (GET /images/:id)
     useEffect(() => {
@@ -90,7 +164,7 @@ function UploadBanner1() {
                 setSelectPlan(asset.freePremium || '');
                 setTitle(asset.title || '');
                 setDescription(asset.description || '');
-                setZipFolder(asset.zipfolder || '');
+                setZipFolder(asset.zipfolder || []);
                 setZipFolderUrl(asset.zipfolderurl || '');
                 setTermsChecked(!!asset.termsConditions);
                 setContentChecked(!!asset.permissionLetter);
@@ -152,7 +226,7 @@ function UploadBanner1() {
             setZipFolder(result.s3Key);
             message.success('ZIP uploaded successfully!');
         } catch (error) {
-            setZipFolder('');
+            setZipFolder([]);
             message.error('Error uploading ZIP: ' + (error.message || 'Upload failed'));
         } finally {
             setLoading(false);
@@ -294,7 +368,7 @@ function UploadBanner1() {
                                         onClick={() => deleteKeyword(index)}
                                         aria-label="Remove keyword"
                                     >
-                                        ×
+                                        &times;
                                     </button>
                                 </span>
                             ))}
@@ -317,9 +391,14 @@ function UploadBanner1() {
                         </select>
                     </div>
 
-                    {['vector', 'psd', 'templates', 'mockups'].includes(category) && (
+                    {isZipVisible && (
                         <div className="upload-field">
-                            <label className="upload-label">Upload Zip File</label>
+                            <label className="upload-label">
+                                Upload Zip File
+                                <span className="ms-2 text-muted small">
+                                    ({isZipRequired ? 'Required' : 'Optional'})
+                                </span>
+                            </label>
                             <input
                                 type="file"
                                 id="zipFileInput"
@@ -330,6 +409,24 @@ function UploadBanner1() {
                             {loading ? (
                                 <div className="mt-2">
                                     <Spin />
+                                </div>
+                            ) : null}
+                            {!loading && currentZipName ? (
+                                <div className="mt-2 small text-muted">
+                                    Current ZIP: <strong>{currentZipName}</strong>
+                                    {currentZipUrl ? (
+                                        <>
+                                            {' '}
+                                            <a
+                                                href={currentZipUrl}
+                                                download={currentZipName || true}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                Download
+                                            </a>
+                                        </>
+                                    ) : null}
                                 </div>
                             ) : null}
                         </div>
@@ -351,7 +448,7 @@ function UploadBanner1() {
                         </label>
                     </div>
 
-                    <UploadBtn />
+                    <UploadBtn isZipRequired={isZipRequired} />
                 </div>
             </div>
         </div>
@@ -359,3 +456,4 @@ function UploadBanner1() {
 }
 
 export default UploadBanner1;
+

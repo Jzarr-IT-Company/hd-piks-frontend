@@ -11,26 +11,66 @@ function RegisteredBttn() {
     const { username, setUsername,
         semail, setsEmail,
         password, setPassword,
+        confirmPassword,
         setConfirmPassword, } = useGlobalState();
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
-    const handleBttn = async () => {
-        if (!username || !semail || !password) {
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // At least 8 chars, one uppercase, one lowercase, one number, one special char
+    const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;
+
+    const validateSignup = () => {
+        const cleanUsername = (username || '').trim();
+        const cleanEmail = (semail || '').trim();
+
+        if (!cleanUsername || !cleanEmail || !password || !confirmPassword) {
             message.error('Please fill all required fields');
+            return false;
+        }
+
+        if (cleanUsername.length < 3) {
+            message.error('Username must be at least 3 characters');
+            return false;
+        }
+
+        if (!emailRegex.test(cleanEmail)) {
+            message.error('Please enter a valid email address');
+            return false;
+        }
+
+        if (!strongPasswordRegex.test(password)) {
+            message.error(
+                'Password must be 8+ chars with uppercase, lowercase, number and special character'
+            );
+            return false;
+        }
+
+        if (password !== confirmPassword) {
+            message.error('Password and Confirm Password do not match');
+            return false;
+        }
+
+        return true;
+    };
+
+    const handleBttn = async () => {
+        if (!validateSignup()) {
             return;
         }
         setLoading(true)
         try {
-            
+            const cleanUsername = username.trim();
+            const cleanEmail = semail.trim();
             const response = await api.post(API_ENDPOINTS.SIGNUP, {
-                name: username, email: semail, password
+                name: cleanUsername, email: cleanEmail, password
             });
             console.log(response.data.token.token)
             console.log(response.data.id)
             if (response.status === 200) {
                 message.success("Signup Successsfully")
                 setLoading(false)
-                const obj = { name: username, email: semail }
+                const obj = { name: cleanUsername, email: cleanEmail }
                 Cookies.set("id", response.data.id, { expires: 365 * 20 });
                 Cookies.set("token", response.data.token.token, { expires: 365 * 20 });
                 localStorage.setItem('informationData', JSON.stringify(obj));

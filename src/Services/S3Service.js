@@ -57,11 +57,14 @@ export const multipartUploadToS3 = async (file, category, onProgress) => {
         uploadId,
         parts: etags
     });
-    // Use Vite env for AWS domain
-    const AWS_DOMAIN = import.meta.env.VITE_AWS_DOMAIN || 'your-bucket.s3.amazonaws.com';
+    const completedS3Url =
+        completeData?.result?.s3Url ||
+        completeData?.result?.Location ||
+        (import.meta.env.VITE_AWS_DOMAIN ? `https://${import.meta.env.VITE_AWS_DOMAIN}/${key}` : '');
+
     return {
         s3Key: key,
-        s3Url: `https://${AWS_DOMAIN}/${key}`,
+        s3Url: completedS3Url,
         fileName: file.name,
         fileSize: file.size,
         mimeType: file.type,

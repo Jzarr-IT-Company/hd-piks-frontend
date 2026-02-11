@@ -19,6 +19,9 @@ function Sidebar() {
     const { name } = useParams();
     const [searchParams] = useSearchParams();
     const collectionSlug = searchParams.get('collection');             // NEW
+    const discoverMode = searchParams.get('discover') === '1' && !collectionSlug;
+    const discoverSubcategory = searchParams.get('dsSub') || '';
+    const discoverSubSubcategory = searchParams.get('dsSubSub') || '';
 
     // Resolve route param 'name' to parent or subcategory using /categories
     useEffect(() => {
@@ -443,6 +446,9 @@ function Sidebar() {
                                 name={categoryname}
                                 presetSubcategory={presetSubcategory}
                                 collectionAssetIds={collectionAssetIds}   // NEW
+                                searchSubcategory={discoverMode ? discoverSubcategory : undefined}
+                                searchSubSubcategory={discoverMode ? discoverSubSubcategory : undefined}
+                                similarMatchMode={discoverMode}
                             />
                         </div>
                     </div>

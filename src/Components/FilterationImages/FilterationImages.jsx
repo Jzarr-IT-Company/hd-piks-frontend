@@ -3,10 +3,12 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { FiCompass, FiDownload, FiFolderPlus, FiShare2 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
+import Cookies from 'js-cookie';
 import { getAllImages, getImagesByCreatorId } from '../../Services/getImages';
 import api from '../../Services/api';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config';
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
+import CollectionSelectModal from '../CollectionSelectModal';
 import './FilterationImages.css';
 
 function FilterationImages({
@@ -17,6 +19,7 @@ function FilterationImages({
     subSubcategoryNames = [],
     searchSubSubcategory = undefined,
     collectionAssetIds = undefined,   // NEW: limit to these asset IDs
+    similarMatchMode = false,
 }) {
     const [imagesdata, setImagesdata] = useState([]);
     const [creatorData, setCreatorData] = useState({});
@@ -26,6 +29,8 @@ function FilterationImages({
     const navigate = useNavigate();
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showCollectionModal, setShowCollectionModal] = useState(false);
+    const [selectedAssetId, setSelectedAssetId] = useState(null);
 
     const isSearchMode = !!searchSubcategory;
 
@@ -142,23 +147,55 @@ function FilterationImages({
                 ? base.filter((item) => normalize(getCategoryName(item.category)) === normalize(name))
                 : base;
 
-            // Restrict to searched subcategory when in search mode
-            if (searchSubcategory) {
-                const targetSub = normalize(searchSubcategory);
-                filtered = filtered.filter(
-                    (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
-                );
-            }
+            if (similarMatchMode) {
+                // Discover Similar matching priority:
+                // 1) category + subcategory + sub-subcategory
+                // 2) category + subcategory
+                // 3) category only
+                const targetSub = normalize(searchSubcategory || '');
+                const targetSubSub = normalize(searchSubSubcategory || '');
 
-            // Restrict to specific sub‑subcategory if provided
-            if (searchSubSubcategory) {
-                const targetSubSub = normalize(searchSubSubcategory);
-                filtered = filtered.filter(
-                    (item) => normalize(getSubSubcategoryName(item.subsubcategory)) ===
-                    targetSubSub
-                );
-            }
+                if (targetSub && targetSubSub) {
+                    const level3 = filtered.filter(
+                        (item) =>
+                            normalize(getSubcategoryName(item.subcategory)) === targetSub &&
+                            normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
+                    );
+                    if (level3.length) {
+                        filtered = level3;
+                    } else {
+                        const level2 = filtered.filter(
+                            (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
+                        );
+                        if (level2.length) filtered = level2;
+                    }
+                } else if (targetSub) {
+                    filtered = filtered.filter(
+                        (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
+                    );
+                } else if (targetSubSub) {
+                    filtered = filtered.filter(
+                        (item) =>
+                            normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
+                    );
+                }
+            } else {
+                // Existing strict search behavior
+                if (searchSubcategory) {
+                    const targetSub = normalize(searchSubcategory);
+                    filtered = filtered.filter(
+                        (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
+                    );
+                }
 
+                if (searchSubSubcategory) {
+                    const targetSubSub = normalize(searchSubSubcategory);
+                    filtered = filtered.filter(
+                        (item) => normalize(getSubSubcategoryName(item.subsubcategory)) ===
+                        targetSubSub
+                    );
+                }
+            }
             // Newest first using createdAt or uploadedAt fallback.
             filtered.sort(
                 (a, b) =>
@@ -205,7 +242,7 @@ function FilterationImages({
         } finally {
             setLoading(false);
         }
-    }, [name, normalize, creatorId, getCategoryName, getSubcategoryName, getSubSubcategoryName, searchSubcategory, searchSubSubcategory, collectionAssetIds]);
+    }, [name, normalize, creatorId, getCategoryName, getSubcategoryName, getSubSubcategoryName, searchSubcategory, searchSubSubcategory, collectionAssetIds, similarMatchMode]);
 
     useEffect(() => {
         if (!loading) {
@@ -263,8 +300,14 @@ function FilterationImages({
         event.stopPropagation();
         const catName = getCategoryName(img?.category);
         if (!catName) return;
-        navigate(`/collection/${normalize(catName)}`);
-    }, [navigate, normalize, getCategoryName]);
+        const subName = getSubcategoryName(img?.subcategory);
+        const subSubName = getSubSubcategoryName(img?.subsubcategory);
+        const params = new URLSearchParams();
+        params.set('discover', '1');
+        if (subName) params.set('dsSub', subName);
+        if (subSubName) params.set('dsSubSub', subSubName);
+        navigate(`/collection/${encodeURIComponent(normalize(catName))}?${params.toString()}`);
+    }, [navigate, normalize, getCategoryName, getSubcategoryName, getSubSubcategoryName]);
 
     const handleShare = useCallback(async (event, img) => {
         event.stopPropagation();
@@ -360,9 +403,24 @@ function FilterationImages({
         setDownloadTarget(null);
     }, [getExtensionFromUrl]);
 
-    const handleSaveToCollection = useCallback((event) => {
+    const handleSaveToCollection = useCallback((event, img) => {
         event.stopPropagation();
-        alert('Save to collection coming soon.');
+        if (!img?._id) return;
+
+        const token = Cookies.get('token');
+        if (!token) {
+            alert('Please login to save assets to a collection.');
+            navigate('/login');
+            return;
+        }
+
+        setSelectedAssetId(img._id);
+        setShowCollectionModal(true);
+    }, [navigate]);
+
+    const handleCloseCollectionModal = useCallback(() => {
+        setShowCollectionModal(false);
+        setSelectedAssetId(null);
     }, []);
 
     const skeletonCount = imagesdata.length > 0 ? imagesdata.length : 6;
@@ -549,7 +607,7 @@ function FilterationImages({
                                                                     type="button"
                                                                     className="filteration-action-btn"
                                                                     title="Save to collection"
-                                                                    onClick={handleSaveToCollection}
+                                                                    onClick={(e) => handleSaveToCollection(e, img)}
                                                                 >
                                                                     <FiFolderPlus size={16} />
                                                                 </button>
@@ -678,8 +736,17 @@ function FilterationImages({
                     </div>
                 </div>
             )}
+
+            <CollectionSelectModal
+                show={showCollectionModal}
+                onClose={handleCloseCollectionModal}
+                assetId={selectedAssetId}
+                onSuccess={() => {}}
+            />
         </div>
     );
 }
 
 export default React.memo(FilterationImages);
+
+

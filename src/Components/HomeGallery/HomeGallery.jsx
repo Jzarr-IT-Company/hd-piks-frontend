@@ -1,9 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Skeleton } from 'antd';
 import { useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import api from '../../Services/api.js';
-import { API_ENDPOINTS } from '../../config/api.config.js';
+import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config.js';
+import { FiDownload, FiShare2, FiCompass, FiFolderPlus } from 'react-icons/fi';
+import CollectionSelectModal from '../CollectionSelectModal';
 import '../LazyLoadImage2/LazyLoadImage.css';
+import './HomeGallery.css';
 
 const PAGE_SIZE = 16;
 
@@ -61,14 +65,29 @@ function useHomeGallery(parentCategory) {
 }
 
 // Reusable gallery card
-function GalleryItem({ src, alt, onClick }) {
+function GalleryItem({
+    asset,
+    src,
+    alt,
+    onOpen,
+    onDiscoverSimilar,
+    onShare,
+    onDownload,
+    onSaveToCollection,
+    getName
+}) {
     const [loaded, setLoaded] = useState(false);
+    const isVideoAsset = (
+        asset?.fileMetadata?.mimeType?.startsWith('video/')
+        || asset?.imagetype?.startsWith('video/')
+        || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
+    );
 
     return (
         <div
-            className="lazy-image-wrapper"
-            style={{ position: 'relative', width: '100%', paddingBottom: '70%', cursor: onClick ? 'pointer' : 'default' }}
-            onClick={onClick}
+            className="lazy-image-wrapper home-gallery__card"
+            style={{ position: 'relative', width: '100%', paddingBottom: '70%', cursor: onOpen ? 'pointer' : 'default' }}
+            onClick={onOpen}
         >
             {!loaded && (
                 <div className="lazy-skeleton-overlay">
@@ -78,31 +97,113 @@ function GalleryItem({ src, alt, onClick }) {
                     />
                 </div>
             )}
-            <img
-                src={src}
-                alt={alt}
-                className="lazy-image"
-                style={{
-                    position: 'absolute',
-                    inset: 0,
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    borderRadius: 16,
-                    opacity: loaded ? 1 : 0,
-                    transition: 'opacity 0.35s ease',
-                }}
-                loading="lazy"
-                onLoad={() => setLoaded(true)}
-            />
+            {isVideoAsset ? (
+                <video
+                    src={src}
+                    className="lazy-image"
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 16,
+                        opacity: loaded ? 1 : 0,
+                        transition: 'opacity 0.35s ease',
+                        backgroundColor: '#000',
+                    }}
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    onLoadedData={() => setLoaded(true)}
+                    onError={() => setLoaded(true)}
+                />
+            ) : (
+                <img
+                    src={src}
+                    alt={alt}
+                    className="lazy-image"
+                    style={{
+                        position: 'absolute',
+                        inset: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: 16,
+                        opacity: loaded ? 1 : 0,
+                        transition: 'opacity 0.35s ease',
+                    }}
+                    loading="lazy"
+                    onLoad={() => setLoaded(true)}
+                />
+            )}
+
+            <div className="home-gallery__hover-actions">
+                <div className="home-gallery__overlay-top">
+                    <button
+                        type="button"
+                        className="home-gallery__icon-btn"
+                        aria-label="Discover similar"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDiscoverSimilar(asset);
+                        }}
+                    >
+                        <FiCompass size={16} />
+                    </button>
+                    <button
+                        type="button"
+                        className="home-gallery__icon-btn"
+                        aria-label="Save to collection"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onSaveToCollection(asset);
+                        }}
+                    >
+                        <FiFolderPlus size={16} />
+                    </button>
+                    <button
+                        type="button"
+                        className="home-gallery__icon-btn"
+                        aria-label="Share"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onShare(asset);
+                        }}
+                    >
+                        <FiShare2 size={16} />
+                    </button>
+                    <button
+                        type="button"
+                        className="home-gallery__icon-btn"
+                        aria-label="Download"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onDownload(asset);
+                        }}
+                    >
+                        <FiDownload size={16} />
+                    </button>
+                </div>
+
+                <div className="home-gallery__overlay-meta">
+                    <div className="home-gallery__overlay-sub">
+                        {getName(asset?.subcategory) || getName(asset?.category) || 'Asset'}
+                    </div>
+                    <div className="home-gallery__overlay-title">
+                        {asset?.title || 'Untitled'}
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
 
 function HomeGallery() {
     const navigate = useNavigate();
-    // Tabs: all / Image / Mockups (you can add more later)
-    const [activeTab, setActiveTab] = useState('all'); // 'all' | 'Image' | 'Mockups'
+    // Tabs: all / Image / Video / Mockups
+    const [activeTab, setActiveTab] = useState('all'); // 'all' | 'Image' | 'Video' | 'Mockups'
 
     const parentFilter =
         activeTab === 'all'
@@ -110,6 +211,10 @@ function HomeGallery() {
             : activeTab; // sent as parentCategory name to backend
 
     const { items, loading, error, hasMore, loadMore } = useHomeGallery(parentFilter);
+    const [downloadTarget, setDownloadTarget] = useState(null);
+    const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showCollectionModal, setShowCollectionModal] = useState(false);
+    const [selectedAssetId, setSelectedAssetId] = useState(null);
 
     const handleTabClick = (tab) => {
         setActiveTab(tab);
@@ -147,6 +252,137 @@ function HomeGallery() {
         [slugify, getName]
     );
 
+    const getExtensionFromUrl = useCallback((url) => {
+        if (!url) return '';
+        try {
+            const u = new URL(url);
+            const pathname = u.pathname || '';
+            const dotIndex = pathname.lastIndexOf('.');
+            if (dotIndex === -1) return '';
+            return pathname.substring(dotIndex);
+        } catch {
+            const qIndex = url.indexOf('?');
+            const clean = qIndex === -1 ? url : url.slice(0, qIndex);
+            const dotIndex = clean.lastIndexOf('.');
+            if (dotIndex === -1) return '';
+            return clean.substring(dotIndex);
+        }
+    }, []);
+
+    const getVariantsForItem = useCallback((item) => {
+        if (!item) return [];
+        const variants = Array.isArray(item.mediaVariants) ? [...item.mediaVariants] : [];
+        if (!variants.length && item.imageUrl) {
+            variants.push({
+                variant: 'original',
+                url: item.imageUrl,
+                s3Key: item.s3Key || null,
+                dimensions: {
+                    width: item.fileMetadata?.dimensions?.width || null,
+                    height: item.fileMetadata?.dimensions?.height || null,
+                },
+            });
+        }
+        const order = ['thumbnail', 'small', 'medium', 'large', 'original'];
+        variants.sort((a, b) => {
+            const ai = order.indexOf(a.variant);
+            const bi = order.indexOf(b.variant);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+        });
+        return variants;
+    }, []);
+
+    const handleDiscoverSimilar = useCallback((asset) => {
+        const categoryName = getName(asset?.category);
+        if (!categoryName) return;
+        const subName = getName(asset?.subcategory);
+        const subSubName = getName(asset?.subsubcategory);
+        const params = new URLSearchParams();
+        params.set('discover', '1');
+        if (subName) params.set('dsSub', subName);
+        if (subSubName) params.set('dsSubSub', subSubName);
+        navigate(`/collection/${encodeURIComponent(normalize(categoryName))}?${params.toString()}`);
+    }, [navigate, normalize, getName]);
+
+    const handleShare = useCallback(async (asset) => {
+        if (!asset) return;
+        const detailUrl = asset?._id
+            ? `${window.location.origin}${buildAssetUrl(asset)}`
+            : asset?.imageUrl || window.location.href;
+        try {
+            if (navigator.share) {
+                await navigator.share({ title: asset?.title || 'Asset', url: detailUrl });
+                return;
+            }
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(detailUrl);
+                alert('Link copied to clipboard');
+                return;
+            }
+            window.prompt('Copy link', detailUrl);
+        } catch (err) {
+            console.error('Share failed', err);
+        }
+    }, [buildAssetUrl]);
+
+    const handleDownload = useCallback((asset) => {
+        if (!asset) return;
+        setDownloadTarget(asset);
+        setShowDownloadModal(true);
+    }, []);
+
+    const handleSaveToCollection = useCallback((asset) => {
+        if (!asset?._id) return;
+
+        const token = Cookies.get('token');
+        if (!token) {
+            alert('Please login to save assets to a collection.');
+            navigate('/login');
+            return;
+        }
+
+        setSelectedAssetId(asset._id);
+        setShowCollectionModal(true);
+    }, [navigate]);
+
+    const handleCloseCollectionModal = useCallback(() => {
+        setShowCollectionModal(false);
+        setSelectedAssetId(null);
+    }, []);
+
+    const handleVariantDownload = useCallback((variant, item) => {
+        if (!variant || !variant.url) return;
+
+        const label = variant.variant
+            ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
+            : 'Original';
+        const w = variant.dimensions?.width;
+        const h = variant.dimensions?.height;
+        const sizeSuffix = w && h ? `-${w}x${h}px` : '';
+        const baseTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+        const ext = getExtensionFromUrl(variant.url) || '';
+        const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
+
+        let href = variant.url;
+        if (variant.s3Key) {
+            const params = new URLSearchParams();
+            params.set('key', variant.s3Key);
+            params.set('filename', fileName);
+            href = `${API_BASE_URL}/download?${params.toString()}`;
+        }
+
+        const link = document.createElement('a');
+        link.href = href;
+        link.download = fileName;
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        setShowDownloadModal(false);
+        setDownloadTarget(null);
+    }, [getExtensionFromUrl]);
+
     return (
         <section className="py-5">
             <div className="container">
@@ -160,7 +396,7 @@ function HomeGallery() {
 
                 {/* Tabs */}
                 <div className="d-flex flex-wrap gap-2 mb-4 justify-content-center justify-content-md-start">
-                    {['all', 'Image', 'Mockups'].map((tab) => (
+                    {['all', 'Image', 'Video', 'Mockups'].map((tab) => (
                         <button
                             key={tab}
                             type="button"
@@ -217,9 +453,15 @@ function HomeGallery() {
                     {items.map((asset) => (
                         <div key={asset._id} className="col-6 col-md-3">
                             <GalleryItem
+                                asset={asset}
                                 src={asset.imageUrl}
-                                alt={asset.title || asset.subcategory || 'Asset'}
-                                onClick={() => navigate(buildAssetUrl(asset))}
+                                alt={asset.title || getName(asset.subcategory) || 'Asset'}
+                                onOpen={() => navigate(buildAssetUrl(asset))}
+                                onDiscoverSimilar={handleDiscoverSimilar}
+                                onShare={handleShare}
+                                onDownload={handleDownload}
+                                onSaveToCollection={handleSaveToCollection}
+                                getName={getName}
                             />
                         </div>
                     ))}
@@ -241,10 +483,79 @@ function HomeGallery() {
                             onClick={loadMore}
                             disabled={loading}
                         >
-                            {loading ? 'Loading…' : 'Load more'}
+                            {loading ? 'Loading...' : 'Load more'}
                         </button>
                     </div>
                 )}
+
+                {showDownloadModal && downloadTarget && (
+                    <div
+                        className="download-modal-backdrop"
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            zIndex: 1050,
+                        }}
+                        onClick={() => {
+                            setShowDownloadModal(false);
+                            setDownloadTarget(null);
+                        }}
+                    >
+                        <div
+                            className="download-modal"
+                            style={{
+                                background: '#fff',
+                                borderRadius: 12,
+                                padding: '16px 20px',
+                                minWidth: 260,
+                                maxWidth: 320,
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
+                                FILE SIZE
+                            </div>
+                            {getVariantsForItem(downloadTarget).map((v) => {
+                                const label = v.variant.charAt(0).toUpperCase() + v.variant.slice(1);
+                                const w = v.dimensions?.width;
+                                const h = v.dimensions?.height;
+                                const sizeLabel = w && h ? `${w} x ${h}px` : '';
+                                return (
+                                    <button
+                                        key={v._id?.$oid || v.s3Key || v.variant}
+                                        type="button"
+                                        onClick={() => handleVariantDownload(v, downloadTarget)}
+                                        style={{
+                                            width: '100%',
+                                            textAlign: 'left',
+                                            border: 'none',
+                                            background: 'transparent',
+                                            padding: '6px 0',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            fontSize: 13,
+                                        }}
+                                    >
+                                        <span>{label}</span>
+                                        <span style={{ color: '#666' }}>{sizeLabel}</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                <CollectionSelectModal
+                    show={showCollectionModal}
+                    onClose={handleCloseCollectionModal}
+                    assetId={selectedAssetId}
+                    onSuccess={() => {}}
+                />
             </div>
         </section>
     );

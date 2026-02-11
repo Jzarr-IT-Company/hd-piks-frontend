@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import Cookies from 'js-cookie';
 import { useGlobalState } from '../../Context/Context';
 import api from '../../Services/api.js';
 import { API_ENDPOINTS } from '../../config/api.config.js';
 import { message, Spin } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-function UploadBtn() {
+function UploadBtn({ isZipRequired = false }) {
     const {
         category,
         setCategory,
@@ -30,6 +29,7 @@ function UploadBtn() {
         zipFolder,
         setZipFolder,
         zipFolderUrl,
+        setZipFolderUrl,
         termsChecked,
         setTermsChecked,
         contentChecked,
@@ -45,7 +45,6 @@ function UploadBtn() {
     } = useGlobalState();
     const [loading, setLoading] = useState(false);
 
-    const id = Cookies.get('id');
     const navigate = useNavigate();
     const location = useLocation();
     const params = new URLSearchParams(location.search);
@@ -56,6 +55,22 @@ function UploadBtn() {
         const normalizedPlan = selectPlan ? selectPlan.toLowerCase() : null;
         const errors = [];
 
+        const zipKeyFromState = Array.isArray(zipFolder)
+            ? (typeof zipFolder[0] === 'string'
+                ? zipFolder[0]
+                : (zipFolder[0]?.s3Key || zipFolder[0]?.key || ''))
+            : (typeof zipFolder === 'string'
+                ? zipFolder
+                : (zipFolder?.s3Key || zipFolder?.key || ''));
+
+        const normalizedZipFolderUrl = typeof zipFolderUrl === 'string'
+            ? zipFolderUrl
+            : (Array.isArray(zipFolder) ? (zipFolder[0]?.url || '') : (zipFolder?.url || ''));
+
+        const normalizedZipFolder = zipKeyFromState
+            ? [{ s3Key: zipKeyFromState, url: normalizedZipFolderUrl || null }]
+            : [];
+
         if (!category) errors.push("Please select a category");
         if (!title || title.trim().length < 3) errors.push("Title must be at least 3 characters");
         if (!description || description.trim().length < 20) errors.push("Description must be at least 20 characters");
@@ -63,6 +78,9 @@ function UploadBtn() {
         if (!selectPlan) errors.push("Please select a plan");
         // Only require new image in create mode
         if (!imageUrl && !isEditing) errors.push("Please upload an image");
+        if (isZipRequired && !zipKeyFromState && !normalizedZipFolderUrl) {
+            errors.push("Please upload a ZIP file for this category");
+        }
         if (!termsChecked) errors.push("Please accept Terms and Conditions");
         if (!contentChecked) errors.push("Please confirm permission letter condition");
 
@@ -94,8 +112,8 @@ function UploadBtn() {
                 keywords: keywords,
                 freePremium: normalizedPlan,
                 expireimagedate: expireDate,
-                zipfolder: zipFolder,
-                zipfolderurl: zipFolderUrl,
+                zipfolder: normalizedZipFolder,
+                zipfolderurl: normalizedZipFolderUrl || '',
                 termsConditions: termsChecked,
                 permissionLetter: contentChecked,
                 imageData: imageData
@@ -142,7 +160,8 @@ function UploadBtn() {
         setSelectedSubCategory('');
         setSelectedSubSubCategory('');
         setTitle('');
-        setZipFolder('');
+        setZipFolder([]);
+        setZipFolderUrl('');
         setTermsChecked(false);
         setContentChecked(false);
         setKeywords([])

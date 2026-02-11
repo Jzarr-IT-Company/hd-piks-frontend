@@ -3,10 +3,12 @@ import { useGlobalState } from '../../Context/Context';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
 import { FiDownload, FiShare2, FiCompass, FiFolderPlus } from 'react-icons/fi';
+import Cookies from 'js-cookie';
 import api from '../../Services/api';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config';
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import BackBtnCompo from '../BackBtnCompo/BackBtnCompo';
+import CollectionSelectModal from '../CollectionSelectModal';
 import './AssetDetailView.css';
 
 function AssetDetailView() {
@@ -24,6 +26,8 @@ function AssetDetailView() {
     // NEW: download modal state
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
+    const [showCollectionModal, setShowCollectionModal] = useState(false);
+    const [selectedAssetId, setSelectedAssetId] = useState(null);
 
     const normalize = useCallback((val) => {
         if (typeof val === 'string') return val.trim().toLowerCase();
@@ -236,8 +240,15 @@ function AssetDetailView() {
     };
 
     const handleDiscoverSimilar = () => {
-        if (!asset?.category) return;
-        navigate(`/collection/${normalize(getCategoryName(asset.category))}`);
+        const categoryName = getCategoryName(asset?.category);
+        if (!categoryName) return;
+        const subName = getSubcategoryName(asset?.subcategory);
+        const subSubName = getSubSubcategoryName(asset?.subsubcategory);
+        const params = new URLSearchParams();
+        params.set('discover', '1');
+        if (subName) params.set('dsSub', subName);
+        if (subSubName) params.set('dsSubSub', subSubName);
+        navigate(`/collection/${encodeURIComponent(normalize(categoryName))}?${params.toString()}`);
     };
 
     const handleShare = async () => {
@@ -268,7 +279,20 @@ function AssetDetailView() {
     };
 
     const handleSaveToCollection = () => {
-        alert('Save to collection coming soon.');
+        if (!asset?._id) return;
+        const token = Cookies.get('token');
+        if (!token) {
+            alert('Please login to save assets to a collection.');
+            navigate('/login');
+            return;
+        }
+        setSelectedAssetId(asset._id);
+        setShowCollectionModal(true);
+    };
+
+    const handleCloseCollectionModal = () => {
+        setShowCollectionModal(false);
+        setSelectedAssetId(null);
     };
 
     // CHANGE: for related items, also open the same modal
@@ -300,8 +324,15 @@ function AssetDetailView() {
     };
 
     const handleDiscoverSimilarItem = (item) => {
-        if (!item?.category) return;
-        navigate(`/collection/${normalize(getCategoryName(item.category))}`);
+        const categoryName = getCategoryName(item?.category);
+        if (!categoryName) return;
+        const subName = getSubcategoryName(item?.subcategory);
+        const subSubName = getSubSubcategoryName(item?.subsubcategory);
+        const params = new URLSearchParams();
+        params.set('discover', '1');
+        if (subName) params.set('dsSub', subName);
+        if (subSubName) params.set('dsSubSub', subSubName);
+        navigate(`/collection/${encodeURIComponent(normalize(categoryName))}?${params.toString()}`);
     };
 
     // NEW: perform actual variant download through backend proxy
@@ -578,6 +609,13 @@ function AssetDetailView() {
                     </div>
                 </div>
             )}
+
+            <CollectionSelectModal
+                show={showCollectionModal}
+                onClose={handleCloseCollectionModal}
+                assetId={selectedAssetId}
+                onSuccess={() => {}}
+            />
         </div>
     );
 }
