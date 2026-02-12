@@ -1,6 +1,6 @@
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { FiCompass, FiDownload, FiFolderPlus, FiShare2 } from 'react-icons/fi';
+import { FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import debounce from 'lodash/debounce';
 import Cookies from 'js-cookie';
@@ -330,6 +330,24 @@ function FilterationImages({
         }
     }, [buildAssetUrl]);
 
+    const handleEdit = useCallback((event, img) => {
+        event.stopPropagation();
+        if (!img?._id) return;
+        const params = new URLSearchParams();
+        params.set('assetId', img._id);
+        if (img.imageUrl) params.set('assetUrl', img.imageUrl);
+        if (img.title) params.set('title', img.title);
+        navigate(`/design-hdpiks?${params.toString()}`);
+    }, [navigate]);
+    const handleEditAsset = useCallback((img) => {
+        if (!img?._id) return;
+        const params = new URLSearchParams();
+        params.set('assetId', img._id);
+        if (img.imageUrl) params.set('assetUrl', img.imageUrl);
+        if (img.title) params.set('title', img.title);
+        navigate(`/design-hdpiks?${params.toString()}`);
+    }, [navigate]);
+
     // NEW: build ordered list of variants for an image
     const getVariantsForImage = useCallback((img) => {
         if (!img) return [];
@@ -598,6 +616,14 @@ function FilterationImages({
                                                                 <button
                                                                     type="button"
                                                                     className="filteration-action-btn"
+                                                                    title="Edit image"
+                                                                    onClick={(e) => handleEdit(e, img)}
+                                                                >
+                                                                    <FiEdit3 size={16} />
+                                                                </button>
+                                                                <button
+                                                                    type="button"
+                                                                    className="filteration-action-btn"
                                                                     title="Discover similar"
                                                                     onClick={(e) => handleDiscoverSimilar(e, img)}
                                                                 >
@@ -691,21 +717,32 @@ function FilterationImages({
                         setShowDownloadModal(false);
                         setDownloadTarget(null);
                     }}
-                >
-                    <div
-                        className="download-modal"
-                        style={{
+                    >
+                        <div
+                            className="download-modal"
+                            style={{
                             background: '#fff',
                             borderRadius: 12,
                             padding: '16px 20px',
                             minWidth: 260,
                             maxWidth: 320,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
-                            FILE SIZE
-                        </div>
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary mb-2 w-100"
+                                onClick={() => {
+                                    handleEditAsset(downloadTarget);
+                                    setShowDownloadModal(false);
+                                    setDownloadTarget(null);
+                                }}
+                            >
+                                Edit with HDPiks
+                            </button>
+                            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
+                                FILE SIZE
+                            </div>
                         {getVariantsForImage(downloadTarget).map((v) => {
                             const label = v.variant.charAt(0).toUpperCase() + v.variant.slice(1);
                             const w = v.dimensions?.width;

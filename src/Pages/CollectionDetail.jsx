@@ -46,6 +46,15 @@ function CollectionDetail() {
     }
   };
 
+  const handleEdit = (asset) => {
+    if (!asset?._id) return;
+    const params = new URLSearchParams();
+    params.set('assetId', asset._id);
+    if (asset.imageUrl) params.set('assetUrl', asset.imageUrl);
+    if (asset.title) params.set('title', asset.title);
+    navigate(`/design-hdpiks?${params.toString()}`);
+  };
+
   return (
     <DashboardShell>
       <section className="dash-most">
@@ -62,6 +71,7 @@ function CollectionDetail() {
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
                 <button className="dash-shell__upload-btn" onClick={() => navigate(`/asset/${asset._id}`)} disabled={loading}>View</button>
+                <button className="dash-shell__upload-btn" onClick={() => handleEdit(asset)} disabled={loading}>Edit</button>
                 <button className="dash-shell__upload-btn" onClick={() => handleRemove(asset._id)} disabled={loading}>Remove</button>
               </div>
             </div>

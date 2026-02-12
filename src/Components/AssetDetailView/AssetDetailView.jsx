@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useGlobalState } from '../../Context/Context';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
-import { FiDownload, FiShare2, FiCompass, FiFolderPlus } from 'react-icons/fi';
+import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3 } from 'react-icons/fi';
 import Cookies from 'js-cookie';
 import api from '../../Services/api';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config';
@@ -290,6 +290,15 @@ function AssetDetailView() {
         setShowCollectionModal(true);
     };
 
+    const handleEdit = () => {
+        if (!asset?._id) return;
+        const params = new URLSearchParams();
+        params.set('assetId', asset._id);
+        if (asset.imageUrl) params.set('assetUrl', asset.imageUrl);
+        if (asset.title) params.set('title', asset.title);
+        navigate(`/design-hdpiks?${params.toString()}`);
+    };
+
     const handleCloseCollectionModal = () => {
         setShowCollectionModal(false);
         setSelectedAssetId(null);
@@ -333,6 +342,15 @@ function AssetDetailView() {
         if (subName) params.set('dsSub', subName);
         if (subSubName) params.set('dsSubSub', subSubName);
         navigate(`/collection/${encodeURIComponent(normalize(categoryName))}?${params.toString()}`);
+    };
+
+    const handleEditItem = (item) => {
+        if (!item?._id) return;
+        const params = new URLSearchParams();
+        params.set('assetId', item._id);
+        if (item.imageUrl) params.set('assetUrl', item.imageUrl);
+        if (item.title) params.set('title', item.title);
+        navigate(`/design-hdpiks?${params.toString()}`);
     };
 
     // NEW: perform actual variant download through backend proxy
@@ -412,6 +430,9 @@ function AssetDetailView() {
                     <div className="asset-hero__actions">
                         <button className="action-btn" type="button" aria-label="Discover similar" onClick={handleDiscoverSimilar}>
                             <FiCompass size={18} />
+                        </button>
+                        <button className="action-btn" type="button" aria-label="Edit image" onClick={handleEdit}>
+                            <FiEdit3 size={18} />
                         </button>
                         <button className="action-btn" type="button" aria-label="Save to collection" onClick={handleSaveToCollection}>
                             <FiFolderPlus size={18} />
@@ -509,6 +530,17 @@ function AssetDetailView() {
                                         <button
                                             type="button"
                                             className="related-btn"
+                                            aria-label="Edit image"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleEditItem(item);
+                                            }}
+                                        >
+                                            <FiEdit3 size={16} />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            className="related-btn"
                                             aria-label="Download"
                                             onClick={(e) => {
                                                 e.stopPropagation();
@@ -564,21 +596,32 @@ function AssetDetailView() {
                         setShowDownloadModal(false);
                         setDownloadTarget(null);
                     }}
-                >
-                    <div
-                        className="download-modal"
-                        style={{
+                    >
+                        <div
+                            className="download-modal"
+                            style={{
                             background: '#fff',
                             borderRadius: 12,
                             padding: '16px 20px',
                             minWidth: 260,
                             maxWidth: 320,
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
-                            FILE SIZE
-                        </div>
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary mb-2 w-100"
+                                onClick={() => {
+                                    handleEditItem(downloadTarget);
+                                    setShowDownloadModal(false);
+                                    setDownloadTarget(null);
+                                }}
+                            >
+                                Edit with HDPiks
+                            </button>
+                            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
+                                FILE SIZE
+                            </div>
                         {getVariantsForItem(downloadTarget).map((v) => {
                             const label = v.variant.charAt(0).toUpperCase() + v.variant.slice(1);
                             const w = v.dimensions?.width;

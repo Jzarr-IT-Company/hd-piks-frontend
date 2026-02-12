@@ -11,7 +11,7 @@ function CreateImagesLikeCanva() {
                     id && token ?
                         (
                             <>
-                                <Link className='btn btn-outline-light me-3' style={{ fontSize: "14px" }} target='_blank' to={'https://design.hdpiks.com/'}>Start Creating</Link>
+                                <Link className='btn btn-outline-light me-3' style={{ fontSize: "14px" }} to={'/design-hdpiks'}>Start Creating</Link>
                                 <Link className='text-white' to={'/pricing'}>Pricing</Link>
                             </>
                         ) : <Link className='text-white' style={{ fontSize: "18px" }} to={'/pricing'}>Pricing</Link>

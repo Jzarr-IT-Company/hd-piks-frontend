@@ -36,7 +36,7 @@ function HomeBanner5() {
                 {/* KEEP THIS HEADER + CTA */}
                 <h3 className='text-center mb-4 display-5 fw-bold'>Unlock Your Creativity</h3>
                 <p className='text-center mb-5'>
-                    Every stock image tells a story crafted by a talented creator. Join Freepik&apos;s vibrant community <br />
+                    Every stock image tells a story crafted by a talented creator. Join HDpik&apos;s vibrant community <br />
                     of creators and start monetizing your unique content today!
                 </p>
                 <div className="d-flex justify-content-center align-items-center mb-5">

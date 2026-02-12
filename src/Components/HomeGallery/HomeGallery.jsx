@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import api from '../../Services/api.js';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config.js';
-import { FiDownload, FiShare2, FiCompass, FiFolderPlus } from 'react-icons/fi';
+import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3 } from 'react-icons/fi';
 import CollectionSelectModal from '../CollectionSelectModal';
 import '../LazyLoadImage2/LazyLoadImage.css';
 import './HomeGallery.css';
@@ -70,6 +70,7 @@ function GalleryItem({
     src,
     alt,
     onOpen,
+    onEdit,
     onDiscoverSimilar,
     onShare,
     onDownload,
@@ -141,6 +142,17 @@ function GalleryItem({
 
             <div className="home-gallery__hover-actions">
                 <div className="home-gallery__overlay-top">
+                    <button
+                        type="button"
+                        className="home-gallery__icon-btn"
+                        aria-label="Edit image"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onEdit(asset);
+                        }}
+                    >
+                        <FiEdit3 size={16} />
+                    </button>
                     <button
                         type="button"
                         className="home-gallery__icon-btn"
@@ -304,6 +316,15 @@ function HomeGallery() {
         navigate(`/collection/${encodeURIComponent(normalize(categoryName))}?${params.toString()}`);
     }, [navigate, normalize, getName]);
 
+    const handleEdit = useCallback((asset) => {
+        if (!asset?._id) return;
+        const params = new URLSearchParams();
+        params.set('assetId', asset._id);
+        if (asset.imageUrl) params.set('assetUrl', asset.imageUrl);
+        if (asset.title) params.set('title', asset.title);
+        navigate(`/design-hdpiks?${params.toString()}`);
+    }, [navigate]);
+
     const handleShare = useCallback(async (asset) => {
         if (!asset) return;
         const detailUrl = asset?._id
@@ -457,6 +478,7 @@ function HomeGallery() {
                                 src={asset.imageUrl}
                                 alt={asset.title || getName(asset.subcategory) || 'Asset'}
                                 onOpen={() => navigate(buildAssetUrl(asset))}
+                                onEdit={handleEdit}
                                 onDiscoverSimilar={handleDiscoverSimilar}
                                 onShare={handleShare}
                                 onDownload={handleDownload}
@@ -516,6 +538,17 @@ function HomeGallery() {
                             }}
                             onClick={(e) => e.stopPropagation()}
                         >
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-primary mb-2 w-100"
+                                onClick={() => {
+                                    handleEdit(downloadTarget);
+                                    setShowDownloadModal(false);
+                                    setDownloadTarget(null);
+                                }}
+                            >
+                                Edit with HDPiks
+                            </button>
                             <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
                                 FILE SIZE
                             </div>
