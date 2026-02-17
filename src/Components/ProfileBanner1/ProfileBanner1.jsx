@@ -1,16 +1,19 @@
 import React, { useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { User, Mail, MapPin, Globe2, Link2, Sparkles, AlignLeft, FileText, Clock, CheckCircle2, Briefcase, Calendar, Instagram, Facebook } from 'lucide-react';
-import { useGlobalState } from '../../Context/Context';
+import { useProfile } from '../../Context/ProfileContext';
+import { useAuth } from '../../Context/AuthContext';
+import { useUpload } from '../../Context/UploadContext';
 import ProfileBanner1Bttn from '../ProfileBanner1Bttn/ProfileBanner1Bttn';
 import ProfileBanner1UploadImages from '../ProfileBanner1UploadImages/ProfileBanner1UploadImages';
 
 import CreatorProfileImageUpload from '../ProfileBanner1UploadImages/CreatorProfileImageUpload';
+import { getContributorState } from '../../utils/contributorStatus';
 
 function ProfileBanner1() {
     const {
         fullName, setFullName,
-        email,
+        email, setEmail,
         dob, setDob,
         gender, setGender,
         profession, setProfession,
@@ -22,11 +25,9 @@ function ProfileBanner1() {
         zipCode, setZipCode,
         bio, setBio,
         socialMediaLinks, setSocialMediaLinks,
-        userData,
-        creatorData,
-        showContributorForm,
-        termsChecked, setTermsChecked,
-    } = useGlobalState();
+    } = useProfile();
+    const { userData, creatorData } = useAuth();
+    const { termsChecked, setTermsChecked } = useUpload();
 
     const [creatorProfileImage, setCreatorProfileImage] = React.useState(creatorData?.profile?.profileImage?.url || '');
 
@@ -39,6 +40,7 @@ function ProfileBanner1() {
     useEffect(() => {
         if (!isContributorRoute) {
             if (userData?.name) setFullName(userData.name);
+            if (userData?.email) setEmail(userData.email);
             if (userData?.PortfolioLink) setPortfolioLink(userData.PortfolioLink);
             if (userData?.country) setCountry(userData.country);
             if (userData?.city) setCity(userData.city);
@@ -53,6 +55,7 @@ function ProfileBanner1() {
         }
 
         const profile = creatorData?.profile || {};
+        if (userData?.email) setEmail(userData.email);
         if (profile.displayName) setFullName(profile.displayName);
         if (profile.website) setPortfolioLink(profile.website);
         if (profile.country) setCountry(profile.country);
@@ -86,21 +89,9 @@ function ProfileBanner1() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userData, creatorData, isContributorRoute]);
 
-    const contributorStatus = creatorData?.status || 'not-applied';
-    const isContributor = isContributorRoute;
+    const contributor = getContributorState(userData, creatorData);
+    const contributorStatus = contributor.status;
     const shouldShowContributorForm = isContributorRoute;
-
-    const heading = isContributor
-        ? 'My contributor profile'
-        : shouldShowContributorForm
-            ? 'Apply as contributor'
-            : 'My profile';
-
-    const helperText = isContributor
-        ? 'Your contributor details are visible to users once approved.'
-        : shouldShowContributorForm
-            ? 'Complete these details to submit your contributor application.'
-            : 'You are browsing as a user. Click "Switch to contributor" to start your application.';
 
     useEffect(() => {
         if (!isContributorRoute) {
@@ -109,6 +100,8 @@ function ProfileBanner1() {
         }
         if (contributorStatus === 'approved' || contributorStatus === 'pending') {
             setStep(3);
+        } else if (contributorStatus === 'rejected') {
+            setStep(2);
         } else {
             setStep(1);
         }
@@ -643,7 +636,7 @@ function ProfileBanner1() {
                         </div>
                         <div className="mt-3 d-flex justify-content-between">
                             <button className="btn btn-link" onClick={() => setStep(1)}>Back</button>
-                            <ProfileBanner1Bttn />
+                            <ProfileBanner1Bttn creatorProfileImage={creatorProfileImage} />
                         </div>
                     </section>
                 </div>

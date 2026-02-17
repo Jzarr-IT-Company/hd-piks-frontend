@@ -30,9 +30,13 @@ export const API_ENDPOINTS = {
     UNFOLLOW: '/unfollow',
     GET_FOLLOWERS: userId => `/followers/${userId}`,
     GET_FOLLOWING: userId => `/following/${userId}`,
+    FOLLOW_CREATOR: creatorId => `/creators/${creatorId}/follow`,
+    UNFOLLOW_CREATOR: creatorId => `/creators/${creatorId}/follow`,
+    CREATOR_FOLLOW_STATUS: creatorId => `/creators/${creatorId}/follow-status`,
     // Auth
     SIGNUP: '/signup',
     LOGIN: '/login',
+    REFRESH: '/auth/refresh',
     LOGOUT: '/logout',
     
     // Users
@@ -50,6 +54,7 @@ export const API_ENDPOINTS = {
     ADMIN_CREATOR_STATUS: '/admin/creator/status',
     GET_ALL_CREATORS: '/creators',
     GET_CREATOR_BY_ID: id => `/creators/${id}`,
+    GET_PUBLIC_CREATOR_PROFILE: id => `/creators/${id}/public`,
     COLLECTIONS: '/collections',
     COLLECTION_ADD_ASSET: '/collections/addAsset',
 
@@ -66,9 +71,13 @@ export const API_ENDPOINTS = {
     GET_ALL_IMAGES: '/AllImagesfromDB', // legacy full fetch, avoid in new components
     // NEW: paginated public assets endpoint for galleries
     ASSETS: '/assets',
+    GET_PUBLIC_ASSET_BY_ID: id => `/assets/${id}`,
+    GET_PUBLIC_ASSET_INFO: id => `/assets/${id}/info`,
+    GET_RELATED_ASSETS: id => `/assets/${id}/related`,
 
     GET_IMAGES_BY_CREATOR_ID: '/getAllImages', // POST: { id: creatorId }
     GET_IMAGE_BY_ID: id => `/images/${id}`, // NEW
+    TRACK_ASSET_DOWNLOAD: id => `/assets/${id}/download`,
     SAVE_IMAGES: '/saveImages',
     DELETE_IMAGE: '/fileObjectDelete',
     // Search images by keyword/category/title/description.
@@ -81,6 +90,9 @@ export const API_ENDPOINTS = {
     // Likes
     SAVE_LIKE: '/saveLikes',
     UNLIKE: '/unLikController',
+    ASSET_LIKE: id => `/assets/${id}/like`,
+    ASSET_LIKE_STATUS: id => `/assets/${id}/like-status`,
+    ASSET_LIKE_COUNT: id => `/assets/${id}/like-count`,
     
     // Payment
     PAYMENT: '/payment',

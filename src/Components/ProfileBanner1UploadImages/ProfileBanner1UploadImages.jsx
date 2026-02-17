@@ -4,10 +4,10 @@ import axios from 'axios';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 import ImgCrop from 'antd-img-crop';
-import { useGlobalState } from '../../Context/Context';
+import { useProfile } from '../../Context/ProfileContext';
 
 function ProfileBanner1UploadImages() {
-    const {profileImage, setprofileImage}=useGlobalState()
+    const {profileImage, setprofileImage}=useProfile()
     const [loading, setLoading] = useState(false); 
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];

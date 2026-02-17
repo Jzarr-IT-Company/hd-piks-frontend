@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useGlobalState } from '../../Context/Context';
+import { useUpload } from '../../Context/UploadContext';
 import { uploadImageToS3, formatFileSize } from '../../Services/S3Service.js';
 import { message } from 'antd';
 
@@ -16,7 +16,7 @@ function UploadBanner1ImageCompo() {
         setS3Urls,
         setFileMetadata,
         setUploadProgress
-    } = useGlobalState();
+    } = useUpload();
     
     const [selectedImages, setSelectedImages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);

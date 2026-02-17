@@ -2,13 +2,15 @@ import { ImageList, ImageListItem, Skeleton } from '@mui/material';
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import debounce from 'lodash/debounce';
 import Cookies from 'js-cookie';
-import { getAllImages, getImagesByCreatorId } from '../../Services/getImages';
-import api from '../../Services/api';
-import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config';
+import API_BASE_URL from '../../config/api.config';
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import CollectionSelectModal from '../CollectionSelectModal';
+import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
+import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
+import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
+import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import './FilterationImages.css';
 
 function FilterationImages({
@@ -21,9 +23,6 @@ function FilterationImages({
     collectionAssetIds = undefined,   // NEW: limit to these asset IDs
     similarMatchMode = false,
 }) {
-    const [imagesdata, setImagesdata] = useState([]);
-    const [creatorData, setCreatorData] = useState({});
-    const [loading, setLoading] = useState(true);
     const [activeSubcategory, setActiveSubcategory] = useState('all');
     const [activeSubsubcategory, setActiveSubsubcategory] = useState('all');
     const navigate = useNavigate();
@@ -97,6 +96,94 @@ function FilterationImages({
         }
     }, []);
 
+    const allImagesQuery = useAllImagesQuery(!creatorId);
+    const creatorImagesQuery = useCreatorImagesQuery(creatorId, Boolean(creatorId));
+    const sourceImages = useMemo(
+        () => (creatorId ? (creatorImagesQuery.data || []) : (allImagesQuery.data || [])),
+        [creatorId, creatorImagesQuery.data, allImagesQuery.data]
+    );
+    const sourceLoading = creatorId ? creatorImagesQuery.isLoading : allImagesQuery.isLoading;
+    const sourceError = creatorId ? creatorImagesQuery.error : allImagesQuery.error;
+
+    const imagesdata = useMemo(() => {
+        const approved = sourceImages.filter((item) => item.approved === true && item.rejected !== true);
+
+        let base = approved;
+        if (Array.isArray(collectionAssetIds) && collectionAssetIds.length) {
+            const idSet = new Set(collectionAssetIds.map(String));
+            base = approved.filter((item) => idSet.has(String(item._id)));
+        }
+
+        let filtered = name
+            ? base.filter((item) => normalize(getCategoryName(item.category)) === normalize(name))
+            : base;
+
+        if (similarMatchMode) {
+            const targetSub = normalize(searchSubcategory || '');
+            const targetSubSub = normalize(searchSubSubcategory || '');
+
+            if (targetSub && targetSubSub) {
+                const level3 = filtered.filter(
+                    (item) =>
+                        normalize(getSubcategoryName(item.subcategory)) === targetSub &&
+                        normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
+                );
+                if (level3.length) {
+                    filtered = level3;
+                } else {
+                    const level2 = filtered.filter(
+                        (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
+                    );
+                    if (level2.length) filtered = level2;
+                }
+            } else if (targetSub) {
+                filtered = filtered.filter(
+                    (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
+                );
+            } else if (targetSubSub) {
+                filtered = filtered.filter(
+                    (item) => normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
+                );
+            }
+        } else {
+            if (searchSubcategory) {
+                const targetSub = normalize(searchSubcategory);
+                filtered = filtered.filter(
+                    (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
+                );
+            }
+
+            if (searchSubSubcategory) {
+                const targetSubSub = normalize(searchSubSubcategory);
+                filtered = filtered.filter(
+                    (item) => normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
+                );
+            }
+        }
+
+        return [...filtered].sort(
+            (a, b) =>
+                new Date(b.createdAt || b.fileMetadata?.uploadedAt || 0) -
+                new Date(a.createdAt || a.fileMetadata?.uploadedAt || 0)
+        );
+    }, [sourceImages, collectionAssetIds, name, normalize, getCategoryName, similarMatchMode, searchSubcategory, searchSubSubcategory, getSubcategoryName, getSubSubcategoryName]);
+
+    const creatorIds = useMemo(() => {
+        return Array.from(
+            new Set(
+                imagesdata
+                    .map((img) => img.creatorId && (img.creatorId.$oid || img.creatorId))
+                    .filter(Boolean)
+                    .map(String)
+            )
+        );
+    }, [imagesdata]);
+
+    const creatorsMapQuery = useCreatorsMapQuery(creatorIds);
+    const creatorData = creatorsMapQuery.data || {};
+    const loading = sourceLoading || creatorsMapQuery.isLoading;
+    const queryErrorMessage = sourceError?.response?.data?.message || sourceError?.message || '';
+
     const subcategories = useMemo(() => {
         const set = new Set();
         imagesdata.forEach((img) => {
@@ -123,141 +210,10 @@ function FilterationImages({
         return Array.from(set);
     }, [isSearchMode, subSubcategoryNames, imagesdata, searchSubcategory, normalize, getSubcategoryName, getSubSubcategoryName]);
 
-    const fetchData = useCallback(async () => {
-        try {
-            setLoading(true);
-
-            // 1) Load images (main data)
-            const images = creatorId
-                ? await getImagesByCreatorId(creatorId)
-                : await getAllImages();
-
-            // Only approved images
-            const approved = images.filter((item) => item.approved === true && item.rejected !== true);
-
-            // If a curated collection is selected, restrict to its assetIds
-            let base = approved;
-            if (Array.isArray(collectionAssetIds) && collectionAssetIds.length) {
-                const idSet = new Set(collectionAssetIds.map(String));
-                base = approved.filter((item) => idSet.has(String(item._id)));
-            }
-
-            // Filter by main category name (string or populated object)
-            let filtered = name
-                ? base.filter((item) => normalize(getCategoryName(item.category)) === normalize(name))
-                : base;
-
-            if (similarMatchMode) {
-                // Discover Similar matching priority:
-                // 1) category + subcategory + sub-subcategory
-                // 2) category + subcategory
-                // 3) category only
-                const targetSub = normalize(searchSubcategory || '');
-                const targetSubSub = normalize(searchSubSubcategory || '');
-
-                if (targetSub && targetSubSub) {
-                    const level3 = filtered.filter(
-                        (item) =>
-                            normalize(getSubcategoryName(item.subcategory)) === targetSub &&
-                            normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
-                    );
-                    if (level3.length) {
-                        filtered = level3;
-                    } else {
-                        const level2 = filtered.filter(
-                            (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
-                        );
-                        if (level2.length) filtered = level2;
-                    }
-                } else if (targetSub) {
-                    filtered = filtered.filter(
-                        (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
-                    );
-                } else if (targetSubSub) {
-                    filtered = filtered.filter(
-                        (item) =>
-                            normalize(getSubSubcategoryName(item.subsubcategory)) === targetSubSub
-                    );
-                }
-            } else {
-                // Existing strict search behavior
-                if (searchSubcategory) {
-                    const targetSub = normalize(searchSubcategory);
-                    filtered = filtered.filter(
-                        (item) => normalize(getSubcategoryName(item.subcategory)) === targetSub
-                    );
-                }
-
-                if (searchSubSubcategory) {
-                    const targetSubSub = normalize(searchSubSubcategory);
-                    filtered = filtered.filter(
-                        (item) => normalize(getSubSubcategoryName(item.subsubcategory)) ===
-                        targetSubSub
-                    );
-                }
-            }
-            // Newest first using createdAt or uploadedAt fallback.
-            filtered.sort(
-                (a, b) =>
-                    new Date(b.createdAt || b.fileMetadata?.uploadedAt || 0) -
-                    new Date(a.createdAt || a.fileMetadata?.uploadedAt || 0)
-            );
-            setImagesdata(filtered);
-            setActiveSubcategory('all');
-            setActiveSubsubcategory('all');
-
-            // 2) Load creators per unique creatorId using GET_CREATOR_BY_ID
-            const ids = Array.from(
-                new Set(
-                    filtered
-                        .map(img => img.creatorId && (img.creatorId.$oid || img.creatorId))
-                        .filter(Boolean)
-                )
-            );
-
-            const creatorsMap = {};
-            await Promise.all(
-                ids.map(async (idStr) => {
-                    try {
-                        const res = await api.get(API_ENDPOINTS.GET_CREATOR_BY_ID(idStr));
-                        if (res.data?.data) {
-                            creatorsMap[idStr] = res.data.data;
-                        }
-                    } catch (err) {
-                        if (err.response?.status === 404) {
-                            // Backend route /creators/:id not implemented or wrong path.
-                            // Frontend will fall back to "Unknown Creator".
-                            console.warn('[FilterationImages] Creator not found for id', idStr);
-                        } else {
-                            console.error('[FilterationImages] Failed to load creator', idStr, err);
-                        }
-                    }
-                })
-            );
-            setCreatorData(creatorsMap);
-        } catch (error) {
-            console.error('Server error', error.message);
-            setImagesdata([]);
-            setCreatorData({});
-        } finally {
-            setLoading(false);
-        }
-    }, [name, normalize, creatorId, getCategoryName, getSubcategoryName, getSubSubcategoryName, searchSubcategory, searchSubSubcategory, collectionAssetIds, similarMatchMode]);
-
     useEffect(() => {
-        if (!loading) {
-            console.log('[FilterationImages] Rendering imagesdata:', imagesdata);
-        }
-    }, [imagesdata, loading]);
-
-    const debouncedFetchData = useMemo(() => debounce(fetchData, 500), [fetchData]);
-
-    useEffect(() => {
-        debouncedFetchData();
-        return () => {
-            debouncedFetchData.cancel();
-        };
-    }, [name, debouncedFetchData]);
+        setActiveSubcategory('all');
+        setActiveSubsubcategory('all');
+    }, [name, searchSubcategory, searchSubSubcategory, creatorId, collectionAssetIds, similarMatchMode]);
 
     useEffect(() => {
         if (presetSubcategory === undefined || presetSubcategory === null) return;
@@ -386,7 +342,7 @@ function FilterationImages({
     }, []);
 
     // NEW: download the selected variant via backend proxy
-    const handleVariantDownload = useCallback((variant, img) => {
+    const handleVariantDownload = useCallback(async (variant, img) => {
         if (!variant || !variant.url) return;
 
         const label = variant.variant
@@ -408,6 +364,11 @@ function FilterationImages({
             params.set('filename', fileName);
             href = `${API_BASE_URL}/download?${params.toString()}`;
         }
+
+        await trackAssetDownloadEvent({
+            assetId: img?._id,
+            fileName,
+        });
 
         const link = document.createElement('a');
         link.href = href;
@@ -573,6 +534,15 @@ function FilterationImages({
                         </ImageListItem>
                     ))}
                 </ImageList>
+            ) : queryErrorMessage ? (
+                <QueryErrorRetry
+                    message={queryErrorMessage}
+                    onRetry={() => {
+                        if (creatorId) creatorImagesQuery.refetch();
+                        else allImagesQuery.refetch();
+                        creatorsMapQuery.refetch();
+                    }}
+                />
             ) : imagesdata.length === 0 ? (
                 <p className="text-capitalize">No data found yet</p>
             ) : (
@@ -603,7 +573,7 @@ function FilterationImages({
                                                 <ImageListItem key={img._id} onClick={() => handleImageClick(img)}>
                                                     <div className="card card-container rounded-4">
                                                         <LazyLoadImage2
-                                                            src={img.imageUrl}
+                                                            src={getMediaVariantUrl(img, ['small', 'medium', 'thumbnail', 'large', 'original'])}
                                                             alt={
                                                                 getSubcategoryName(img.subcategory) ||
                                                                 getCategoryName(img.category) ||
@@ -653,6 +623,7 @@ function FilterationImages({
                                                                 >
                                                                     <FiDownload size={16} />
                                                                 </button>
+                                                                <LikeBttnSm imgId={img?._id} compact stopPropagation />
                                                             </div>
                                                             <h5
                                                                 className="mb-1 text-white fw-semibold"

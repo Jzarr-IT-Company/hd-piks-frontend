@@ -2,14 +2,74 @@ import axios from 'axios';
 import API_BASE_URL from '../config/api.config.js';
 import Cookies from 'js-cookie';
 
+const publicExactPaths = new Set([
+    '/',
+    '/pricing',
+    '/contactus',
+    '/login',
+    '/signup',
+    '/design-hdpiks',
+    '/collections',
+    '/termsandcondition',
+    '/blog',
+    '/blogs1',
+    '/blogs2',
+    '/blogs3',
+    '/blogs4',
+    '/company',
+    '/company/about-us',
+    '/company/contact-us',
+    '/company/faq',
+    '/company/terms',
+    '/company/privacy',
+]);
+
+const publicRegexPaths = [
+    /^\/admin\/login$/i,
+    /^\/collection\/[^/]+$/i,
+    /^\/memberdetail\/[^/]+$/i,
+    /^\/creatordetail\/[^/]+$/i,
+    /^\/collections\/[^/]+$/i,
+    /^\/videocollection\/[^/]+$/i,
+    /^\/search\/[^/]+$/i,
+    /^\/search\/[^/]+\/[^/]+$/i,
+    /^\/asset\/[^/]+$/i,
+    /^\/asset\/[^/]+\/[^/]+(?:\/[^/]+)?\/[^/]+$/i,
+    /^\/ai\/[^/]+$/i,
+];
+
+const normalizePathname = (pathname = '') => {
+    if (!pathname || pathname === '/') return '/';
+    return pathname.endsWith('/') ? pathname.slice(0, -1) : pathname;
+};
+
+const isPublicPath = (pathname = '') => {
+    const normalized = normalizePathname(pathname);
+    if (publicExactPaths.has(normalized)) return true;
+    return publicRegexPaths.some((pattern) => pattern.test(normalized));
+};
+
 // Create axios instance with base configuration
 const api = axios.create({
     baseURL: API_BASE_URL,
     timeout: 30000, // 30 seconds
+    withCredentials: true,
     headers: {
         'Content-Type': 'application/json'
     }
 });
+
+let isRefreshing = false;
+let pendingQueue = [];
+
+const flushQueue = (newToken) => {
+    pendingQueue.forEach((cb) => cb(newToken));
+    pendingQueue = [];
+};
+
+const shouldSkipRefresh = (url = '') => {
+    return ['/login', '/signup', '/auth/refresh', '/admin/login'].some((x) => url.includes(x));
+};
 
 // Request interceptor - Add auth token to requests
 api.interceptors.request.use(
@@ -42,7 +102,7 @@ api.interceptors.response.use(
         }
         return response;
     },
-    (error) => {
+    async (error) => {
         // Handle different error scenarios
         if (error.response) {
             // Server responded with error status
@@ -53,13 +113,56 @@ api.interceptors.response.use(
             // Handle specific status codes
             switch (status) {
                 case 401:
-                    // Only redirect to login for protected routes, not public endpoints
-                    const publicPaths = ['/', '/blogs', '/blogs/', '/blogs/:slug', '/pricing', '/contactus', '/signup'];
-                    const isPublic = publicPaths.some(path => window.location.pathname === path || window.location.pathname.startsWith(path));
-                    if (!isPublic && window.location.pathname !== '/login') {
+                    // Try one refresh cycle for protected API calls before redirecting.
+                    const originalRequest = error.config || {};
+                    if (!originalRequest._retry && !shouldSkipRefresh(originalRequest.url || '')) {
+                        originalRequest._retry = true;
+
+                        if (isRefreshing) {
+                            return new Promise((resolve, reject) => {
+                                pendingQueue.push((token) => {
+                                    if (!token) {
+                                        reject(error);
+                                        return;
+                                    }
+                                    originalRequest.headers = originalRequest.headers || {};
+                                    originalRequest.headers.Authorization = `Bearer ${token}`;
+                                    resolve(api(originalRequest));
+                                });
+                            });
+                        }
+
+                        try {
+                            isRefreshing = true;
+                            const refreshResp = await axios.post(
+                                `${API_BASE_URL}/auth/refresh`,
+                                {},
+                                { withCredentials: true, timeout: 30000 }
+                            );
+                            const newToken = refreshResp?.data?.accessToken;
+                            if (newToken) {
+                                // Access token stays short-lived; use session cookie.
+                                Cookies.set('token', newToken);
+                                flushQueue(newToken);
+                                originalRequest.headers = originalRequest.headers || {};
+                                originalRequest.headers.Authorization = `Bearer ${newToken}`;
+                                return api(originalRequest);
+                            }
+                            flushQueue(null);
+                        } catch (_refreshErr) {
+                            flushQueue(null);
+                        } finally {
+                            isRefreshing = false;
+                        }
+                    }
+
+                    const pathname = normalizePathname(window.location.pathname);
+                    const isPublic = isPublicPath(pathname);
+                    if (!isPublic && pathname !== '/login' && pathname !== '/admin/login') {
                         Cookies.remove('token');
                         Cookies.remove('id');
-                        window.location.href = '/login';
+                        const target = pathname.startsWith('/admin') ? '/admin/login' : '/login';
+                        window.location.href = target;
                     }
                     break;
                 case 403:

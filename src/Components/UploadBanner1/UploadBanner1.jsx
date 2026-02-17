@@ -3,7 +3,8 @@ import './UploadBanner1.css';
 import { fetchCategories } from '../../Services/category';
 import { multipartUploadToS3 } from '../../Services/S3Service';
 import UploadBanner1ImageCompo from '../UploadBanner1ImageCompo/UploadBanner1ImageCompo';
-import { useGlobalState } from '../../Context/Context';
+import { useUpload } from '../../Context/UploadContext';
+import { useAuth } from '../../Context/AuthContext';
 import UploadBtn from '../UploadBtn/UploadBtn';
 import { message, Spin } from 'antd';
 import { Link, useLocation } from 'react-router-dom';
@@ -41,7 +42,6 @@ function UploadBanner1() {
         setContentChecked,
         keywords,
         setKeywords,
-        creatorData,
         imageUrl,
         setImageUrl,
         imageType,
@@ -56,7 +56,8 @@ function UploadBanner1() {
         setFileMetadata,
         imageData,
         setImageData,
-    } = useGlobalState();
+    } = useUpload();
+    const { creatorData } = useAuth();
 
     const [loading, setLoading] = useState(false);
     const [keywordInput, setKeywordInput] = useState('');

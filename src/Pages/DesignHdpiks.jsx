@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import CircularProgress from "@mui/material/CircularProgress";
 import api from "../Services/api";
 import { buildCategoryTree, fetchCategories } from "../Services/category";
 import "./DesignHdpiks.css";
@@ -35,6 +36,7 @@ function DesignHdpiks() {
   const imageKitEndpoint = (import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || "").trim();
   const [params] = useSearchParams();
   const sourceImageId = params.get("assetId");
+  const originalAssetUrl = (params.get("assetUrl") || "").trim();
   const sourceCategoryId = params.get("category");
   const sourceSubCategoryId = params.get("subcategory");
   const sourceSubSubCategoryId = params.get("subsubcategory");
@@ -52,10 +54,16 @@ function DesignHdpiks() {
   const [exportQuality, setExportQuality] = useState(92);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [rollingBack, setRollingBack] = useState(false);
+  const [rollingBackVersionId, setRollingBackVersionId] = useState(null);
   const [notice, setNotice] = useState("");
-  const [source, setSource] = useState(() => params.get("assetUrl") || "");
-  const [sourceInput, setSourceInput] = useState(() => params.get("assetUrl") || "");
+  const [source, setSource] = useState(() => originalAssetUrl);
+  const [sourceInput, setSourceInput] = useState(() => originalAssetUrl);
   const [localFileName, setLocalFileName] = useState("");
+  const [editHistory, setEditHistory] = useState([]);
+  const [historyRefreshKey, setHistoryRefreshKey] = useState(0);
+  const [retryKeyByUrl, setRetryKeyByUrl] = useState({});
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -69,6 +77,38 @@ function DesignHdpiks() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    if (!sourceImageId) {
+      setEditHistory([]);
+      return () => {
+        mounted = false;
+      };
+    }
+    (async () => {
+      try {
+        const resp = await api.get(`/imagekit/edit-history/${sourceImageId}`);
+        if (!mounted) return;
+        const versions = resp?.data?.data?.versions || [];
+        setEditHistory(Array.isArray(versions) ? versions : []);
+      } catch (err) {
+        if (!mounted) return;
+        setEditHistory([]);
+        if (err?.response?.status === 401) {
+          setNotice("Login required to view edit history. Local editing is still available.");
+        }
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [sourceImageId, historyRefreshKey]);
+
+  useEffect(() => {
+    // New source should start with a clean retry state.
+    setRetryKeyByUrl({});
+  }, [source]);
 
   const selectedCategoryNode = useMemo(
     () => categoryTree.find((c) => c._id === selectedCategory),
@@ -123,6 +163,30 @@ function DesignHdpiks() {
     return removeImageKitTransform(source);
   }, [canUseImageKitTransforms, source]);
 
+  const displayPreviewSrc = useMemo(() => {
+    const activeUrl = showOriginal ? originalPreviewSrc : previewSrc;
+    return withRetryCacheBuster(activeUrl, retryKeyByUrl);
+  }, [showOriginal, originalPreviewSrc, previewSrc, retryKeyByUrl]);
+
+  useEffect(() => {
+    setPreviewLoading(Boolean(source));
+  }, [displayPreviewSrc, source]);
+
+  const isViewingOriginal = useMemo(() => {
+    if (!originalAssetUrl || !source) return false;
+    return normalizeComparableUrl(source) === normalizeComparableUrl(originalAssetUrl);
+  }, [source, originalAssetUrl]);
+
+  const sortedEditHistory = useMemo(() => {
+    if (!Array.isArray(editHistory)) return [];
+    return [...editHistory].sort((a, b) => {
+      const aNum = Number(a?.versionNumber || 0);
+      const bNum = Number(b?.versionNumber || 0);
+      if (aNum !== bNum) return bNum - aNum;
+      return new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime();
+    });
+  }, [editHistory]);
+
   const updateValue = (key, value) => {
     setEditValues((prev) => ({ ...prev, [key]: value }));
   };
@@ -162,7 +226,12 @@ function DesignHdpiks() {
 
   const resetAll = () => {
     setEditValues(EDIT_DEFAULTS);
-    setNotice("All edits reset.");
+    if (originalAssetUrl) {
+      setSource(originalAssetUrl);
+      setSourceInput(originalAssetUrl);
+      setShowOriginal(false);
+    }
+    setNotice("All edits reset. Original asset restored.");
   };
 
   const loadFromInputUrl = () => {
@@ -276,11 +345,68 @@ function DesignHdpiks() {
       });
 
       setNotice("Edited asset saved to HDPiks successfully.");
+      setHistoryRefreshKey((v) => v + 1);
     } catch (err) {
-      setNotice(err?.response?.data?.message || err?.message || "Failed to save edited asset.");
+      if (err?.response?.status === 401) {
+        setNotice("Please login to save edited assets to HDPiks.");
+      } else {
+        setNotice(err?.response?.data?.message || err?.message || "Failed to save edited asset.");
+      }
     } finally {
       setUploading(false);
     }
+  };
+
+  const rollbackVersion = async (targetVersionId) => {
+    if (!sourceImageId || !targetVersionId) return;
+    setRollingBack(true);
+    setRollingBackVersionId(targetVersionId);
+    setNotice("");
+    try {
+      await api.post("/imagekit/rollback-version", {
+        originalImageId: sourceImageId,
+        targetVersionId,
+      });
+      setNotice("Rollback applied successfully.");
+      setHistoryRefreshKey((v) => v + 1);
+      const rolledBackVersion = editHistory.find((item) => item?._id === targetVersionId);
+      if (rolledBackVersion?.imageUrl) {
+        setSource(rolledBackVersion.imageUrl);
+        setSourceInput(rolledBackVersion.imageUrl);
+      }
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setNotice("Please login to use rollback history.");
+      } else {
+        setNotice(err?.response?.data?.message || err?.message || "Failed to rollback version.");
+      }
+    } finally {
+      setRollingBack(false);
+      setRollingBackVersionId(null);
+    }
+  };
+
+  const handlePreviewImageError = (event) => {
+    setPreviewLoading(false);
+    const attemptedUrl =
+      event?.currentTarget?.currentSrc ||
+      event?.currentTarget?.src ||
+      (showOriginal ? originalPreviewSrc : previewSrc);
+
+    const normalized = stripCacheBuster(attemptedUrl);
+    if (!isHttpUrl(normalized)) {
+      setNotice("Failed to load image source.");
+      return;
+    }
+
+    // Retry once for this URL with a cache-busting query param.
+    if (!retryKeyByUrl[normalized]) {
+      setRetryKeyByUrl((prev) => ({ ...prev, [normalized]: Date.now() }));
+      setNotice("Retrying image load...");
+      return;
+    }
+
+    setNotice("Failed to load image source.");
   };
 
   return (
@@ -390,21 +516,174 @@ function DesignHdpiks() {
                 ))}
               </select>
             </div>
+            {sourceImageId ? (
+              <div className="taxonomy-panel">
+                <h4>Edit History</h4>
+                {sortedEditHistory.length ? (
+                  <div className="history-list">
+                    {originalAssetUrl ? (
+                      <>
+                        <h5 className="history-group-title">Original Asset</h5>
+                        <article
+                          className={`history-card history-card--original${isViewingOriginal ? " is-selected" : ""}`}
+                          title="Original uploaded asset"
+                        >
+                          <button
+                            type="button"
+                            className="history-thumb-btn"
+                            onClick={() => {
+                              setSource(originalAssetUrl);
+                              setSourceInput(originalAssetUrl);
+                            }}
+                          >
+                            <img
+                              src={originalAssetUrl}
+                              alt="Original asset preview"
+                              className="history-thumb"
+                              loading="lazy"
+                            />
+                          </button>
+
+                          <div className="history-meta">
+                            <div className="history-meta-top">
+                              <strong>Original</strong>
+                              {isViewingOriginal ? <span className="history-badge">Viewing</span> : null}
+                            </div>
+                            <p>Base uploaded asset</p>
+                          </div>
+
+                          <div className="history-actions">
+                            <button
+                              type="button"
+                              className="ghost-btn"
+                              onClick={() => {
+                                setSource(originalAssetUrl);
+                                setSourceInput(originalAssetUrl);
+                              }}
+                              disabled={isViewingOriginal}
+                            >
+                              Use Original
+                            </button>
+                            <button
+                              type="button"
+                              className="ghost-btn"
+                              onClick={resetAll}
+                            >
+                              Reset Edits
+                            </button>
+                          </div>
+                        </article>
+                      </>
+                    ) : null}
+                    <h5 className="history-group-title">Edited Assets</h5>
+                    {sortedEditHistory.map((version, index) => {
+                      const isCurrent = Boolean(version?.isCurrentVersion);
+                      const isRollingThis = rollingBackVersionId && rollingBackVersionId === version?._id;
+                      const isViewingVersion =
+                        normalizeComparableUrl(source) === normalizeComparableUrl(version?.imageUrl);
+                      const resolvedVersion = Number.isFinite(Number(version?.versionNumber))
+                        ? Number(version.versionNumber)
+                        : sortedEditHistory.length - index;
+                      const versionLabel = `v${resolvedVersion}`;
+                      return (
+                        <article
+                          key={version?._id}
+                          className={`history-card${isViewingVersion ? " is-selected" : ""}`}
+                          title={isCurrent ? "Current version" : "Edited version"}
+                        >
+                          <button
+                            type="button"
+                            className="history-thumb-btn"
+                            onClick={() => {
+                              if (version?.imageUrl) {
+                                setSource(version.imageUrl);
+                                setSourceInput(version.imageUrl);
+                              }
+                            }}
+                          >
+                            {version?.imageUrl ? (
+                              <img
+                                src={version.imageUrl}
+                                alt={`${versionLabel} preview`}
+                                className="history-thumb"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="history-thumb history-thumb--empty">No preview</div>
+                            )}
+                          </button>
+
+                          <div className="history-meta">
+                            <div className="history-meta-top">
+                              <strong>{versionLabel}</strong>
+                              {isViewingVersion ? (
+                                <span className="history-badge">Viewing</span>
+                              ) : isCurrent ? (
+                                <span className="history-badge history-badge--muted">Current</span>
+                              ) : null}
+                            </div>
+                            <p>{formatHistoryDate(version?.createdAt)}</p>
+                          </div>
+
+                          <div className="history-actions">
+                            <button
+                              type="button"
+                              className="ghost-btn"
+                              onClick={() => {
+                                if (version?.imageUrl) {
+                                  setSource(version.imageUrl);
+                                  setSourceInput(version.imageUrl);
+                                }
+                              }}
+                            >
+                              Preview
+                            </button>
+                            <button
+                              type="button"
+                              className="ghost-btn"
+                              onClick={() => rollbackVersion(version?._id)}
+                              disabled={rollingBack || isCurrent}
+                            >
+                              {isRollingThis ? "Applying..." : "Rollback"}
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="studio-hint">No edited versions yet.</p>
+                )}
+              </div>
+            ) : null}
           </div>
         </aside>
 
         <section className="design-studio__canvas-area">
           <div className="canvas-shell">
             {source ? (
-              <img
-                ref={imageRef}
-                src={showOriginal ? originalPreviewSrc : previewSrc}
-                alt="Editor preview"
-                className="canvas-image"
-                style={{ filter: computedFilter, transform: computedTransform, ...cropStyle }}
-                crossOrigin="anonymous"
-                onError={() => setNotice("Failed to load image source.")}
-              />
+              <>
+                {previewLoading ? (
+                  <div className="canvas-loading-overlay" aria-live="polite" aria-busy="true">
+                    <CircularProgress size={42} thickness={4.5} />
+                  </div>
+                ) : null}
+                <img
+                  ref={imageRef}
+                  src={displayPreviewSrc}
+                  alt="Editor preview"
+                  className="canvas-image"
+                  style={{
+                    filter: computedFilter,
+                    transform: computedTransform,
+                    ...cropStyle,
+                    opacity: previewLoading ? 0 : 1,
+                  }}
+                  crossOrigin="anonymous"
+                  onLoad={() => setPreviewLoading(false)}
+                  onError={handlePreviewImageError}
+                />
+              </>
             ) : (
               <div className="canvas-empty-state">No image loaded yet</div>
             )}
@@ -724,6 +1003,59 @@ function mimeToExt(mime) {
   if (mime === "image/jpeg") return "jpg";
   if (mime === "image/webp") return "webp";
   return "png";
+}
+
+function isHttpUrl(value) {
+  return typeof value === "string" && /^https?:\/\//i.test(value);
+}
+
+function stripCacheBuster(url) {
+  if (!isHttpUrl(url)) return url;
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete("hdcb");
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function withRetryCacheBuster(url, retryKeyByUrl = {}) {
+  if (!isHttpUrl(url)) return url;
+  try {
+    const normalized = stripCacheBuster(url);
+    const retryKey = retryKeyByUrl[normalized];
+    if (!retryKey) return normalized;
+    const parsed = new URL(normalized);
+    parsed.searchParams.set("hdcb", String(retryKey));
+    return parsed.toString();
+  } catch {
+    return url;
+  }
+}
+
+function normalizeComparableUrl(url) {
+  if (!isHttpUrl(url)) return url || "";
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.delete("hdcb");
+    return parsed.toString();
+  } catch {
+    return url || "";
+  }
+}
+
+function formatHistoryDate(value) {
+  if (!value) return "Unknown time";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "Unknown time";
+  return date.toLocaleString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function parsePositiveInt(value) {

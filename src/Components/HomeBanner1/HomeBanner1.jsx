@@ -64,7 +64,7 @@ function HomeBanner1() {   // home banner1 component
 
     return (
         <>
-            <div className="container py-4 mt-4">
+            <div className="container py-4 mt-4 home-banner1-section">
                 {/* Heading + subheading with better spacing */}
                 <div className="mb-3 text-center text-md-start">
                     <h3 className='fw-bold display-5 mb-1'>Explore Our Collections</h3>

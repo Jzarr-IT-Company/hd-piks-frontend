@@ -4,13 +4,14 @@ import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import '../Components/DashboardShell/DashboardShell.css';
 import ContributorFilesList from '../Components/ContributorFilesList/ContributorFilesList';
 import useUserAssets from '../hooks/useUserAssets';
-import { useGlobalState } from '../Context/Context';
+import { useAuth } from '../Context/AuthContext';
+import { getContributorState } from '../utils/contributorStatus';
 
 function Rejections() {
-  const { userData, creatorData } = useGlobalState();
+  const { userData, creatorData } = useAuth();
   const navigate = useNavigate();
-  const contributorStatus = creatorData?.status || 'not-applied';
-  const isContributorApproved = userData?.role === 'creator' || contributorStatus === 'approved';
+  const contributor = getContributorState(userData, creatorData);
+  const isContributorApproved = contributor.isApproved;
   const { rejected, counts, loading, error } = useUserAssets();
 
   useEffect(() => {

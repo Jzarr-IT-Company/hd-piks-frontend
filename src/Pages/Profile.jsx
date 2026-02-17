@@ -3,11 +3,11 @@ import { useLocation } from 'react-router-dom';
 import ProfileBanner1 from '../Components/ProfileBanner1/ProfileBanner1';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import '../Components/DashboardShell/DashboardShell.css';
-import { useGlobalState } from '../Context/Context';
+import { useProfile } from '../Context/ProfileContext';
 
 function Profile() {
   const location = useLocation();
-  const { setShowContributorForm } = useGlobalState();
+  const { setShowContributorForm } = useProfile();
 
   useEffect(() => {
     if (location.pathname === '/profile/contributor') {

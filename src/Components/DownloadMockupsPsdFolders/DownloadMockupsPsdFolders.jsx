@@ -1,10 +1,25 @@
 import React, { useState } from 'react';
 import { Spin } from 'antd';
-function DownloadMockupsPsdFolders({ zipfolderurl }) {
+import API_BASE_URL from '../../config/api.config.js';
+import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+
+function DownloadMockupsPsdFolders({ zipfolderurl, assetId, fileName }) {
     const [isLoading, setIsLoading] = useState(false);
 
+    const getS3KeyFromUrl = (url) => {
+        if (!url) return '';
+        try {
+            const parsed = new URL(url);
+            return decodeURIComponent((parsed.pathname || '').replace(/^\/+/, ''));
+        } catch {
+            return '';
+        }
+    };
+
     const handleDownload = async () => {
-        const zipfoldermodifiedUrl2 = zipfolderurl?.replace('https://imagesvideoszipfilesbuckets.s3.amazonaws.com/', '') || '';
+        const zipfoldermodifiedUrl2 = getS3KeyFromUrl(zipfolderurl)
+            || zipfolderurl?.replace('https://imagesvideoszipfilesbuckets.s3.amazonaws.com/', '')
+            || '';
         setIsLoading(true);
         const downloadKey = zipfoldermodifiedUrl2;
         if (!downloadKey) {
@@ -12,22 +27,31 @@ function DownloadMockupsPsdFolders({ zipfolderurl }) {
             setIsLoading(false);
             return;
         }
-        if (zipfolderurl || zipfoldermodifiedUrl2) {
-            try {
-                const link = document.createElement('a');
-                link.href = zipfolderurl;
-                link.setAttribute('download', zipfoldermodifiedUrl2);
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(zipfolderurl);
-            } catch (error) {
-                console.error('Error downloading file:', error);
-                alert('Error downloading file');
-            } finally {
-                setIsLoading(false);
+
+        try {
+            const fallbackName = fileName || (downloadKey.split('/').pop() || 'asset.zip');
+            let href = zipfolderurl;
+
+            await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
+            if (downloadKey) {
+                const params = new URLSearchParams();
+                params.set('key', downloadKey);
+                params.set('filename', fallbackName);
+                href = `${API_BASE_URL}/download?${params.toString()}`;
             }
-            return;
+
+            const link = document.createElement('a');
+            link.href = href;
+            link.setAttribute('download', fallbackName);
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error('Error downloading file:', error);
+            alert('Error downloading file');
+        } finally {
+            setIsLoading(false);
         }
     };
     return (

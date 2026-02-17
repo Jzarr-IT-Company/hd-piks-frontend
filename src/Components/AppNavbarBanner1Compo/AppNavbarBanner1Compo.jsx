@@ -253,6 +253,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 
 import videosImg from '../../assets/01_Videos_4K.jpg';
 import imagesImg from '../../assets/02_Images_4K.jpg';
@@ -380,17 +381,13 @@ function AppNavbarBanner1Compo() {
         );
     };
 
-    // Auto-advance on mobile
-    useEffect(() => {
-        if (typeof window === 'undefined') return;
-        if (window.innerWidth >= 768) return; // only mobile
+    const goPrevMobile = () => {
+        setMobileIndex((prev) => (prev - 1 + CARDS.length) % CARDS.length);
+    };
 
-        const interval = setInterval(() => {
-            setMobileIndex((prev) => (prev + 1) % CARDS.length);
-        }, 3000);
-
-        return () => clearInterval(interval);
-    }, []);
+    const goNextMobile = () => {
+        setMobileIndex((prev) => (prev + 1) % CARDS.length);
+    };
 
     // Scroll active card into view
     useEffect(() => {
@@ -475,9 +472,29 @@ function AppNavbarBanner1Compo() {
                 </div>
             </div>
 
-            {/* Mobile: wide swipeable cards, auto-move, scrollbar hidden via CSS */}
+            {/* Mobile: wide swipeable cards, manual move only, scrollbar hidden via CSS */}
+            <div className="d-flex d-md-none align-items-center justify-content-between mt-3 px-3">
+                <button
+                    type="button"
+                    onClick={goPrevMobile}
+                    className="btn btn-sm btn-light border rounded-circle d-inline-flex align-items-center justify-content-center"
+                    style={{ width: 32, height: 32 }}
+                    aria-label="Previous asset type"
+                >
+                    <FiChevronLeft size={16} />
+                </button>
+                <button
+                    type="button"
+                    onClick={goNextMobile}
+                    className="btn btn-sm btn-light border rounded-circle d-inline-flex align-items-center justify-content-center"
+                    style={{ width: 32, height: 32 }}
+                    aria-label="Next asset type"
+                >
+                    <FiChevronRight size={16} />
+                </button>
+            </div>
             <div
-                className="d-flex d-md-none mt-3 px-3 asset-type-carousel"
+                className="d-flex d-md-none mt-2 px-3 asset-type-carousel"
                 style={{ overflowX: 'auto', gap: 16, scrollSnapType: 'x mandatory' }}
             >
                 {CARDS.map((card, index) => (

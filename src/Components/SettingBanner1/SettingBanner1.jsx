@@ -1,15 +1,16 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGlobalState } from '../../Context/Context';
+import { useAuth } from '../../Context/AuthContext';
+import { getContributorState } from '../../utils/contributorStatus';
 import './SettingBanner1.css';
 
 function SettingBanner1() {
     const navigate = useNavigate();
-    const { creatorData } = useGlobalState();
-    const status = creatorData?.status || 'not-applied';
-    const reason = creatorData?.rejectionReason;
-
-    const statusLabel = status === 'approved' ? 'Approved' : status === 'pending' ? 'Pending' : status === 'rejected' ? 'Rejected' : 'Not applied';
+    const { userData, creatorData } = useAuth();
+    const contributor = getContributorState(userData, creatorData);
+    const status = contributor.status;
+    const reason = contributor.rejectionReason;
+    const statusLabel = contributor.statusLabel;
     const statusClass = `setting-pill setting-pill--${status}`;
 
     let headline = 'Creator application';

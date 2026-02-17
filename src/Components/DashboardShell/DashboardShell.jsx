@@ -2,15 +2,18 @@
 import React, { useEffect, useMemo, useState , useRef } from 'react';
 import './DashboardShell.css';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useGlobalState } from '../../Context/Context';
+import { useAuth } from '../../Context/AuthContext';
+import { useProfile } from '../../Context/ProfileContext';
 import { LayoutDashboard, Layers, BarChart3, Sparkles, BookOpenCheck, ShieldCheck, FileText, Inbox, MessageSquare, CreditCard, RefreshCw, Users, ArrowUpToLine, User, Mail, MapPin, Globe2, Link2, Sparkles as SparkleIcon, AlignLeft, Briefcase, Calendar, Instagram, Facebook } from 'lucide-react';
 import bydefault from './bydefault';
 import axios from 'axios';
 import EditableCreatorProfile from '../ProfileBanner1UploadImages/EditableCreatorProfile';
+import { getContributorState } from '../../utils/contributorStatus';
 
 
 function DashboardShell({ children, rightPanel, fileCounts = {} }) {
-  const { userData, creatorData, setShowContributorForm } = useGlobalState();
+  const { userData, creatorData } = useAuth();
+  const { setShowContributorForm } = useProfile();
   // Loading fallback if userData or creatorData are not loaded yet
   if (userData === undefined || creatorData === undefined) {
     return (
@@ -22,8 +25,12 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   // Handler for Creator Profile panel
   const [showCreatorProfile, setShowCreatorProfile] = useState(false);
   const handleCreatorProfile = () => {
-    console.log('Creator Profile button clicked');
-    setShowCreatorProfile(true);
+    if (canOpenCreatorProfile) {
+      setShowCreatorProfile(true);
+      return;
+    }
+    setShowContributorForm(true);
+    navigate('/profile/contributor');
   };
   const handleCloseCreatorProfile = () => {
     setShowCreatorProfile(false);
@@ -33,18 +40,12 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   const [openGroups, setOpenGroups] = useState({ Files: true, Personal: true });
   const isSettingsPage = location.pathname === '/setting';
     
-  const contributorStatus = creatorData?.status || 'not-applied';
-  const rejectionReason = creatorData?.rejectionReason;
-  const isContributorApproved = userData?.role === 'creator' || contributorStatus === 'approved';
-  const isContributorPending = contributorStatus === 'pending';
-  const statusLabel = contributorStatus === 'approved' ? 'Approved' : contributorStatus === 'pending' ? 'Pending' : contributorStatus === 'rejected' ? 'Rejected' : 'Not applied';
-  const statusMessage = contributorStatus === 'approved'
-    ? 'Your creator profile is approved. You can switch to the contributor dashboard.'
-    : contributorStatus === 'pending'
-      ? 'Your application is under review. This can take 2-4 business days.'
-      : contributorStatus === 'rejected'
-        ? `Application rejected${rejectionReason ? `: ${rejectionReason}` : ''}. Update your creator profile to reapply.`
-        : 'Start your creator application to sell your work.';
+  const contributor = getContributorState(userData, creatorData);
+  const contributorStatus = contributor.status;
+  const isContributorApproved = contributor.isApproved;
+  const canOpenCreatorProfile = contributorStatus === 'approved';
+  const statusLabel = contributor.statusLabel;
+  const statusMessage = contributor.statusMessage;
   const flatActive = useMemo(() => location.pathname, [location.pathname]);
   const personalMenu = useMemo(() => ([
     { label: 'Collections', to: '/collections', count: '', Icon: Layers },
@@ -88,7 +89,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
           { label: 'Published', to: '/files/published', count: counts.published, Icon: Inbox },
         ],
       },
-      { label: 'Stats', to: '/dashboard', Icon: BarChart3 },
+      { label: 'Stats', to: '/stats', Icon: BarChart3 },
       { label: 'Search Trends', to: '/dashboard', Icon: Sparkles },
       { label: 'Guidelines', to: '/dashboard', Icon: BookOpenCheck },
       { label: 'Contact', to: '/dashboard', Icon: MessageSquare },
@@ -124,7 +125,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   };
 
   const isCreator = userData?.role === 'creator';
-  const isPending = contributorStatus === 'pending';
+  const isPending = contributor.isPending;
   const statusPillStorageKey = 'dash-status-pill-hidden';
   const [showStatusPill, setShowStatusPill] = useState(() => {
     if (typeof window === 'undefined') return true;
@@ -193,7 +194,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   };
 
   return (
-    <div className="dash-shell">
+    <div className={`dash-shell ${rightPanel ? '' : 'dash-shell--no-right'}`}>
       <aside className="dash-shell__sidebar">
         <div className="dash-shell__brand">{brandText}</div>
         <button
@@ -202,7 +203,13 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
           onClick={handleCreatorProfile}
         >
           <User size={18} className="me-2" />
-          Creator Profile
+          {canOpenCreatorProfile
+            ? 'Creator Profile'
+            : contributorStatus === 'pending'
+              ? 'View application'
+              : contributorStatus === 'rejected'
+                ? 'Re-apply as contributor'
+                : 'Apply as contributor'}
         </button>
         <nav className="dash-shell__nav">
           {navItems.map((item) => {
@@ -270,7 +277,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
         </header>
 
         <div className="dash-shell__content">
-          {showCreatorProfile ? (
+          {showCreatorProfile && canOpenCreatorProfile ? (
             <div className="container mt-4">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h3 className="fw-bold mb-0">Creator Profile</h3>

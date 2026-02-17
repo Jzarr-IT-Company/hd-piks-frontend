@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './MoreRelatedImages.css';
-import axios from 'axios';
+import api from '../../Services/api.js';
+import { API_ENDPOINTS } from '../../config/api.config.js';
+import { getResponsiveImageProps } from '../../utils/mediaVariants.js';
 
 function MoreRelatedImages({ category }) {
     const [relatedImages, setRelatedImages] = useState([]);
@@ -29,7 +31,14 @@ function MoreRelatedImages({ category }) {
                     {relatedImages.slice(0, 40).map((data, index) => (
                         <div className="more-related-images-card-wrapper col-auto" key={index}>
                             <div className="more-related-images-card rounded-4">
-                                <img src={data.imageUrl} className="more-related-images-img rounded-4 img-fluid" alt="..." />
+                                <img
+                                    {...getResponsiveImageProps(data, {
+                                        preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
+                                        sizes: '(max-width: 576px) 92vw, (max-width: 992px) 45vw, 28vw',
+                                    })}
+                                    className="more-related-images-img rounded-4 img-fluid"
+                                    alt={data?.title || data?.category || 'Related image'}
+                                />
                                 <div className="more-related-images-overlay rounded-4 d-flex flex-column justify-content-end">
                                     <h5 className="more-related-images-category mb-2">{data.category || "Nature"}</h5>
                                     <div className="d-flex justify-content-between">
@@ -52,7 +61,14 @@ function MoreRelatedImages({ category }) {
                     {relatedImages.slice(50, 90).map((data, index) => (
                         <div className="more-related-images-card-wrapper col-auto" key={index}>
                             <div className="more-related-images-card rounded-4">
-                                <img src={data.imageUrl} className="more-related-images-img rounded-4 img-fluid" alt="..." />
+                                <img
+                                    {...getResponsiveImageProps(data, {
+                                        preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
+                                        sizes: '(max-width: 576px) 92vw, (max-width: 992px) 45vw, 28vw',
+                                    })}
+                                    className="more-related-images-img rounded-4 img-fluid"
+                                    alt={data?.title || data?.category || 'Related image'}
+                                />
                                 <div className="more-related-images-overlay rounded-4 d-flex flex-column justify-content-end">
                                     <h5 className="more-related-images-category mb-2">{data.category || "Nature"}</h5>
                                     <div className="d-flex justify-content-between">

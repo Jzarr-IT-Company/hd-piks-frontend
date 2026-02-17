@@ -1,68 +1,17 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Skeleton } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import api from '../../Services/api.js';
-import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config.js';
+import API_BASE_URL from '../../config/api.config.js';
 import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3 } from 'react-icons/fi';
 import CollectionSelectModal from '../CollectionSelectModal';
+import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
+import { QueryErrorRetry, QueryGridSkeleton } from '../QueryState/QueryState.jsx';
+import { useAssetsInfiniteQuery } from '../../query/assetsQueries.js';
+import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
+import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import '../LazyLoadImage2/LazyLoadImage.css';
 import './HomeGallery.css';
-
-const PAGE_SIZE = 16;
-
-// Hook: paginated assets for homepage gallery
-function useHomeGallery(parentCategory) {
-    const [items, setItems] = useState([]);
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const fetchPage = useCallback(
-        async (pageToLoad, replace = false) => {
-            try {
-                setLoading(true);
-                const params = {
-                    page: pageToLoad,
-                    limit: PAGE_SIZE,
-                };
-                if (parentCategory && parentCategory !== 'all') {
-                    params.parentCategory = parentCategory; // e.g. "Image", "Mockups"
-                }
-                const res = await api.get(API_ENDPOINTS.ASSETS, { params });
-                const data = res.data?.data || [];
-                setItems((prev) => (replace ? data : [...prev, ...data]));
-                // simple hasMore: if fewer than page size, assume no more
-                setHasMore(data.length === PAGE_SIZE);
-                setError('');
-            } catch (e) {
-                console.error('[HomeGallery] fetch assets failed', e);
-                setError(e?.response?.data?.message || e.message || 'Failed to load assets');
-                setHasMore(false);
-            } finally {
-                setLoading(false);
-            }
-        },
-        [parentCategory]
-    );
-
-    // initial + when filter changes
-    useEffect(() => {
-        setItems([]);
-        setPage(1);
-        fetchPage(1, true);
-    }, [parentCategory, fetchPage]);
-
-    const loadMore = useCallback(() => {
-        if (!hasMore || loading) return;
-        const next = page + 1;
-        setPage(next);
-        fetchPage(next, false);
-    }, [page, hasMore, loading, fetchPage]);
-
-    return { items, loading, error, hasMore, loadMore };
-}
 
 // Reusable gallery card
 function GalleryItem({
@@ -197,6 +146,7 @@ function GalleryItem({
                     >
                         <FiDownload size={16} />
                     </button>
+                    <LikeBttnSm imgId={asset?._id} compact stopPropagation />
                 </div>
 
                 <div className="home-gallery__overlay-meta">
@@ -222,7 +172,19 @@ function HomeGallery() {
             ? undefined
             : activeTab; // sent as parentCategory name to backend
 
-    const { items, loading, error, hasMore, loadMore } = useHomeGallery(parentFilter);
+    const assetsQuery = useAssetsInfiniteQuery(parentFilter);
+    const items = useMemo(
+        () => (assetsQuery.data?.pages || []).flatMap((page) => page.items || []),
+        [assetsQuery.data]
+    );
+    const loading = assetsQuery.isLoading;
+    const loadingMore = assetsQuery.isFetchingNextPage;
+    const hasMore = Boolean(assetsQuery.hasNextPage);
+    const error = assetsQuery.error?.response?.data?.message || assetsQuery.error?.message || '';
+    const loadMore = useCallback(() => {
+        if (!hasMore || loadingMore) return;
+        assetsQuery.fetchNextPage();
+    }, [hasMore, loadingMore, assetsQuery]);
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -371,7 +333,7 @@ function HomeGallery() {
         setSelectedAssetId(null);
     }, []);
 
-    const handleVariantDownload = useCallback((variant, item) => {
+    const handleVariantDownload = useCallback(async (variant, item) => {
         if (!variant || !variant.url) return;
 
         const label = variant.variant
@@ -392,6 +354,11 @@ function HomeGallery() {
             href = `${API_BASE_URL}/download?${params.toString()}`;
         }
 
+        await trackAssetDownloadEvent({
+            assetId: item?._id,
+            fileName,
+        });
+
         const link = document.createElement('a');
         link.href = href;
         link.download = fileName;
@@ -405,7 +372,7 @@ function HomeGallery() {
     }, [getExtensionFromUrl]);
 
     return (
-        <section className="py-5">
+        <section className="py-5 home-gallery-section">
             <div className="container">
                 {/* Heading */}
                 <h3 className="fw-bold display-5 mb-2 text-center text-md-start">
@@ -447,27 +414,17 @@ function HomeGallery() {
 
                 {/* Error state */}
                 {error && !loading && (
-                    <div className="alert alert-danger py-2 mb-3">
-                        {error}
-                    </div>
+                    <QueryErrorRetry
+                        message={error}
+                        onRetry={() => assetsQuery.refetch()}
+                    />
                 )}
 
                 {/* Grid */}
                 <div className="row g-3">
                     {/* Loading skeletons (initial or loading more and no items yet) */}
                     {loading && !items.length && (
-                        <>
-                            {Array.from({ length: 8 }).map((_, i) => (
-                                <div key={i} className="col-6 col-md-3">
-                                    <div className="lazy-image-wrapper" style={{ paddingBottom: '70%' }}>
-                                        <Skeleton.Image
-                                            active
-                                            style={{ width: '100%', height: '100%', borderRadius: 16 }}
-                                        />
-                                    </div>
-                                </div>
-                            ))}
-                        </>
+                        <QueryGridSkeleton count={8} />
                     )}
 
                     {/* Items */}
@@ -475,7 +432,7 @@ function HomeGallery() {
                         <div key={asset._id} className="col-6 col-md-3">
                             <GalleryItem
                                 asset={asset}
-                                src={asset.imageUrl}
+                                src={getMediaVariantUrl(asset, ['thumbnail', 'small', 'medium', 'large', 'original'])}
                                 alt={asset.title || getName(asset.subcategory) || 'Asset'}
                                 onOpen={() => navigate(buildAssetUrl(asset))}
                                 onEdit={handleEdit}
@@ -503,9 +460,9 @@ function HomeGallery() {
                             type="button"
                             className="btn btn-outline-dark px-4"
                             onClick={loadMore}
-                            disabled={loading}
+                            disabled={loadingMore}
                         >
-                            {loading ? 'Loading...' : 'Load more'}
+                            {loadingMore ? 'Loading...' : 'Load more'}
                         </button>
                     </div>
                 )}

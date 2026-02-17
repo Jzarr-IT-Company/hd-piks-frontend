@@ -386,13 +386,14 @@ function AdminLayout() {
 }
 import HomePage from "../Pages/HomePage";
 import Dashboard from "../Pages/Dashboard";
+import Stats from "../Pages/Stats";
 import PricingPlan from "../Pages/PricingPlan";
 import Login from "../Pages/Login";
 import Signup from "../Pages/Signup";
-import Member from "../Pages/Member";
 import Contactus from "../Pages/Contactus";
 import Sidebar from "../Components/Sidebar/Sidebar";
 import MemberDetail from "../Pages/MemberDetail";
+import CreatorDetail from "../Pages/CreatorDetail";
 import Upload from "../Pages/Upload";
 import Profile from "../Pages/Profile";
 import Collections from "../Pages/Collections";
@@ -414,7 +415,8 @@ import AdminCollectionsPageWrapper from "../Admin/Pages/AdminCollectionsPage";
 import Setting from "../Pages/Setting";
 import Search from "../Pages/SearchPage";
 import AssetDetail from "../Pages/AssetDetail";
-import { useGlobalState } from "../Context/Context";
+import { useAuth } from "../Context/AuthContext.jsx";
+import { getContributorState } from "../utils/contributorStatus.js";
 
 import  AboutUs  from '../Pages/Company/AboutUs';
 import  ContactUs  from '../Pages/Company/ContactUs';
@@ -437,7 +439,7 @@ function ProtectedRoute({ children }) {
 function ProtectedCreatorRoute({ children }) {
   const token = Cookies.get("token");
   const location = useLocation();
-  const { userData, creatorData } = useGlobalState();
+  const { userData, creatorData } = useAuth();
 
   if (!token) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
@@ -468,7 +470,8 @@ function ProtectedCreatorRoute({ children }) {
     );
   }
 
-  const isApprovedCreator = creatorData?.status === "approved" && belongsToUser;
+  const contributor = getContributorState(userData, creatorData);
+  const isApprovedCreator = contributor.isApproved && belongsToUser;
   if (!isApprovedCreator) {
     return (
       <Navigate
@@ -522,6 +525,14 @@ function Routing() {
       ),
     },
     {
+      path: "/stats",
+      element: (
+        <ProtectedCreatorRoute>
+          <Stats />
+        </ProtectedCreatorRoute>
+      ),
+    },
+    {
       path: "/pricing",
       element: <PricingPlan />,
     },
@@ -546,12 +557,12 @@ function Routing() {
       element: <Sidebar />,
     },
     {
-      path: "/member",
-      element: <Member />,
-    },
-    {
       path: "/memberdetail/:id",
       element: <MemberDetail />,
+    },
+    {
+      path: "/creatordetail/:creatorId",
+      element: <CreatorDetail />,
     },
     {
       path: "/upload",
@@ -666,6 +677,10 @@ function Routing() {
     {
       path: "/search/:term",
       element: <Search />,
+    },
+    {
+      path: "/asset/:categorySlug/:subSlug?/:subSubSlug?/:id/info",
+      element: <AssetDetail />,
     },
     {
       path: "/asset/:categorySlug/:subSlug?/:subSubSlug?/:id",

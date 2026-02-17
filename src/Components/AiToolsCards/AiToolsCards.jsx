@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { FiCpu, FiImage, FiScissors } from "react-icons/fi";
+import "./AiToolsCards.css";
 
 const DEFAULT_AI_TOOLS = [
 	{ id: "ai-text-voiceover", label: "AI Text Voiceover", icon: <FiImage size={16} /> },
@@ -18,11 +19,11 @@ function AiToolsCards({ tools = DEFAULT_AI_TOOLS, onSelect }) {
 	};
 
 	return (
-		<div className="row g-2 justify-content-center">
+		<div className="d-flex flex-wrap justify-content-center gap-2 w-100 px-2">
 			{tools.map((tool) => (
 				<div
 					key={tool.id}
-					className="col-6 col-md-auto d-flex justify-content-center"
+					className="ai-tools-card-item d-flex justify-content-center"
 				>
 					<button
 						type="button"
@@ -44,6 +45,7 @@ function AiToolsCards({ tools = DEFAULT_AI_TOOLS, onSelect }) {
 							whiteSpace: "normal",
 							textAlign: "center",
 							lineHeight: 1.2,
+							minHeight: 38,
 						}}
 					>
 						<span

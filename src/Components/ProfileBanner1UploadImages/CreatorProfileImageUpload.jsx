@@ -4,9 +4,12 @@ import axios from 'axios';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 import ImgCrop from 'antd-img-crop';
+import { message } from 'antd';
+import { useAuth } from '../../Context/AuthContext';
 
 function CreatorProfileImageUpload({ profileImage, setProfileImage }) {
     const [loading, setLoading] = useState(false);
+    const { creatorData } = useAuth();
     const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -27,18 +30,27 @@ function CreatorProfileImageUpload({ profileImage, setProfileImage }) {
                 }
             });
 
-            // 3. Persist S3 URL in creator profile
-            await api.post(API_ENDPOINTS.SAVE_CREATOR_PROFILE_IMAGE_URL, {
-                s3Url,
-                s3Key,
-                fileSize: file.size,
-                mimeType: file.type
-            });
+            // 3. Persist S3 URL in creator profile when creator record exists.
+            // For first-time applicants, backend returns 404 ("creator profile not found");
+            // we still keep S3 URL in local contributor form and submit it in apply payload.
+            const creatorStatus = creatorData?.status || 'not-applied';
+            const hasCreatorRecord = creatorStatus !== 'not-applied';
+            if (hasCreatorRecord) {
+                await api.post(API_ENDPOINTS.SAVE_CREATOR_PROFILE_IMAGE_URL, {
+                    s3Url,
+                    s3Key,
+                    fileSize: file.size,
+                    mimeType: file.type
+                });
+            }
 
-            // 4. Set profile image to S3 URL in parent state
+            // 4. Set profile image to S3 URL in parent state (always)
             setProfileImage(s3Url);
+            message.success('Profile image uploaded');
         } catch (error) {
             console.error('Error uploading image to S3 or saving URL:', error);
+            const apiMessage = error?.response?.data?.message;
+            message.error(apiMessage || 'Failed to upload profile image');
         } finally {
             setLoading(false);
         }

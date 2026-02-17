@@ -1,37 +1,70 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Spin } from 'antd';
+import API_BASE_URL from '../../config/api.config.js';
+import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import './DownloadButton.css'
 
-const DownloadButton = ({ imageUrl }) => {
+const DownloadButton = ({ imageUrl, fileKey, imageUrlOnly, imgeUrlSep, assetId, fileName }) => {
     const [isLoading, setIsLoading] = useState(false);
 
+    const getS3KeyFromUrl = (url) => {
+        if (!url) return '';
+        try {
+            const parsed = new URL(url);
+            return decodeURIComponent((parsed.pathname || '').replace(/^\/+/, ''));
+        } catch {
+            return '';
+        }
+    };
+
+    const getExtensionFromUrl = (url) => {
+        if (!url) return '';
+        try {
+            const parsed = new URL(url);
+            const pathname = parsed.pathname || '';
+            const dotIndex = pathname.lastIndexOf('.');
+            return dotIndex === -1 ? '' : pathname.slice(dotIndex);
+        } catch {
+            const dotIndex = url.lastIndexOf('.');
+            return dotIndex === -1 ? '' : url.slice(dotIndex);
+        }
+    };
+
     const handleDownload = async () => {
-        const modifiedUrl = imageUrl?.replace('https://imagesvideoszipfilesbuckets.s3.amazonaws.com/', '') || '';
+        const sourceUrl = imageUrl || fileKey || imageUrlOnly || imgeUrlSep || '';
+        const extractedKey = getS3KeyFromUrl(sourceUrl);
+        const normalizedKey = extractedKey || sourceUrl?.replace('https://imagesvideoszipfilesbuckets.s3.amazonaws.com/', '') || '';
 
         setIsLoading(true);
-        const downloadKey = modifiedUrl;
+        const downloadKey = normalizedKey;
         
-        if (!downloadKey) {
+        if (!downloadKey && !sourceUrl) {
             alert('No valid file key or URL provided.');
             setIsLoading(false);
             return;
         }
-       
-        const downloadUrl = `https://hspiks-image-server.vercel.app/download?key=${downloadKey}`;
 
         try {
-            const response = await axios.get(downloadUrl, {
-                responseType: 'blob',
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
+            const nameFromKey = downloadKey ? (downloadKey.split('/').pop() || 'asset') : 'asset';
+            const ext = getExtensionFromUrl(sourceUrl);
+            const fallbackName = fileName || (nameFromKey.includes('.') ? nameFromKey : `${nameFromKey}${ext || ''}`);
+
+            let href = sourceUrl;
+            await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
+            if (downloadKey) {
+                const params = new URLSearchParams();
+                params.set('key', downloadKey);
+                params.set('filename', fallbackName);
+                href = `${API_BASE_URL}/download?${params.toString()}`;
+            }
+
             const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', downloadKey);
+            link.href = href;
+            link.setAttribute('download', fallbackName);
+            link.rel = 'noopener noreferrer';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
-            window.URL.revokeObjectURL(url);
         } catch (error) {
             console.error('Error downloading file:', error);
             alert('Error downloading file');

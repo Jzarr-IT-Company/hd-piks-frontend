@@ -1,0 +1,12 @@
+.ai-tools-card-item {
+  flex: 1 1 calc(50% - 8px);
+  min-width: 0;
+  max-width: 340px;
+}
+
+@media (min-width: 768px) {
+  .ai-tools-card-item {
+    flex: 0 0 auto;
+    min-width: 220px;
+  }
+}

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useGlobalState } from '../../Context/Context';
+import { useUpload } from '../../Context/UploadContext';
+import { useAuth } from '../../Context/AuthContext';
 import api from '../../Services/api.js';
 import { API_ENDPOINTS } from '../../config/api.config.js';
 import { message, Spin } from 'antd';
@@ -37,12 +38,12 @@ function UploadBtn({ isZipRequired = false }) {
         keywords,
         setKeywords,
         imageData,
-        creatorData,
         // S3 fields
         s3Keys,
         s3Urls,
         fileMetadata
-    } = useGlobalState();
+    } = useUpload();
+    const { creatorData } = useAuth();
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();

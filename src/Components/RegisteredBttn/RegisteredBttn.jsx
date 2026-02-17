@@ -5,14 +5,14 @@ import Cookies from 'js-cookie';
 
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
-import { useGlobalState } from '../../Context/Context';
+import { useAuth } from '../../Context/AuthContext.jsx';
 
 function RegisteredBttn() {
     const { username, setUsername,
         semail, setsEmail,
         password, setPassword,
         confirmPassword,
-        setConfirmPassword, } = useGlobalState();
+        setConfirmPassword, } = useAuth();
     const [loading, setLoading] = useState(false)
     const navigate = useNavigate()
 
@@ -63,16 +63,17 @@ function RegisteredBttn() {
             const cleanUsername = username.trim();
             const cleanEmail = semail.trim();
             const response = await api.post(API_ENDPOINTS.SIGNUP, {
-                name: cleanUsername, email: cleanEmail, password
+                name: cleanUsername,
+                email: cleanEmail,
+                password,
+                confirmPassword
             });
-            console.log(response.data.token.token)
-            console.log(response.data.id)
             if (response.status === 200) {
                 message.success("Signup Successsfully")
                 setLoading(false)
                 const obj = { name: cleanUsername, email: cleanEmail }
-                Cookies.set("id", response.data.id, { expires: 365 * 20 });
-                Cookies.set("token", response.data.token.token, { expires: 365 * 20 });
+                Cookies.set("id", response.data.id);
+                Cookies.set("token", response.data.accessToken || response.data.token);
                 localStorage.setItem('informationData', JSON.stringify(obj));
                 navigate('/')
                 window.location.reload()

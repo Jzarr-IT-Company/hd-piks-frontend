@@ -1,4 +1,5 @@
 .home-gallery{max-width:1200px;margin:40px auto;padding:0 16px;display:flex;flex-direction:column;gap:16px;}
+.home-gallery-section{position:relative;z-index:1;clear:both;}
 .home-gallery__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .home-gallery__eyebrow{text-transform:uppercase;letter-spacing:0.6px;color:#2563eb;font-weight:700;margin:0;font-size:12px;}
 .home-gallery__title{margin:4px 0 6px;font-weight:800;font-size:24px;color:#0f172a;}
@@ -40,6 +41,10 @@
 .home-gallery__filter:hover{border-color:#2563eb;color:#fff;}
 
 @media (max-width:600px){
-  .home-gallery{margin:28px auto;}
+  .home-gallery-section{
+    margin-top: 14px;
+    padding-top: 6px !important;
+  }
+  .home-gallery{margin:18px auto;}
   .home-gallery__title{font-size:20px;}
 }

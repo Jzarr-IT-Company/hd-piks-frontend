@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import img2 from '../../assets/user.png';
-import axios from 'axios';
+import api from '../../Services/api.js';
+import { API_ENDPOINTS } from '../../config/api.config.js';
 import { getUserById } from '../../Services/user.js';
 import DownloadButton from '../DownloadButton/DownloadButton';
 import { Link } from 'react-router-dom';
 import { Spin } from 'antd';
 import MoreRelatedVideos from '../MoreRelatedVideos/MoreRelatedVideos';
+import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 function MoreRelatedVideosBaner1({ closeButton, imageId, userId }) {
     const [imagesData, setImagesData] = useState([]);
     const [userData, setUserData] = useState(null);
@@ -73,7 +75,7 @@ function MoreRelatedVideosBaner1({ closeButton, imageId, userId }) {
                             
                             <img src={userData?.profileImage || img2} className="img-fluid"
                                 style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "contain" }} alt="Profile" />
-                            <Link to={`/memberdetail/${userData?._id}`}>
+                            <Link to={`/creatordetail/${userData?.creatorId?._id || userData?.creatorId || userData?._id}`}>
                                 <h5 className='ms-3'>{userData?.name || "Unknown User"}</h5>
                             </Link>
                         </div>
@@ -83,7 +85,15 @@ function MoreRelatedVideosBaner1({ closeButton, imageId, userId }) {
             <div className="row mt-3 px-3">
                 <div className="col-lg-7 col-md-12 col-sm-12 border" style={{ height: "400px" }}>
                     {imagesData.map((img) => (
-                        <video key={img._id} src={img.imageUrl} style={{ width: "100%", height: "100%", objectFit: "contain" }} controls  muted loop autoPlay></video>
+                        <video
+                            key={img._id}
+                            src={getMediaVariantUrl(img, ['720p', '1080p', '360p', 'original']) || img.imageUrl}
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                            controls
+                            muted
+                            loop
+                            autoPlay
+                        ></video>
                     )) || <Spin />}
                 </div>
                 <div className="col-12 mt-4 px-3 py-3 d-flex align-items-center justify-content-between">
@@ -92,7 +102,7 @@ function MoreRelatedVideosBaner1({ closeButton, imageId, userId }) {
                         <button className='btn border px-4 fw-semibold py-3 fs-6'>
                             <i className="fa-regular fa-heart"></i> Like
                         </button>
-                        <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} />
+                        <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} assetId={imageId} />
                         <button className="fw-semibold btn border px-3 py-3" style={{ fontSize: "18px" }}>
                             <i className="fa-solid fa-circle-info"></i> More info
                         </button>
@@ -128,7 +138,7 @@ function MoreRelatedVideosBaner1({ closeButton, imageId, userId }) {
             </div>
             <MoreRelatedVideos category={imageDetails.category} />
             <div className="sticky-bottom w-100 bg-white py-3 d-md-none px-0">
-                <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} imgeUrlSep={imageDetails.imageUrlSep} />
+                <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} imgeUrlSep={imageDetails.imageUrlSep} assetId={imageId} />
             </div>
         </div>
     );

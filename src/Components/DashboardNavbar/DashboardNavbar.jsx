@@ -13,7 +13,7 @@ import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
 import logo from '../../assets/logo1.webp'
-import { useGlobalState } from '../../Context/Context';
+import { useAuth } from '../../Context/AuthContext';
 import Cookies from 'js-cookie';
 import bydefault from '../../assets/user.png';
 
@@ -34,7 +34,7 @@ const settings = [
 function ResponsiveAppBar() {
   const [anchorElNav, setAnchorElNav] = React.useState(null);
   const [anchorElUser, setAnchorElUser] = React.useState(null);
-  const { userData } = useGlobalState();
+  const { userData } = useAuth();
   const handleOpenNavMenu = (event) => {
     setAnchorElNav(event.currentTarget);
   };

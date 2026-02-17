@@ -3,13 +3,13 @@ import img from '../assets/loginpic.webp';
 import { Link } from 'react-router-dom';
 import SocialAuthentication from '../Components/SocialAuthentication/SocialAuthentication';
 import RegisteredBttn from '../Components/RegisteredBttn/RegisteredBttn';
-import { useGlobalState } from '../Context/Context';
+import { useAuth } from '../Context/AuthContext.jsx';
 
 function Signup() {
   const { username, setUsername,
     semail, setsEmail,
     password, setPassword,
-    confirmPassword, setConfirmPassword, } = useGlobalState()
+    confirmPassword, setConfirmPassword, } = useAuth()
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const strongPasswordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/;

@@ -47,7 +47,44 @@
     gap: 20px 0px !important;
 }
 
+.home-banner1-section {
+    position: relative;
+    z-index: 2;
+    background: #fff;
+}
+
+.home-banner1-section .card {
+    overflow: hidden;
+}
+
+.home-banner1-section .card-img-overlay {
+    position: absolute;
+    inset: 0;
+}
+
 @media (max-width: 576px) {
+    .home-banner1-section {
+        margin-bottom: 18px;
+    }
+
+    .home-banner1-section .row.g-3 {
+        row-gap: 12px !important;
+    }
+
+    .home-banner1-section h3 {
+        font-size: 2rem !important;
+        line-height: 1.15;
+    }
+
+    .home-banner1-section .card-img-overlay {
+        padding: 10px;
+    }
+
+    .home-banner1-section .card-title {
+        font-size: 1.05rem;
+        line-height: 1.15;
+    }
+
     .overlay-cards-css {
         height: 200px !important;
     }

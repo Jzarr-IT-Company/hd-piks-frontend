@@ -1,12 +1,12 @@
 import React from 'react';
-import { useGlobalState } from '../../Context/Context';
+import { useAuth } from '../../Context/AuthContext';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLinkedin, faXTwitter, faInstagram } from '@fortawesome/free-brands-svg-icons';
 import { Link } from 'react-router-dom';
 import bydefault from '../../assets/user.png';
 
 function DashboardBanner1() {
-    const { userData } = useGlobalState();
+    const { userData } = useAuth();
 
     if (!userData) {
         console.log("DATA NOT FOUND");

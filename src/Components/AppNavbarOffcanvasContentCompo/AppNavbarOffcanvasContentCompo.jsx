@@ -35,9 +35,6 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
                     <AccordionDetails>
                         <div className="d-flex flex-column" style={{ gap: "3px 0px" }}>
                             <div className="text-start w-100" >
-                                <Link className='btn btn-light w-100 fw-semibold py-4' style={{ textAlign: "start" }} onClick={handleCLoseBtn} to={`/member`}>Member</Link>
-                            </div>
-                            <div className="text-start w-100" >
                                 <Link className='btn btn-light w-100 fw-semibold py-4 text-start' style={{ textAlign: "start" }} onClick={handleCLoseBtn} to={`/collection/${"Artificial Chirstmas Trees"}`}>Collection</Link>
                             </div>
                             <div className="text-start w-100" >

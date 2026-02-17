@@ -239,40 +239,33 @@ function AppFooter() {
                   <section className="mb-4 text-center">
                     <a
                       className="btn btn-outline-light btn-floating m-1"
-                      href="#"
+                      href="https://www.facebook.com/hdpiks/"
                       role="button"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Follow HDpiks on Facebook"
                       style={{ backgroundColor: "#4267B2", color: "#fff" }}
                     >
                       <i className="fab fa-facebook-f" />
                     </a>
                     <a
                       className="btn btn-outline-light btn-floating m-1"
-                      href="#"
+                      href="https://www.instagram.com/hdpiks/"
                       role="button"
-                      style={{ backgroundColor: "#1DA1F2", color: "#fff" }}
-                    >
-                      <i className="fab fa-twitter" />
-                    </a>
-                    <a
-                      className="btn btn-outline-light btn-floating m-1"
-                      href="#"
-                      role="button"
-                      style={{ backgroundColor: "#DB4437", color: "#fff" }}
-                    >
-                      <i className="fab fa-google" />
-                    </a>
-                    <a
-                      className="btn btn-outline-light btn-floating m-1"
-                      href="#"
-                      role="button"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Follow HDpiks on Instagram"
                       style={{ backgroundColor: "#E1306C", color: "#fff" }}
                     >
                       <i className="fab fa-instagram" />
                     </a>
                     <a
                       className="btn btn-outline-light btn-floating m-1"
-                      href="#"
+                      href="https://www.linkedin.com/company/111755280/"
                       role="button"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Follow HDpiks on LinkedIn"
                       style={{ backgroundColor: "#0077B5", color: "#fff" }}
                     >
                       <i className="fab fa-linkedin-in" />

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import MoreRelatedImages from '../MoreRelatedImages/MoreRelatedImages';
 import img2 from '../../assets/user.png';
-import axios from 'axios';
+import api from '../../Services/api.js';
+import { API_ENDPOINTS } from '../../config/api.config.js';
 import { getUserById } from '../../Services/user.js';
 import DownloadButton from '../DownloadButton/DownloadButton';
 import { Link } from 'react-router-dom';
@@ -10,6 +11,7 @@ import ShareButton from '../ShareButton/ShareButton';
 import ShareButtonSm from '../ShareButtonSm/ShareButtonSm';
 import LikeBttn from '../LikeBttn/LikeBttn';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm';
+import { getResponsiveImageProps } from '../../utils/mediaVariants.js';
 
 function MoreRelatedImagesBanner1({ closeButton, imageId, userId }) {
     const [imagesData, setImagesData] = useState([]);
@@ -21,6 +23,7 @@ function MoreRelatedImagesBanner1({ closeButton, imageId, userId }) {
         category: '',
         imageUrlSep: ''
     });
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchImages = async () => {
@@ -75,7 +78,7 @@ function MoreRelatedImagesBanner1({ closeButton, imageId, userId }) {
                         <div className="d-flex align-items-center">
                             <img src={userData?.profileImage || img2} className="img-fluid"
                                 style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "contain" }} alt="Profile" />
-                            <Link to={`/memberdetail/${userData?._id}`}>
+                            <Link to={`/creatordetail/${userData?.creatorId?._id || userData?.creatorId || userData?._id}`}>
                                 <h5 className='ms-3'>{userData?.name || "Unknown User"}</h5>
                             </Link>
                         </div>
@@ -85,8 +88,16 @@ function MoreRelatedImagesBanner1({ closeButton, imageId, userId }) {
             <div className="row mt-3 px-3">
                 <div className="col-lg-7 col-md-12 col-sm-12 border" style={{ height: "400px" }}>
                     {imagesData.map((img) => (
-                        <img key={img._id} src={img.imageUrl || img2} className="img-fluid w-100"
-                            style={{ width: "100%", height: "100%", objectFit: "contain" }} alt="Selected" />
+                        <img
+                            key={img._id}
+                            {...getResponsiveImageProps(img, {
+                                preferredOrder: ['medium', 'large', 'small', 'original'],
+                                sizes: '(max-width: 992px) 100vw, 60vw',
+                            })}
+                            className="img-fluid w-100"
+                            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                            alt={img?.title || "Selected"}
+                        />
                     )) || <Spin />}
                 </div>
                 <div className="col-12 mt-4 px-3 py-3 d-flex align-items-center justify-content-between">
@@ -97,7 +108,7 @@ function MoreRelatedImagesBanner1({ closeButton, imageId, userId }) {
                                 return <LikeBttn imgId={img._id} />
                             })
                         }
-                        <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} />
+                        <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} assetId={imageId} />
                         <button className="fw-semibold btn border px-3 py-3" style={{ fontSize: "18px" }}>
                             <i className="fa-solid fa-circle-info"></i> More info
                         </button>
@@ -131,7 +142,7 @@ function MoreRelatedImagesBanner1({ closeButton, imageId, userId }) {
             </div>
             <MoreRelatedImages category={imageDetails.category} />
             <div className="sticky-bottom w-100 bg-white py-3 d-md-none px-0">
-                <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} imgeUrlSep={imageDetails.imageUrlSep} />
+                <DownloadButton fileKey={imageDetails.imageUrl} imageUrlOnly={imageDetails.imageUrlOnly} imgeUrlSep={imageDetails.imageUrlSep} assetId={imageId} />
             </div>
         </div>
     );

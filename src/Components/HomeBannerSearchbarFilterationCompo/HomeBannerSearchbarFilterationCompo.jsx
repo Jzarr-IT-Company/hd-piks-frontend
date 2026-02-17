@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useGlobalState } from '../../Context/Context';
+import { useUI } from '../../Context/UIContext';
 import { useNavigate } from 'react-router-dom';
 import { fetchCategories } from '../../Services/category';
 // NEW: MUI dropdown like HomeBannerSearchFilterationCompo2
@@ -14,7 +14,7 @@ import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 
 function HomeBannerSearchbarFilterationCompo() {
-    const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useGlobalState();
+    const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useUI();
     const [searchQuerry, setSearchQuerry] = useState('');
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);

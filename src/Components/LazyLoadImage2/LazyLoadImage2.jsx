@@ -3,7 +3,7 @@ import PropTypes from 'prop-types'; // Import PropTypes
 import { Skeleton } from 'antd';
 import './LazyLoadImage.css';
 
-const LazyLoadImage2 = ({ src, alt, className }) => {
+const LazyLoadImage2 = ({ src, alt, className, srcSet, sizes }) => {
     const [isVisible, setIsVisible] = useState(false);
     const [isLoaded, setIsLoaded] = useState(false);
     const imgRef = React.useRef();
@@ -41,6 +41,10 @@ const LazyLoadImage2 = ({ src, alt, className }) => {
         setIsLoaded(true);
     };
 
+    useEffect(() => {
+        setIsLoaded(false);
+    }, [src, srcSet]);
+
     return (
         <div
             style={{
@@ -61,6 +65,8 @@ const LazyLoadImage2 = ({ src, alt, className }) => {
             <img
                 ref={imgRef}
                 src={isVisible ? src : ''}
+                srcSet={isVisible ? srcSet : undefined}
+                sizes={isVisible ? sizes : undefined}
                 alt={alt}
                 className="lazy-image"
                 style={{
@@ -80,7 +86,9 @@ const LazyLoadImage2 = ({ src, alt, className }) => {
 LazyLoadImage2.propTypes = {
     src: PropTypes.string.isRequired,  // `src` should be a string and is required
     alt: PropTypes.string.isRequired,  // `alt` should be a string and is required
-    className: PropTypes.string        // `className` should be a string, optional
+    className: PropTypes.string,       // `className` should be a string, optional
+    srcSet: PropTypes.string,
+    sizes: PropTypes.string,
 };
 
 export default LazyLoadImage2;

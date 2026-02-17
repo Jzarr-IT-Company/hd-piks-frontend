@@ -25,7 +25,7 @@ function DashboardBanner3({ items, loadingExternal, refreshExternal }) {
 
         (async () => {
             try {
-                const response = await api.post(API_ENDPOINTS.GET_USER_IMAGES, { id });
+                const response = await api.post(API_ENDPOINTS.GET_IMAGES_BY_CREATOR_ID, { id });
                 if (response.data.status === 200) {
                     setTotalCollectionsData(response.data.data.length)
                     setAllData(response.data.data);
@@ -41,7 +41,7 @@ function DashboardBanner3({ items, loadingExternal, refreshExternal }) {
     const refresh = async () => {
         if (refreshExternal) return refreshExternal();
         try {
-            const response = await api.post(API_ENDPOINTS.GET_USER_IMAGES, { id });
+            const response = await api.post(API_ENDPOINTS.GET_IMAGES_BY_CREATOR_ID, { id });
             if (response.data.status === 200) {
                 setTotalCollectionsData(response.data.data.length)
                 setAllData(response.data.data);

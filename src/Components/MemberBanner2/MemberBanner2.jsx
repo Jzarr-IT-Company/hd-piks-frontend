@@ -7,7 +7,7 @@ const MemberBanner2 = React.memo(({ userData }) => {
     const navigate = useNavigate();
 
     const handleNavigation = useCallback((id) => {
-        navigate(`/memberdetail/${id}`);
+        navigate(`/creatordetail/${id}`);
     }, [navigate]);
 
     return (
@@ -17,7 +17,11 @@ const MemberBanner2 = React.memo(({ userData }) => {
                     userData.map((data) => {
                         const name = data.name.slice(0, 20);
                         return (
-                            <div key={data._id} className="col-md-6 col-sm-6" onClick={() => handleNavigation(data._id)}>
+                            <div
+                                key={data._id}
+                                className="col-md-6 col-sm-6"
+                                onClick={() => handleNavigation(data?.creatorId?._id || data?.creatorId || data._id)}
+                            >
                                 <div className="card rounded-4 position-relative card-hover">
                                     <img loading="lazy" className="rounded-top-4" height={160} style={{ objectFit: "cover" }} alt="..." />
                                     <div className="card-body rounded-bottom-4" style={{ backgroundColor: "#80019d" }}>

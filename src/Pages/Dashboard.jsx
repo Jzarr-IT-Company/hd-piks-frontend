@@ -1,24 +1,25 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
-import { Spin, Empty } from 'antd';
+import { Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import DashboardBanner3 from '../Components/DashboardBanner3/DashboardBanner3';
-import { useGlobalState } from '../Context/Context';
+import { useAuth } from '../Context/AuthContext';
 import api from '../Services/api';
 import { API_ENDPOINTS } from '../config/api.config';
+import { getContributorState } from '../utils/contributorStatus';
 import '../Components/DashboardShell/DashboardShell.css';
 
 function Dashboard() {
-  const { userData, creatorData } = useGlobalState();
+  const { userData, creatorData } = useAuth();
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const id = Cookies.get('id');
   const token = Cookies.get('token');
 
-  const contributorStatus = creatorData?.status || 'not-applied';
-  const isContributorApproved = userData?.role === 'creator' || contributorStatus === 'approved';
+  const contributor = getContributorState(userData, creatorData);
+  const isContributorApproved = contributor.isApproved;
 
   useEffect(() => {
     if (creatorData && !isContributorApproved) {
@@ -34,7 +35,7 @@ function Dashboard() {
 
     (async () => {
       try {
-        const response = await api.post(API_ENDPOINTS.GET_USER_IMAGES, { id });
+        const response = await api.post(API_ENDPOINTS.GET_IMAGES_BY_CREATOR_ID, { id });
         if (response.data.status === 200) {
           setItems(response.data.data || []);
         }
@@ -50,7 +51,7 @@ function Dashboard() {
     if (!id) return;
     setLoading(true);
     try {
-      const response = await api.post(API_ENDPOINTS.GET_USER_IMAGES, { id });
+      const response = await api.post(API_ENDPOINTS.GET_IMAGES_BY_CREATOR_ID, { id });
       if (response.data.status === 200) {
         setItems(response.data.data || []);
       }
@@ -60,18 +61,6 @@ function Dashboard() {
       setLoading(false);
     }
   };
-
-  const stats = useMemo(() => {
-    const downloads = userData?.download || 0;
-    const files = items.length;
-    const likes = items.reduce((acc, item) => acc + (item.likes || 0), 0);
-    return { downloads, files, likes };
-  }, [items, userData]);
-
-  const mostDownloaded = useMemo(() => {
-    const sorted = [...items].sort((a, b) => (b.downloads || b.download || 0) - (a.downloads || a.download || 0));
-    return sorted.slice(0, 5);
-  }, [items]);
 
   if (id && token && !userData) {
     return (
@@ -83,31 +72,27 @@ function Dashboard() {
 
   return (
     <DashboardShell>
-
       <section className="dash-highlight dash-highlight--welcome">
         <div className="dash-highlight__content">
           <div className="dash-highlight__eyebrow">Let's get you started</div>
           <h3 className="dash-highlight__title">WELCOME TO THE CONTRIBUTOR PANEL!</h3>
           <p className="dash-highlight__body">
-            Now that you're here, let's make the most of our time together. You're one step away from becoming a contributor and converting your resources into earnings. This is what you have to do next:
+            Keep your dashboard focused on operations. Detailed analytics is now available under the Stats section.
           </p>
           <ul className="dash-highlight__list">
             <li>
               <span className="dash-highlight__icon" aria-hidden></span>
-              <div>To make sure your resources are accepted, read first our <a className="dash-highlight__link" href="/guidelines">Guidelines</a>.</div>
+              <div>Read our <a className="dash-highlight__link" href="/guidelines">Guidelines</a> before uploading.</div>
             </li>
             <li>
               <span className="dash-highlight__icon" aria-hidden></span>
-              <div>Upload your <strong>150 - 200 best resources only</strong>. Quality is a must: let's see how amazing you are.</div>
+              <div>Upload high-quality resources with clear metadata for faster approvals.</div>
             </li>
             <li>
               <span className="dash-highlight__icon" aria-hidden></span>
-              <div>We believe in second chances, so you have two attempts to show your true potential.</div>
+              <div>Use <strong>Stats</strong> in the sidebar to monitor downloads, likes and top-performing assets.</div>
             </li>
           </ul>
-          <div className="dash-highlight__footer">
-            To see the onboarding again, <a className="dash-highlight__link" href="/onboarding">click here</a>.
-          </div>
           <div className="dash-highlight__cta-row">
             <button className="dash-shell__upload-btn" onClick={() => window.location.assign('/upload')}>
               Submit your first work
@@ -115,62 +100,8 @@ function Dashboard() {
           </div>
         </div>
         <div className="dash-highlight__visual" aria-hidden>
-          <span className="dash-highlight__visual-icon">🖼️</span>
+          <span className="dash-highlight__visual-icon">[]</span>
         </div>
-      </section>
-
-      <section className="dash-cards">
-        <div className="dash-cards__header">
-          <h4 className="dash-cards__title">Performance overview</h4>
-        </div>
-        <div className="dash-card">
-          <div className="dash-card__label">Earnings</div>
-          <div className="dash-card__value">-- €</div>
-          <div className="dash-card__sub">Current month</div>
-        </div>
-        <div className="dash-card">
-          <div className="dash-card__label">Downloads</div>
-          <div className="dash-card__value">{stats.downloads}</div>
-          <div className="dash-card__sub">Current month</div>
-        </div>
-        <div className="dash-card">
-          <div className="dash-card__label">Likes</div>
-          <div className="dash-card__value">{stats.likes}</div>
-          <div className="dash-card__sub">Current month</div>
-        </div>
-        <div className="dash-card">
-          <div className="dash-card__label">Files</div>
-          <div className="dash-card__value">{stats.files}</div>
-          <div className="dash-card__sub">Current month</div>
-        </div>
-      </section>
-
-    
-
-      <section className="dash-most">
-        <div className="dash-most__header">
-          <h4>Most downloaded in last month</h4>
-          <span className="dash-most__meta">All files</span>
-        </div>
-        {loading ? (
-          <div className="dash-most__loading"><Spin /></div>
-        ) : mostDownloaded.length === 0 ? (
-          <Empty description="No downloads yet" />
-        ) : (
-          <div className="dash-most__list">
-            {mostDownloaded.map((item, idx) => (
-              <div key={item._id || idx} className="dash-most__item">
-                <div className="dash-most__rank">{idx + 1}</div>
-                <img src={item.imageUrl} alt={item.title || 'Asset'} className="dash-most__thumb" />
-                <div className="dash-most__info">
-                  <div className="dash-most__title">{item.title || 'Untitled asset'}</div>
-                  <div className="dash-most__author">{userData?.name || 'You'}</div>
-                </div>
-                <div className="dash-most__downloads">{item.downloads || item.download || 0}</div>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
 
       <section>

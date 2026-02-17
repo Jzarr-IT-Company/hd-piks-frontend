@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { useGlobalState } from "../../Context/Context";
+import { useUI } from "../../Context/UIContext";
 import { useNavigate, useParams } from "react-router-dom";
 import Button from "@mui/material/Button";
 import ButtonGroup from "@mui/material/ButtonGroup";
@@ -11,10 +11,10 @@ import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import { getAllImages } from "../../Services/getImages";
-import { fetchCategories } from "../../Services/category"; // NEW
+import { usePublicCategoriesQuery } from "../../query/categoryQueries.js";
 
 function HomeBannerSearchFilterationCompo2({ showOnDesktop = false }) {
-	const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useGlobalState();
+	const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useUI();
 	const [searchQuerry, setSearchQuerry] = useState("");
 	const navigate = useNavigate();
 	const { term } = useParams();
@@ -24,6 +24,7 @@ function HomeBannerSearchFilterationCompo2({ showOnDesktop = false }) {
 	// Parent dropdown options (from real backend categories)
 	const [options, setOptions] = useState(["Image", "Video"]);
 	const [selectedIndex, setSelectedIndex] = React.useState(0);
+	const categoriesQuery = usePublicCategoriesQuery();
 
 	// All approved images + suggestions
 	const [allItems, setAllItems] = useState([]);
@@ -66,32 +67,17 @@ function HomeBannerSearchFilterationCompo2({ showOnDesktop = false }) {
 		if (term) setSearchQuerry(term.replace(/-/g, " "));
 	}, [term]);
 
-	// NEW: load real parent categories from /categories (public)
 	useEffect(() => {
-		let active = true;
-		(async () => {
-			try {
-				const tree = await fetchCategories();
-				if (!active || !Array.isArray(tree) || !tree.length) return;
+		const tree = categoriesQuery.data;
+		if (!Array.isArray(tree) || !tree.length) return;
 
-				// tree is root categories with children; parents are top level
-				const parentNames = tree
-					.map((c) => c.name)
-					.filter(Boolean);
+		const parentNames = tree.map((c) => c.name).filter(Boolean);
+		if (!parentNames.length) return;
 
-				if (parentNames.length) {
-					setOptions(parentNames);
-					setSelectedIndex(0);
-					setHomeBannerSearchbarFilteration(parentNames[0]);
-				}
-			} catch (e) {
-				console.error("[HomeBannerSearch] fetchCategories failed", e);
-			}
-		})();
-		return () => {
-			active = false;
-		};
-	}, [setHomeBannerSearchbarFilteration]);
+		setOptions(parentNames);
+		setSelectedIndex(0);
+		setHomeBannerSearchbarFilteration(parentNames[0]);
+	}, [categoriesQuery.data, setHomeBannerSearchbarFilteration]);
 
 	// Load all approved images once (for suggestions)
 	useEffect(() => {
@@ -345,6 +331,17 @@ function HomeBannerSearchFilterationCompo2({ showOnDesktop = false }) {
 					</div>
 
 					{/* Suggestions slider: only related sub‑subcategories */}
+					{categoriesQuery.isError && (
+						<div className="d-flex justify-content-center justify-content-md-start mb-2">
+							<button
+								type="button"
+								className="btn btn-sm btn-outline-danger"
+								onClick={() => categoriesQuery.refetch()}
+							>
+								Retry categories
+							</button>
+						</div>
+					)}
 					{suggestions.length > 0 && (
 						<div
 							className="mt-3 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start"

@@ -34,15 +34,6 @@ function SidebarCompo() {
                       <Link
                         style={{ fontSize: "13px" }}
                         className="btn text-decoration-none text-dark fw-semibold py-2 text-start hover_link w-100"
-                        to={`/member`}
-                      >
-                        Members
-                      </Link>
-                    </div>
-                    <div className="">
-                      <Link
-                        style={{ fontSize: "13px" }}
-                        className="btn text-decoration-none text-dark fw-semibold py-2 text-start hover_link w-100"
                         to={`/collection/${"Artificial Chirstmas Trees"}`}
                       >
                         collections

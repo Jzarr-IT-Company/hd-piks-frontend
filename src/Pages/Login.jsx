@@ -24,9 +24,7 @@ function Login() {
         message.success("login successfull")
         navigate('/')
         Cookies.set("id", response.data.id)
-        Cookies.set("token", response.data.token)
-        console.log("RESPONSE", response.data.token)
-        console.log("RESPONSE", response.data.id)
+        Cookies.set("token", response.data.accessToken || response.data.token)
         window.location.reload()
         setEmail('');
         setPassword('')

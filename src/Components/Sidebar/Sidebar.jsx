@@ -8,6 +8,7 @@ import { Layers, ArrowDownUp, BadgeCheck, Sparkles, Palette, Tags, Grid, X } fro
 import './Sidebar.css';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
+import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
 
 function Sidebar() {
     const [isExpanded, setIsExpanded] = useState(true);
@@ -22,49 +23,41 @@ function Sidebar() {
     const discoverMode = searchParams.get('discover') === '1' && !collectionSlug;
     const discoverSubcategory = searchParams.get('dsSub') || '';
     const discoverSubSubcategory = searchParams.get('dsSubSub') || '';
+    const categoriesQuery = usePublicCategoriesQuery();
 
-    // Resolve route param 'name' to parent or subcategory using /categories
+    // Resolve route param 'name' to parent or subcategory using cached /categories query
     useEffect(() => {
         if (!name) return;
-
-        const initFromRoute = async () => {
-            try {
-                const res = await api.get(API_ENDPOINTS.PUBLIC_CATEGORIES);
-                const tree = res.data?.data || [];
-                const lower = name.toLowerCase();
-
-                const parentMatch = tree.find(
-                    (p) => p.name?.toLowerCase() === lower
-                );
-                if (parentMatch) {
-                    setCategoryName(parentMatch.name);
-                    setPresetSubcategory('all');
-                    return;
-                }
-
-                for (const parent of tree) {
-                    if (!Array.isArray(parent.children)) continue;
-                    const child = parent.children.find(
-                        (c) => c.name?.toLowerCase() === lower
-                    );
-                    if (child) {
-                        setCategoryName(parent.name);
-                        setPresetSubcategory(child.name);
-                        return;
-                    }
-                }
-
-                setCategoryName(name);
-                setPresetSubcategory('all');
-            } catch (err) {
-                console.error('Sidebar: failed to resolve route category', err);
+        const tree = categoriesQuery.data;
+        if (!Array.isArray(tree) || !tree.length) {
+            if (categoriesQuery.isError) {
                 setCategoryName(name);
                 setPresetSubcategory('all');
             }
-        };
+            return;
+        }
 
-        initFromRoute();
-    }, [name]);
+        const lower = name.toLowerCase();
+        const parentMatch = tree.find((p) => p.name?.toLowerCase() === lower);
+        if (parentMatch) {
+            setCategoryName(parentMatch.name);
+            setPresetSubcategory('all');
+            return;
+        }
+
+        for (const parent of tree) {
+            if (!Array.isArray(parent.children)) continue;
+            const child = parent.children.find((c) => c.name?.toLowerCase() === lower);
+            if (child) {
+                setCategoryName(parent.name);
+                setPresetSubcategory(child.name);
+                return;
+            }
+        }
+
+        setCategoryName(name);
+        setPresetSubcategory('all');
+    }, [name, categoriesQuery.data, categoriesQuery.isError]);
 
     // When a collection slug is present, load that collection and
     // restrict results to its assetIds.

@@ -65,7 +65,7 @@ function DetailImagePageBanner1() {
                             <div className="d-flex align-items-center">
                                 <img src={userData?.profileImage || img2} className="img-fluid"
                                     style={{ width: "70px", height: "70px", borderRadius: "50%", objectFit: "contain" }} alt="Profile" />
-                                <Link to={`/memberdetail/${userData?._id}`}>
+                                <Link to={`/creatordetail/${userData?.creatorId?._id || userData?.creatorId || userData?._id}`}>
                                     <h5 className='ms-3'>{userData ? userData.name : "Unknown User"}</h5>
                                 </Link>
                             </div>
@@ -102,7 +102,7 @@ function DetailImagePageBanner1() {
                                     return <LikeBttn imgId={img._id} />
                                 })
                             }
-                            <DownloadButton imageUrl={imageUrl} />
+                            <DownloadButton imageUrl={imageUrl} assetId={id} />
                             <ShareButton data={imagesData} id={imagesData} userdata={userData} />
                             <MoreInfoCompo imagesData={imagesData} userData={userData} />
                             <button className="fw-semibold btn border d-none d-md-block py-3" style={{ fontSize: "17px" }}>
@@ -138,7 +138,7 @@ function DetailImagePageBanner1() {
                     <MoreRelatedImages category={imagesData[0]?.category} />
                 </div>
                 <div className="sticky-bottom w-100 bg-white py-3 d-md-none px-0" >
-                    <DownloadButton imageUrl={imageUrl} />
+                    <DownloadButton imageUrl={imageUrl} assetId={id} />
                 </div>
             </div>
         </>

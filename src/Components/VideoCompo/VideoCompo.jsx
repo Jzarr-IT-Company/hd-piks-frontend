@@ -6,6 +6,8 @@ import { FiCompass, FiDownload, FiFolderPlus, FiShare2 } from 'react-icons/fi';
 import PropTypes from 'prop-types';
 import api from '../../Services/api';
 import { getAllUsers } from '../../Services/user.js';
+import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config.js';
+import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import '../FilterationImages/FilterationImages.css';
 
 function VideoCompo({ categoryname }) {
@@ -76,12 +78,36 @@ function VideoCompo({ categoryname }) {
         }
     };
 
-    const handleDownload = (event, item) => {
+    const getS3KeyFromUrl = (url) => {
+        if (!url) return '';
+        try {
+            const parsed = new URL(url);
+            return decodeURIComponent((parsed.pathname || '').replace(/^\/+/, ''));
+        } catch {
+            return '';
+        }
+    };
+
+    const handleDownload = async (event, item) => {
         event.stopPropagation();
         if (!item?.imageUrl) return;
+
+        const fallbackKey = item?.s3Key || getS3KeyFromUrl(item.imageUrl);
+        const safeTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+        const fileName = safeTitle.includes('.') ? safeTitle : `${safeTitle}.mp4`;
+
+        let href = item.imageUrl;
+        await trackAssetDownloadEvent({ assetId: item?._id, fileName });
+        if (fallbackKey) {
+            const params = new URLSearchParams();
+            params.set('key', fallbackKey);
+            params.set('filename', fileName);
+            href = `${API_BASE_URL}/download?${params.toString()}`;
+        }
+
         const link = document.createElement('a');
-        link.href = item.imageUrl;
-        link.download = item.title || 'asset';
+        link.href = href;
+        link.download = fileName;
         link.rel = 'noopener noreferrer';
         document.body.appendChild(link);
         link.click();

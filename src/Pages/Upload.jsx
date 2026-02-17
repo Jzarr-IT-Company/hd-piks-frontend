@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import UploadBanner1 from '../Components/UploadBanner1/UploadBanner1';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import '../Components/DashboardShell/DashboardShell.css';
-import { useGlobalState } from '../Context/Context';
+import { useAuth } from '../Context/AuthContext';
+import { getContributorState } from '../utils/contributorStatus';
 
 function Upload() {
-    const { userData, creatorData } = useGlobalState();
+    const { userData, creatorData } = useAuth();
     const navigate = useNavigate();
-    const contributorStatus = creatorData?.status || 'not-applied';
-    const isContributorApproved = userData?.role === 'creator' || contributorStatus === 'approved';
+    const contributor = getContributorState(userData, creatorData);
+    const isContributorApproved = contributor.isApproved;
 
     useEffect(() => {
         if (creatorData && !isContributorApproved) {

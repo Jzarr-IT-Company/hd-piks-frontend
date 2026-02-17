@@ -1,9 +1,9 @@
 import React from 'react'
-import { useGlobalState } from '../../Context/Context';
+import { useUI } from '../../Context/UIContext';
 import { ArrowDownUp, BadgeCheck, Sparkles, Palette, Tags, CalendarClock, FileCode } from 'lucide-react';
 
 function SidebarMenu({handleSidebarClose}) {
-    const {  setCloseSidebar } = useGlobalState();
+    const { setCloseSidebar } = useUI();
 
     const closeHandle = () => {
         handleSidebarClose(); // This will toggle sidebar visibility
