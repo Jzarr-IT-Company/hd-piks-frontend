@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { Skeleton } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -27,17 +27,53 @@ function GalleryItem({
     getName
 }) {
     const [loaded, setLoaded] = useState(false);
+    const [videoDuration, setVideoDuration] = useState(null);
+    const videoRef = useRef(null);
     const isVideoAsset = (
         asset?.fileMetadata?.mimeType?.startsWith('video/')
         || asset?.imagetype?.startsWith('video/')
         || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
     );
 
+    const formatDuration = useCallback((durationSeconds) => {
+        const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const seconds = total % 60;
+        if (hours > 0) {
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }, []);
+
+    const durationLabel = useMemo(() => {
+        const fromMeta = asset?.fileMetadata?.duration;
+        if (fromMeta != null && fromMeta !== '') return formatDuration(fromMeta);
+        if (videoDuration != null) return formatDuration(videoDuration);
+        return null;
+    }, [asset?.fileMetadata?.duration, videoDuration, formatDuration]);
+
+    const handleCardMouseEnter = useCallback(() => {
+        if (!isVideoAsset || !videoRef.current) return;
+        const p = videoRef.current.play();
+        if (p && typeof p.catch === 'function') {
+            p.catch(() => {});
+        }
+    }, [isVideoAsset]);
+
+    const handleCardMouseLeave = useCallback(() => {
+        if (!isVideoAsset || !videoRef.current) return;
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+    }, [isVideoAsset]);
+
     return (
         <div
             className="lazy-image-wrapper home-gallery__card"
             style={{ position: 'relative', width: '100%', paddingBottom: '70%', cursor: onOpen ? 'pointer' : 'default' }}
             onClick={onOpen}
+            onMouseEnter={handleCardMouseEnter}
+            onMouseLeave={handleCardMouseLeave}
         >
             {!loaded && (
                 <div className="lazy-skeleton-overlay">
@@ -49,6 +85,7 @@ function GalleryItem({
             )}
             {isVideoAsset ? (
                 <video
+                    ref={videoRef}
                     src={src}
                     className="lazy-image"
                     style={{
@@ -67,6 +104,12 @@ function GalleryItem({
                     playsInline
                     preload="metadata"
                     onLoadedData={() => setLoaded(true)}
+                    onLoadedMetadata={(event) => {
+                        setLoaded(true);
+                        if (Number.isFinite(event?.currentTarget?.duration)) {
+                            setVideoDuration(event.currentTarget.duration);
+                        }
+                    }}
                     onError={() => setLoaded(true)}
                 />
             ) : (
@@ -87,6 +130,11 @@ function GalleryItem({
                     loading="lazy"
                     onLoad={() => setLoaded(true)}
                 />
+            )}
+            {isVideoAsset && durationLabel && (
+                <div className="home-gallery__video-duration" aria-label={`Duration ${durationLabel}`}>
+                    {durationLabel}
+                </div>
             )}
 
             <div className="home-gallery__hover-actions">

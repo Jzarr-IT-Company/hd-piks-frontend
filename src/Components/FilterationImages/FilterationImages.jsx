@@ -1,5 +1,5 @@
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
@@ -12,6 +12,79 @@ import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import './FilterationImages.css';
+
+function FilterationMedia({ img, src, alt }) {
+    const [videoDuration, setVideoDuration] = useState(null);
+    const videoRef = useRef(null);
+
+    const isVideoAsset = (
+        img?.fileMetadata?.mimeType?.startsWith('video/')
+        || img?.imagetype?.startsWith('video/')
+        || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
+    );
+
+    const formatDuration = useCallback((durationSeconds) => {
+        const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const seconds = total % 60;
+        if (hours > 0) {
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }, []);
+
+    const durationLabel = useMemo(() => {   
+        const fromMeta = img?.fileMetadata?.duration;
+        if (fromMeta != null && fromMeta !== '') return formatDuration(fromMeta);
+        if (videoDuration != null) return formatDuration(videoDuration);
+        return null;
+    }, [img?.fileMetadata?.duration, videoDuration, formatDuration]);
+
+    const handleMouseEnter = useCallback(() => {
+        if (!isVideoAsset || !videoRef.current) return;
+        const p = videoRef.current.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+    }, [isVideoAsset]);
+
+    const handleMouseLeave = useCallback(() => {
+        if (!isVideoAsset || !videoRef.current) return;
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+    }, [isVideoAsset]);
+
+    return (
+        <div className="filteration-media-shell" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            {isVideoAsset ? (
+                <video
+                    ref={videoRef}
+                    src={src}
+                    className="filteration-video-preview"
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    onLoadedMetadata={(event) => {
+                        if (Number.isFinite(event?.currentTarget?.duration)) {
+                            setVideoDuration(event.currentTarget.duration);
+                        }
+                    }}
+                />
+            ) : (
+                <LazyLoadImage2
+                    src={src}
+                    alt={alt}
+                    loading="lazy"
+                />
+            )}
+            {isVideoAsset && durationLabel && (
+                <div className="filteration-video-duration" aria-label={`Duration ${durationLabel}`}>
+                    {durationLabel}
+                </div>
+            )}
+        </div>
+    );
+}
 
 function FilterationImages({
     name,
@@ -572,14 +645,14 @@ function FilterationImages({
                                             return (
                                                 <ImageListItem key={img._id} onClick={() => handleImageClick(img)}>
                                                     <div className="card card-container rounded-4">
-                                                        <LazyLoadImage2
+                                                        <FilterationMedia
+                                                            img={img}
                                                             src={getMediaVariantUrl(img, ['small', 'medium', 'thumbnail', 'large', 'original'])}
                                                             alt={
                                                                 getSubcategoryName(img.subcategory) ||
                                                                 getCategoryName(img.category) ||
                                                                 getSubSubcategoryName(img.subsubcategory)
                                                             }
-                                                            loading="lazy"
                                                         />
                                                         <div className="card-img-overlay rounded-4 content-hide d-flex flex-column justify-content-end">
                                                             <div className="filteration-actions">

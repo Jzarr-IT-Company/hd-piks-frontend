@@ -24,12 +24,14 @@ import {
   InputAdornment,
   TablePagination,
 } from '@mui/material';
-import { Delete, CheckCircle, Cancel, Visibility, Search as SearchIcon } from '@mui/icons-material';
+import { Delete, CheckCircle, Cancel, Visibility, Search as SearchIcon, Download as DownloadIcon } from '@mui/icons-material';
 import api from '../../Services/api';
+import API_BASE_URL from '../../config/api.config.js';
 
 export default function ImagesPage() {
   const [images, setImages] = useState([]);
   const [creators, setCreators] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
@@ -43,7 +45,8 @@ export default function ImagesPage() {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [uploaderFilter, setUploaderFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [categoryPathFilter, setCategoryPathFilter] = useState('all');
+  const [categoryFilter, setCategoryFilter] = useState('all');
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
@@ -51,12 +54,14 @@ export default function ImagesPage() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [imgRes, creatorRes] = await Promise.all([
+      const [imgRes, creatorRes, categoryRes] = await Promise.all([
         api.get('/admin/images'),
         api.get('/admin/creators'),
+        api.get('/admin/categories'),
       ]);
       setImages(imgRes.data.data || []);
       setCreators(creatorRes.data.data || []);
+      setCategories(categoryRes.data.data || []);
     } catch {
       setError('Failed to fetch images or creators');
     }
@@ -67,11 +72,42 @@ export default function ImagesPage() {
     fetchData();
   }, []);
 
-  const nameOf = (field) => {
+  const getFieldId = (field) => {
     if (!field) return '';
     if (typeof field === 'string') return field;
-    if (typeof field === 'object') return field.name || '';
+    if (typeof field === 'object') return String(field._id || field.$oid || '');
     return String(field);
+  };
+
+  const categoryNameMap = useMemo(() => {
+    const map = {};
+
+    const walk = (nodes) => {
+      if (!Array.isArray(nodes)) return;
+      nodes.forEach((cat) => {
+        const id = String(cat?._id || cat?.id || '');
+        if (id) {
+          map[id] = cat?.name || id;
+        }
+        if (Array.isArray(cat?.children) && cat.children.length) {
+          walk(cat.children);
+        }
+      });
+    };
+
+    walk(categories);
+    return map;
+  }, [categories]);
+
+  const resolveCategoryName = (field) => {
+    if (!field) return '';
+    if (typeof field === 'object') {
+      if (field.name) return field.name;
+      const id = getFieldId(field);
+      return categoryNameMap[id] || id;
+    }
+    const id = getFieldId(field);
+    return categoryNameMap[id] || id;
   };
 
   const getStatusLabel = (img) => {
@@ -186,6 +222,103 @@ export default function ImagesPage() {
     return img?.fileMetadata?.mimeType || img?.imagetype || '-';
   };
 
+  const getCategoryPath = (img) => {
+    const parts = [
+      resolveCategoryName(img?.category),
+      resolveCategoryName(img?.subcategory),
+      resolveCategoryName(img?.subsubcategory),
+    ].filter(Boolean);
+    return parts.join(' / ') || '-';
+  };
+
+  const getZipUrl = (img) => {
+    if (!img) return '';
+    if (typeof img.zipfolderurl === 'string' && img.zipfolderurl.trim()) return img.zipfolderurl.trim();
+    if (Array.isArray(img.zipfolder)) {
+      const first = img.zipfolder.find((z) => typeof z?.url === 'string' && z.url.trim());
+      if (first?.url) return first.url.trim();
+    }
+    return '';
+  };
+
+  const getZipKey = (img) => {
+    if (!img) return '';
+    if (Array.isArray(img.zipfolder)) {
+      const first = img.zipfolder.find((z) =>
+        typeof z?.s3Key === 'string' && z.s3Key.trim()
+        || typeof z?.key === 'string' && z.key.trim()
+      );
+      if (first?.s3Key) return first.s3Key.trim();
+      if (first?.key) return first.key.trim();
+    }
+    if (img.zipfolder && typeof img.zipfolder === 'object') {
+      return String(img.zipfolder.s3Key || img.zipfolder.key || '').trim();
+    }
+    return '';
+  };
+
+  const getZipFileName = (img) => {
+    const url = getZipUrl(img);
+    if (!url) return '';
+    try {
+      const cleanUrl = url.split('?')[0];
+      const parts = cleanUrl.split('/');
+      return decodeURIComponent(parts[parts.length - 1] || '');
+    } catch {
+      return '';
+    }
+  };
+
+  const getCoverDownloadUrl = (img) => {
+    if (!img) return '';
+    if (typeof img.imageUrl === 'string' && img.imageUrl.trim()) return img.imageUrl.trim();
+    if (typeof img.s3Url === 'string' && img.s3Url.trim()) return img.s3Url.trim();
+    if (Array.isArray(img.imageData)) {
+      const first = img.imageData.find((d) => typeof d?.url === 'string' && d.url.trim());
+      if (first?.url) return first.url.trim();
+    }
+    return '';
+  };
+
+  const getCoverKey = (img) => {
+    if (!img) return '';
+    if (typeof img.s3Key === 'string' && img.s3Key.trim()) return img.s3Key.trim();
+    if (Array.isArray(img.imageData)) {
+      const first = img.imageData.find((d) => typeof d?.s3Key === 'string' && d.s3Key.trim());
+      if (first?.s3Key) return first.s3Key.trim();
+    }
+    return '';
+  };
+
+  const inferFileName = (value = '', fallback = 'asset') => {
+    if (!value) return fallback;
+    const clean = String(value).split('?')[0];
+    const parts = clean.split('/');
+    return decodeURIComponent(parts[parts.length - 1] || fallback);
+  };
+
+  const buildProxyDownloadUrl = (s3Key, fallbackName = 'asset') => {
+    if (!s3Key) return '';
+    return `${API_BASE_URL}/download?key=${encodeURIComponent(s3Key)}&filename=${encodeURIComponent(fallbackName)}`;
+  };
+
+  const getCoverDirectOrProxyUrl = (img) => {
+    const coverKey = getCoverKey(img);
+    if (coverKey) return buildProxyDownloadUrl(coverKey, inferFileName(coverKey, 'cover'));
+    return getCoverDownloadUrl(img);
+  };
+
+  const getZipDirectOrProxyUrl = (img) => {
+    const zipKey = getZipKey(img);
+    if (zipKey) return buildProxyDownloadUrl(zipKey, inferFileName(zipKey, 'package.zip'));
+    return getZipUrl(img);
+  };
+
+  const isZipRequiredCategory = (img) => {
+    const top = resolveCategoryName(img?.category).trim().toLowerCase();
+    return ['mockups', 'vector', 'psd', 'templates', 'icons', 'nft'].includes(top);
+  };
+
   const isVideo = (img) => {
     const type = getFileType(img);
     return type.startsWith('video/');
@@ -201,15 +334,25 @@ export default function ImagesPage() {
     ).sort((a, b) => a.localeCompare(b));
   }, [images, creatorMap]);
 
-  const typeOptions = useMemo(() => {
+  const categoryPathOptions = useMemo(() => {
     return Array.from(
       new Set(
         images
-          .map((img) => getFileType(img))
-          .filter((type) => type && type !== '-')
+          .map((img) => getCategoryPath(img))
+          .filter((path) => path && path !== '-')
       )
     ).sort((a, b) => a.localeCompare(b));
   }, [images]);
+
+  const categoryOptions = useMemo(() => {
+    return Array.from(
+      new Set(
+        images
+          .map((img) => resolveCategoryName(img?.category))
+          .filter(Boolean)
+      )
+    ).sort((a, b) => a.localeCompare(b));
+  }, [images, categoryNameMap]);
 
   const statusCounts = useMemo(() => {
     const counts = { total: images.length, approved: 0, pending: 0, rejected: 0 };
@@ -228,24 +371,29 @@ export default function ImagesPage() {
       const status = getStatusLabel(img);
       const uploader = getCreatorName(img.creatorId);
       const type = getFileType(img);
+      const category = resolveCategoryName(img?.category);
+      const categoryPath = getCategoryPath(img);
       const title = (img.title || img.name || img._id || '').toLowerCase();
 
       const matchesQuery = !q
         || title.includes(q)
         || uploader.toLowerCase().includes(q)
         || type.toLowerCase().includes(q)
+        || category.toLowerCase().includes(q)
+        || categoryPath.toLowerCase().includes(q)
         || status.toLowerCase().includes(q);
       const matchesStatus = statusFilter === 'all' || status.toLowerCase() === statusFilter;
       const matchesUploader = uploaderFilter === 'all' || uploader === uploaderFilter;
-      const matchesType = typeFilter === 'all' || type === typeFilter;
+      const matchesCategory = categoryFilter === 'all' || category === categoryFilter;
+      const matchesCategoryPath = categoryPathFilter === 'all' || categoryPath === categoryPathFilter;
 
-      return matchesQuery && matchesStatus && matchesUploader && matchesType;
+      return matchesQuery && matchesStatus && matchesUploader && matchesCategory && matchesCategoryPath;
     });
-  }, [images, query, statusFilter, uploaderFilter, typeFilter, creatorMap]);
+  }, [images, query, statusFilter, uploaderFilter, categoryPathFilter, categoryFilter, creatorMap]);
 
   useEffect(() => {
     setPage(0);
-  }, [query, statusFilter, uploaderFilter, typeFilter]);
+  }, [query, statusFilter, uploaderFilter, categoryPathFilter, categoryFilter]);
 
   useEffect(() => {
     const maxPage = Math.max(0, Math.ceil(filteredImages.length / rowsPerPage) - 1);
@@ -288,7 +436,7 @@ export default function ImagesPage() {
       </Box>
 
       <Paper sx={{ p: 2, mb: 2 }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr 1fr' }, gap: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr 1fr 1fr 1fr' }, gap: 1.5 }}>
           <TextField
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -329,13 +477,25 @@ export default function ImagesPage() {
           <TextField
             select
             size="small"
-            label="Type"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            label="Category"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
           >
-            <MenuItem value="all">All types</MenuItem>
-            {typeOptions.map((type) => (
-              <MenuItem key={type} value={type}>{type}</MenuItem>
+            <MenuItem value="all">All categories</MenuItem>
+            {categoryOptions.map((category) => (
+              <MenuItem key={category} value={category}>{category}</MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            select
+            size="small"
+            label="Category tree"
+            value={categoryPathFilter}
+            onChange={(e) => setCategoryPathFilter(e.target.value)}
+          >
+            <MenuItem value="all">All category trees</MenuItem>
+            {categoryPathOptions.map((path) => (
+              <MenuItem key={path} value={path}>{path}</MenuItem>
             ))}
           </TextField>
         </Box>
@@ -348,7 +508,10 @@ export default function ImagesPage() {
               <TableRow>
                 <TableCell>Preview</TableCell>
                 <TableCell>Title</TableCell>
+                <TableCell>Category</TableCell>
                 <TableCell>Type</TableCell>
+                <TableCell align="center">ZIP</TableCell>
+                <TableCell align="center">Download</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell>Uploader</TableCell>
                 <TableCell align="right">Actions</TableCell>
@@ -361,7 +524,52 @@ export default function ImagesPage() {
                     <Avatar variant="rounded" src={img.imageUrl || img.url || img.thumbnailUrl || ''} alt={img.title || 'Image'} />
                   </TableCell>
                   <TableCell>{img.title || img.name || img._id}</TableCell>
-                  <TableCell>{getFileType(img)}</TableCell>
+                  <TableCell>{getCategoryPath(img)}</TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color={isZipRequiredCategory(img) && !getZipUrl(img) ? 'error.main' : 'text.primary'}>
+                      {isZipRequiredCategory(img)
+                        ? `(${getFileType(img)}) (${getZipUrl(img) ? 'zip' : 'zip-missing'})`
+                        : `(${getFileType(img)})`}
+                    </Typography>
+                  </TableCell>
+                  <TableCell align="center">
+                    {getZipUrl(img) ? (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<DownloadIcon />}
+                        component="a"
+                        href={getZipDirectOrProxyUrl(img)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                      >
+                        ZIP
+                      </Button>
+                    ) : (
+                      <Typography variant="body2" color={isZipRequiredCategory(img) ? 'error.main' : 'text.secondary'}>
+                        {isZipRequiredCategory(img) ? 'Required' : '-'}
+                      </Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    {getCoverDownloadUrl(img) ? (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        startIcon={<DownloadIcon />}
+                        component="a"
+                        href={getCoverDirectOrProxyUrl(img)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        download
+                      >
+                        Cover
+                      </Button>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">-</Typography>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       size="small"
@@ -386,7 +594,7 @@ export default function ImagesPage() {
               ))}
               {pagedImages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={9} align="center">
                     <Typography variant="body2" color="text.secondary">
                       No assets match the current filters.
                     </Typography>
@@ -487,11 +695,37 @@ export default function ImagesPage() {
                 <Typography variant="body2"><strong>Size:</strong> {getFileSize(viewTarget)}</Typography>
                 <Typography variant="body2">
                   <strong>Category:</strong>{' '}
-                  {[nameOf(viewTarget.category), nameOf(viewTarget.subcategory), nameOf(viewTarget.subsubcategory)]
+                  {[
+                    resolveCategoryName(viewTarget.category),
+                    resolveCategoryName(viewTarget.subcategory),
+                    resolveCategoryName(viewTarget.subsubcategory),
+                  ]
                     .filter(Boolean)
                     .join(' / ') || '-'}
                 </Typography>
                 <Typography variant="body2"><strong>Plan:</strong> {viewTarget.freePremium || '-'}</Typography>
+                <Typography variant="body2">
+                  <strong>Cover file:</strong>{' '}
+                  {getCoverDownloadUrl(viewTarget) ? (
+                    <a href={getCoverDirectOrProxyUrl(viewTarget)} target="_blank" rel="noopener noreferrer" download>
+                      Download cover
+                    </a>
+                  ) : (
+                    '-'
+                  )}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>ZIP package:</strong>{' '}
+                  {getZipUrl(viewTarget) ? (
+                    <a href={getZipDirectOrProxyUrl(viewTarget)} target="_blank" rel="noopener noreferrer" download>
+                      Download ZIP
+                    </a>
+                  ) : isZipRequiredCategory(viewTarget) ? (
+                    <span style={{ color: '#d32f2f' }}>Missing (required for this category)</span>
+                  ) : (
+                    '-'
+                  )}
+                </Typography>
                 <Typography variant="body2"><strong>Approved:</strong> {viewTarget.approved ? 'Yes' : 'No'}</Typography>
                 <Typography variant="body2"><strong>Rejected:</strong> {viewTarget.rejected ? 'Yes' : 'No'}</Typography>
                 <Typography variant="body2">

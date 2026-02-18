@@ -7,6 +7,8 @@ import { message, Spin } from 'antd';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 function UploadBtn({ isZipRequired = false }) {
+    const MIN_ZIP_BYTES = 1 * 1024 * 1024; // 1MB
+    const MAX_ZIP_BYTES = 500 * 1024 * 1024; // 500MB
     const {
         category,
         setCategory,
@@ -56,20 +58,25 @@ function UploadBtn({ isZipRequired = false }) {
         const normalizedPlan = selectPlan ? selectPlan.toLowerCase() : null;
         const errors = [];
 
-        const zipKeyFromState = Array.isArray(zipFolder)
-            ? (typeof zipFolder[0] === 'string'
-                ? zipFolder[0]
-                : (zipFolder[0]?.s3Key || zipFolder[0]?.key || ''))
-            : (typeof zipFolder === 'string'
-                ? zipFolder
-                : (zipFolder?.s3Key || zipFolder?.key || ''));
+        const zipFromState = Array.isArray(zipFolder) ? zipFolder[0] : zipFolder;
+        const zipKeyFromState = typeof zipFromState === 'string'
+            ? zipFromState
+            : (zipFromState?.s3Key || zipFromState?.key || '');
+        const zipSizeFromState = typeof zipFromState === 'object' ? Number(zipFromState?.fileSize || 0) : 0;
+        const zipMimeTypeFromState = typeof zipFromState === 'object' ? (zipFromState?.mimeType || '') : '';
+        const zipFileNameFromState = typeof zipFromState === 'object' ? (zipFromState?.fileName || '') : '';
 
-        const normalizedZipFolderUrl = typeof zipFolderUrl === 'string'
-            ? zipFolderUrl
-            : (Array.isArray(zipFolder) ? (zipFolder[0]?.url || '') : (zipFolder?.url || ''));
+        const normalizedZipFolderUrl = (typeof zipFolderUrl === 'string' && zipFolderUrl)
+            || (typeof zipFromState === 'object' ? (zipFromState?.url || '') : '');
 
         const normalizedZipFolder = zipKeyFromState
-            ? [{ s3Key: zipKeyFromState, url: normalizedZipFolderUrl || null }]
+            ? [{
+                s3Key: zipKeyFromState,
+                ...(normalizedZipFolderUrl ? { url: normalizedZipFolderUrl } : {}),
+                ...(zipSizeFromState ? { fileSize: zipSizeFromState } : {}),
+                ...(zipMimeTypeFromState ? { mimeType: zipMimeTypeFromState } : {}),
+                ...(zipFileNameFromState ? { fileName: zipFileNameFromState } : {}),
+            }]
             : [];
 
         if (!category) errors.push("Please select a category");
@@ -81,6 +88,10 @@ function UploadBtn({ isZipRequired = false }) {
         if (!imageUrl && !isEditing) errors.push("Please upload an image");
         if (isZipRequired && !zipKeyFromState && !normalizedZipFolderUrl) {
             errors.push("Please upload a ZIP file for this category");
+        }
+        if ((zipKeyFromState || normalizedZipFolderUrl) && zipSizeFromState) {
+            if (zipSizeFromState < MIN_ZIP_BYTES) errors.push("ZIP too small. Minimum 1MB required");
+            if (zipSizeFromState > MAX_ZIP_BYTES) errors.push("ZIP too large. Max 500MB allowed");
         }
         if (!termsChecked) errors.push("Please accept Terms and Conditions");
         if (!contentChecked) errors.push("Please confirm permission letter condition");

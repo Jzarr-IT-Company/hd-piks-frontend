@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useUpload } from '../../Context/UploadContext';
 import { uploadImageToS3, formatFileSize } from '../../Services/S3Service.js';
 import { message } from 'antd';
 
-function UploadBanner1ImageCompo() {
+function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
     const { 
         category,
         selectedSubCategory,
@@ -23,8 +23,22 @@ function UploadBanner1ImageCompo() {
     const [progress, setProgress] = useState(0);
 
     const allowedFileTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "video/mp4", "image/webp"];
-    const MAX_IMAGE_BYTES = 30 * 1024 * 1024; // 30MB limit for images
+    const MIN_IMAGE_BYTES = Math.ceil(1.5 * 1024 * 1024); // 1.5MB minimum for images
+    const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15MB limit for images
     const MAX_VIDEO_BYTES = 120 * 1024 * 1024; // 120MB limit for videos
+
+    const expectedMediaKind = useMemo(() => {
+        const normalized = String(selectedCategoryName || '').trim().toLowerCase();
+        if (!normalized) return null;
+        if (normalized === 'video') return 'video';
+        return 'image';
+    }, [selectedCategoryName]);
+
+    const acceptedInputTypes = useMemo(() => {
+        if (expectedMediaKind === 'video') return 'video/mp4';
+        if (expectedMediaKind === 'image') return 'image/png,image/jpeg,image/jpg,image/gif,image/webp';
+        return '.png,.jpg,.jpeg,.gif,.webp,.mp4';
+    }, [expectedMediaKind]);
     
     const handleFileChange = async (event) => {
         const files = Array.from(event.target.files);
@@ -48,10 +62,28 @@ function UploadBanner1ImageCompo() {
             }
 
             const isVideo = file.type.startsWith('video/');
-            const limit = isVideo ? MAX_VIDEO_BYTES : MAX_IMAGE_BYTES;
-            if (file.size > limit) {
-                message.error(`File too large. Max ${isVideo ? '120MB' : '30MB'} allowed.`);
+            if (expectedMediaKind === 'video' && !isVideo) {
+                message.error('Selected category is Video. Please upload only MP4 video files.');
                 return;
+            }
+            if (expectedMediaKind === 'image' && isVideo) {
+                message.error(`Selected category is ${selectedCategoryName || 'Image'}. Please upload only image files.`);
+                return;
+            }
+            if (isVideo) {
+                if (file.size > MAX_VIDEO_BYTES) {
+                    message.error('Video too large. Max 120MB allowed.');
+                    return;
+                }
+            } else {
+                if (file.size < MIN_IMAGE_BYTES) {
+                    message.error('Image too small. Minimum 1.5MB required.');
+                    return;
+                }
+                if (file.size > MAX_IMAGE_BYTES) {
+                    message.error('Image too large. Max 15MB allowed.');
+                    return;
+                }
             }
 
             // Clean filename
@@ -133,6 +165,8 @@ function UploadBanner1ImageCompo() {
                 className="d-none"
                 id="images"
                 multiple
+                disabled={!category}
+                accept={acceptedInputTypes}
                 onChange={handleFileChange}
             />
             <label
@@ -202,7 +236,19 @@ function UploadBanner1ImageCompo() {
                             ></i>
                             <h4 className="mt-3 mb-2" style={{ fontWeight: 800 }}>Drag & Drop to Upload</h4>
                             <p className="text-muted mb-1">or click to select files from your device</p>
-                            <p className="small text-muted">Supported formats: JPG, PNG, JPEG, GIF, WEBP, MP4</p>
+                            {!category ? (
+                                <p className="small text-danger mb-1">Select category first to enable file upload.</p>
+                            ) : null}
+                            <p className="small text-muted">
+                                {expectedMediaKind === 'video'
+                                    ? 'Supported format: MP4'
+                                    : 'Supported formats: JPG, PNG, JPEG, GIF, WEBP'}
+                            </p>
+                            <p className="small text-muted mb-0">
+                                {expectedMediaKind === 'video'
+                                    ? 'Video size limit: up to 120MB'
+                                    : 'Image size limits: minimum 1.5MB, maximum 15MB'}
+                            </p>
                         </div>
                     )}
                 </div>

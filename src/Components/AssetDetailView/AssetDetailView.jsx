@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useAuth } from '../../Context/AuthContext';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
@@ -15,6 +15,84 @@ import { useAssetDetailQuery, useRelatedAssetsQuery } from '../../query/assetDet
 import { useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import './AssetDetailView.css';
+
+function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getResponsiveImageProps }) {
+    const [videoDuration, setVideoDuration] = useState(null);
+    const videoRef = useRef(null);
+
+    const isVideoAsset = useMemo(() => {
+        const mime = String(item?.fileMetadata?.mimeType || item?.imagetype || '').toLowerCase();
+        if (mime.startsWith('video/')) return true;
+        const cat = String(getCategoryName(item?.category) || '').trim().toLowerCase();
+        if (cat === 'video' || cat === 'videos') return true;
+        const url = item?.imageUrl || '';
+        return /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(url);
+    }, [item, getCategoryName]);
+
+    const formatDuration = useCallback((durationSeconds) => {
+        const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
+        const hours = Math.floor(total / 3600);
+        const minutes = Math.floor((total % 3600) / 60);
+        const seconds = total % 60;
+        if (hours > 0) {
+            return `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }, []);
+
+    const durationLabel = useMemo(() => {
+        const fromMeta = item?.fileMetadata?.duration;
+        if (fromMeta != null && fromMeta !== '') return formatDuration(fromMeta);
+        if (videoDuration != null) return formatDuration(videoDuration);
+        return null;
+    }, [item?.fileMetadata?.duration, videoDuration, formatDuration]);
+
+    const handleMouseEnter = useCallback(() => {
+        if (!isVideoAsset || !videoRef.current) return;
+        const p = videoRef.current.play();
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+    }, [isVideoAsset]);
+
+    const handleMouseLeave = useCallback(() => {
+        if (!isVideoAsset || !videoRef.current) return;
+        videoRef.current.pause();
+        videoRef.current.currentTime = 0;
+    }, [isVideoAsset]);
+
+    return (
+        <div className="related-media-shell" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+            {isVideoAsset ? (
+                <video
+                    ref={videoRef}
+                    src={getMediaVariantUrl(item, ['360p', '720p', '1080p', 'original']) || item.imageUrl}
+                    className="related-media-el"
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    onLoadedMetadata={(event) => {
+                        if (Number.isFinite(event?.currentTarget?.duration)) {
+                            setVideoDuration(event.currentTarget.duration);
+                        }
+                    }}
+                />
+            ) : (
+                <LazyLoadImage2
+                    {...getResponsiveImageProps(item, {
+                        preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
+                        sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
+                    })}
+                    alt={item.title || getSubcategoryName(item.subcategory) || getCategoryName(item.category)}
+                />
+            )}
+            {isVideoAsset && durationLabel && (
+                <div className="related-video-duration" aria-label={`Duration ${durationLabel}`}>
+                    {durationLabel}
+                </div>
+            )}
+        </div>
+    );
+}
 
 function AssetDetailView() {
     const { userData } = useAuth();
@@ -707,21 +785,12 @@ function AssetDetailView() {
                                 style={{ cursor: 'pointer' }}
                             >
                                 <div className="related-card">
-                                    {normalize(getCategoryName(item.category)) === 'video' ? (
-                                        <video
-                                            src={getMediaVariantUrl(item, ['360p', '720p', '1080p', 'original']) || item.imageUrl}
-                                            style={{ width: '100%', borderRadius: 16 }}
-                                            muted
-                                        />
-                                    ) : (
-                                        <LazyLoadImage2
-                                            {...getResponsiveImageProps(item, {
-                                                preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
-                                                sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
-                                            })}
-                                            alt={item.title || getSubcategoryName(item.subcategory) || getCategoryName(item.category)}
-                                        />
-                                    )}
+                                    <RelatedCardMedia
+                                        item={item}
+                                        getCategoryName={getCategoryName}
+                                        getSubcategoryName={getSubcategoryName}
+                                        getResponsiveImageProps={getResponsiveImageProps}
+                                    />
                                     {getCategorySubcategoryTag(item) ? (
                                         <span className="related-tag position-absolute top-0 start-0 m-2">
                                             {getCategorySubcategoryTag(item)}
@@ -799,21 +868,12 @@ function AssetDetailView() {
                                 style={{ cursor: 'pointer' }}
                             >
                                 <div className="related-card">
-                                    {normalize(getCategoryName(item.category)) === 'video' ? (
-                                        <video
-                                            src={getMediaVariantUrl(item, ['360p', '720p', '1080p', 'original']) || item.imageUrl}
-                                            style={{ width: '100%', borderRadius: 16 }}
-                                            muted
-                                        />
-                                    ) : (
-                                        <LazyLoadImage2
-                                            {...getResponsiveImageProps(item, {
-                                                preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
-                                                sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
-                                            })}
-                                            alt={item.title || getSubcategoryName(item.subcategory) || getCategoryName(item.category)}
-                                        />
-                                    )}
+                                    <RelatedCardMedia
+                                        item={item}
+                                        getCategoryName={getCategoryName}
+                                        getSubcategoryName={getSubcategoryName}
+                                        getResponsiveImageProps={getResponsiveImageProps}
+                                    />
                                     {getCategorySubcategoryTag(item) ? (
                                         <span className="related-tag position-absolute top-0 start-0 m-2">
                                             {getCategorySubcategoryTag(item)}

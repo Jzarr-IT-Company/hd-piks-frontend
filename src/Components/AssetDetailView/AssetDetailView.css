@@ -55,6 +55,35 @@
   border-radius: 16px;
 }
 
+.related-media-shell {
+  position: relative;
+  width: 100%;
+}
+
+.related-media-el {
+  display: block;
+  width: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  background: #000;
+}
+
+.related-video-duration {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  z-index: 2;
+  background: rgba(15, 23, 42, 0.82);
+  color: #fff;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
 .related-actions {
   position: absolute;
   top: 10px;

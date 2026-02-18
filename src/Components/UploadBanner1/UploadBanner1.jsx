@@ -14,6 +14,8 @@ import { API_ENDPOINTS } from '../../config/api.config';
 function UploadBanner1() {
     const ZIP_REQUIRED_NAMES = ['mockups', 'vector', 'psd', 'templates', 'icons', 'nft'];
     const ZIP_OPTIONAL_NAMES = ['image'];
+    const MIN_ZIP_BYTES = 1 * 1024 * 1024; // 1MB
+    const MAX_ZIP_BYTES = 500 * 1024 * 1024; // 500MB
 
     const {
         category,
@@ -220,11 +222,30 @@ function UploadBanner1() {
 
     const handleZipFolders = async (file) => {
         if (!file) return;
+        const isZipFile = file.name?.toLowerCase().endsWith('.zip');
+        if (!isZipFile) {
+            message.error('Only .zip file is allowed.');
+            return;
+        }
+        if (file.size < MIN_ZIP_BYTES) {
+            message.error('ZIP too small. Minimum 1MB required.');
+            return;
+        }
+        if (file.size > MAX_ZIP_BYTES) {
+            message.error('ZIP too large. Max 500MB allowed.');
+            return;
+        }
         setLoading(true);
         try {
             const result = await multipartUploadToS3(file, category, () => {});
             setZipFolderUrl(result.s3Url);
-            setZipFolder(result.s3Key);
+            setZipFolder([{
+                s3Key: result.s3Key,
+                url: result.s3Url,
+                fileName: result.fileName || file.name,
+                fileSize: result.fileSize || file.size,
+                mimeType: result.mimeType || file.type || 'application/zip',
+            }]);
             message.success('ZIP uploaded successfully!');
         } catch (error) {
             setZipFolder([]);
@@ -266,7 +287,7 @@ function UploadBanner1() {
                         <img src={imageUrl} alt="Preview" style={{ width: '100%', borderRadius: '8px' }} />
                     )
                 ) : null}
-                <UploadBanner1ImageCompo />
+                <UploadBanner1ImageCompo selectedCategoryName={selectedCategoryNode?.name || ''} />
             </div>
 
             <div className="upload-card upload-card--form">
@@ -430,6 +451,7 @@ function UploadBanner1() {
                                     ) : null}
                                 </div>
                             ) : null}
+                            <div className="small text-muted mt-1">Allowed ZIP size: 1MB to 500MB</div>
                         </div>
                     )}
 
