@@ -262,3 +262,32 @@
 .asset-type-carousel::-webkit-scrollbar {
 	display: none;              /* Chrome/Safari */
 }
+
+.start-creating-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 18px;
+    min-height: 42px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #fff !important;
+    border: 1px solid rgb(143, 92, 255);
+    background: linear-gradient(90deg, rgb(143, 92, 255), rgb(184, 69, 146));
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.start-creating-btn:hover,
+.start-creating-btn:focus-visible {
+    color: #fff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(143, 92, 255, 0.3);
+    filter: saturate(1.05);
+}
+
+.start-creating-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(143, 92, 255, 0.26);
+}

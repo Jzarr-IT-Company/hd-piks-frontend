@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+ï»¿import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { Skeleton } from '@mui/material';
 import FilterationImages from '../Components/FilterationImages/FilterationImages';
@@ -171,13 +171,22 @@ function SearchPage() {
   return (
     <>
       <div className="container pt-4">
-        <div className="d-flex align-items-center">
-          <Link to="/">
+        <div className="d-flex align-items-start d-md-none" style={{ gap: 10 }}>
+          <Link to="/" style={{ marginTop: 2, flex: '0 0 auto' }}>
+            <img src={logo} alt="Hdpiks" style={{ height: 36, cursor: 'pointer' }} />
+          </Link>
+          <div className="flex-grow-1">
+            <HomeBannerSearchFilterationCompo2 showOnDesktop compact hideSearchBarMargin hideWrapperPadding />
+          </div>
+        </div>
+
+        <div className="d-none d-md-flex align-items-start">
+          <Link to="/" style={{ marginTop: -8, flex: '0 0 auto' }}>
             <img src={logo} alt="Hdpiks" style={{ height: 40, cursor: 'pointer' }} />
           </Link>
 
           <div className="flex-grow-1 ms-3">
-            <HomeBannerSearchFilterationCompo2 showOnDesktop />
+            <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding />
           </div>
         </div>
       </div>
@@ -192,10 +201,10 @@ function SearchPage() {
               <p className="text-muted mb-0" style={{ fontSize: 14 }}>
                 Showing assets under <strong>{resolvedCategory}</strong>
                 {presetSubcategory && presetSubcategory !== 'all'
-                  ? ` · subcategory "${presetSubcategory}"`
+                  ? ` Â· subcategory "${presetSubcategory}"`
                   : ''}
                 {presetSubSubcategory && presetSubSubcategory !== 'all'
-                  ? ` · style "${presetSubSubcategory}"`
+                  ? ` Â· style "${presetSubSubcategory}"`
                   : ''}
               </p>
             )}

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useAuth } from '../../Context/AuthContext';
 import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3, FiInfo } from 'react-icons/fi';
 import Cookies from 'js-cookie';
 import api from '../../Services/api';
@@ -14,6 +16,7 @@ import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { useAssetDetailQuery, useRelatedAssetsQuery } from '../../query/assetDetailQueries.js';
 import { useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
+import AppFooter from '../AppFooter/AppFooter.jsx';
 import './AssetDetailView.css';
 
 function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getResponsiveImageProps }) {
@@ -82,6 +85,7 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
                         preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
                         sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
                     })}
+                    className="related-media-el"
                     alt={item.title || getSubcategoryName(item.subcategory) || getCategoryName(item.category)}
                 />
             )}
@@ -95,6 +99,13 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
 }
 
 function AssetDetailView() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
+    const relatedCols = isMobile ? 2 : (isTablet ? 2 : 3);
+    const relatedGap = isMobile ? 10 : 14;
+    const relatedVariant = isMobile ? 'standard' : 'masonry';
+
     const { userData } = useAuth();
     const { id } = useParams();
     const location = useLocation();
@@ -630,27 +641,34 @@ function AssetDetailView() {
 
     if (loading) {
         return (
-            <div className="container py-5">
-                <Skeleton variant="rectangular" width="100%" height={420} className="mb-4" />
-                <div className="d-flex gap-3">
-                    {[...Array(4)].map((_, idx) => (
-                        <Skeleton key={idx} variant="rectangular" width="100%" height={220} />
-                    ))}
+            <>
+                <div className="container py-5">
+                    <Skeleton variant="rectangular" width="100%" height={420} className="mb-4" />
+                    <div className="d-flex gap-3">
+                        {[...Array(4)].map((_, idx) => (
+                            <Skeleton key={idx} variant="rectangular" width="100%" height={220} />
+                        ))}
+                    </div>
                 </div>
-            </div>
+                <AppFooter />
+            </>
         );
     }
 
     if (error || !asset) {
         return (
-            <div className="container py-5">
-                <BackBtnCompo />
-                <p className="mt-4 text-danger fw-semibold">{error || 'Asset not found'}</p>
-            </div>
+            <>
+                <div className="container py-5">
+                    <BackBtnCompo />
+                    <p className="mt-4 text-danger fw-semibold">{error || 'Asset not found'}</p>
+                </div>
+                <AppFooter />
+            </>
         );
     }
 
     return (
+        <>
         <div className="container py-4">
             <BackBtnCompo />
 
@@ -777,7 +795,13 @@ function AssetDetailView() {
                         <h5 className="related-section__title fw-semibold mb-0">More like this</h5>
                         <Link className="related-section__link" to={`/collection/${normalize(getCategoryName(asset.category))}`}>See all</Link>
                     </div>
-                    <ImageList className="related-grid" sx={{ width: '100%', height: 'auto' }} variant="masonry" cols={3} gap={14}>
+                    <ImageList
+                        className="related-grid"
+                        sx={{ width: '100%', height: 'auto' }}
+                        variant={relatedVariant}
+                        cols={relatedCols}
+                        gap={relatedGap}
+                    >
                         {sameSubcategorySimilarAssets.map((item) => (
                             <ImageListItem
                                 key={`similar-${item._id}`}
@@ -797,7 +821,7 @@ function AssetDetailView() {
                                         </span>
                                     ) : null}
                                     <div className="related-actions">
-                                        <LikeBttnSm imgId={item?._id} compact stopPropagation />
+                                        <LikeBttnSm imgId={item?._id} compact compactSize={isMobile ? 28 : 34} stopPropagation />
                                         <button
                                             type="button"
                                             className="related-btn"
@@ -860,7 +884,13 @@ function AssetDetailView() {
                             <Link className="related-section__link" to={`/collection/${normalize(getCategoryName(asset.category))}`}>See all</Link>
                         )}
                     </div>
-                    <ImageList className="related-grid" sx={{ width: '100%', height: 'auto' }} variant="masonry" cols={3} gap={14}>
+                    <ImageList
+                        className="related-grid"
+                        sx={{ width: '100%', height: 'auto' }}
+                        variant={relatedVariant}
+                        cols={relatedCols}
+                        gap={relatedGap}
+                    >
                         {creatorAssets.map((item) => (
                             <ImageListItem
                                 key={`creator-${item._id}`}
@@ -880,7 +910,7 @@ function AssetDetailView() {
                                         </span>
                                     ) : null}
                                     <div className="related-actions">
-                                        <LikeBttnSm imgId={item?._id} compact stopPropagation />
+                                        <LikeBttnSm imgId={item?._id} compact compactSize={isMobile ? 28 : 34} stopPropagation />
                                         <button
                                             type="button"
                                             className="related-btn"
@@ -1139,6 +1169,8 @@ function AssetDetailView() {
                 onSuccess={() => {}}
             />
         </div>
+        <AppFooter />
+        </>
     );
 }
 

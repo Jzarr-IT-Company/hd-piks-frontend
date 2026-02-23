@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')).render(
             <UploadProvider>
               <ProfileProvider>
                 <GlobalStates>
-                  <App />
+                  <App/>
                 </GlobalStates>
               </ProfileProvider>
             </UploadProvider>

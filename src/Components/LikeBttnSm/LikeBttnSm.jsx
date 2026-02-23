@@ -6,7 +6,7 @@ import { API_ENDPOINTS } from '../../config/api.config.js';
 import { useAuth } from '../../Context/AuthContext.jsx';
 import { invalidateLikesRelatedQueries } from '../../utils/likesCache.js';
 
-function LikeBttnSm({ imgId, compact = false, stopPropagation = false }) {
+function LikeBttnSm({ imgId, compact = false, compactSize = 34, stopPropagation = false }) {
     const navigate = useNavigate();
     const { userData } = useAuth();
     const [liked, setLiked] = useState(false);
@@ -90,8 +90,8 @@ function LikeBttnSm({ imgId, compact = false, stopPropagation = false }) {
             onClick={handleClick}
             style={{
                 fontSize: compact ? "14px" : "11px",
-                width: compact ? 34 : undefined,
-                height: compact ? 34 : undefined,
+                width: compact ? compactSize : undefined,
+                height: compact ? compactSize : undefined,
                 borderRadius: compact ? 8 : undefined,
                 padding: compact ? 0 : undefined,
                 background: compact ? "rgba(255,255,255,0.94)" : undefined,

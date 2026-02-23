@@ -2,7 +2,7 @@ import React from 'react'
 import logo from '../../assets/logo1.webp'
 import { Link } from 'react-router-dom'
 
-function ImagsNavbar() {
+function ImagsNavbar({ showSearch = true }) {
 
     return (
         <>
@@ -29,27 +29,29 @@ function ImagsNavbar() {
                         </div>
                     </div>
                 </div>
-                <div className="col d-none d-md-block">
-                    <div
-                        className="input-group"
-                        style={{ backgroundColor: "#f8f9fa", height: 50 }}
-                    >
-                        <input
-                            type="text"
-                            className="form-control"
-                            placeholder="Search..."
-                            aria-label="Search"
-                            style={{ height: "100%", padding: 10 }}
-                        />
-                        <button
-                            className="btn btn-outline-secondary"
-                            type="button"
-                            style={{ height: "100%" }}
+                {showSearch && (
+                    <div className="col d-none d-md-block">
+                        <div
+                            className="input-group"
+                            style={{ backgroundColor: "#f8f9fa", height: 50 }}
                         >
-                            <i className="bi bi-search" />
-                        </button>
+                            <input
+                                type="text"
+                                className="form-control"
+                                placeholder="Search..."
+                                aria-label="Search"
+                                style={{ height: "100%", padding: 10 }}
+                            />
+                            <button
+                                className="btn btn-outline-secondary"
+                                type="button"
+                                style={{ height: "100%" }}
+                            >
+                                <i className="bi bi-search" />
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
 
             </div>
         </>

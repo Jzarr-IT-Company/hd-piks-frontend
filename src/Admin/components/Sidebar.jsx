@@ -5,6 +5,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import ImageIcon from '@mui/icons-material/Image';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import ViewQuiltIcon from '@mui/icons-material/ViewQuilt';
 import { Link, useLocation } from 'react-router-dom';
 
 const menu = [
@@ -13,6 +14,7 @@ const menu = [
   { label: 'Users', icon: <PeopleIcon />, to: '/admin/users' },
   { label: 'Creators', icon: <PeopleIcon />, to: '/admin/creators' },
   { label: 'Images', icon: <ImageIcon />, to: '/admin/images' },
+  { label: 'Templates', icon: <ViewQuiltIcon />, to: '/admin/templates' },
   { label: 'Blogs', icon: <CategoryIcon />, to: '/admin/blogs' },
   { label: 'Analytics', icon: <BarChartIcon />, to: '/admin/analytics' },
   { label: 'Collections', icon: <CategoryIcon />, to: '/admin/collections' },

@@ -74,6 +74,8 @@ export const API_ENDPOINTS = {
     GET_PUBLIC_ASSET_BY_ID: id => `/assets/${id}`,
     GET_PUBLIC_ASSET_INFO: id => `/assets/${id}/info`,
     GET_RELATED_ASSETS: id => `/assets/${id}/related`,
+    TEMPLATES: '/templates',
+    TEMPLATE_BY_ID: id => `/templates/${id}`,
 
     GET_IMAGES_BY_CREATOR_ID: '/getAllImages', // POST: { id: creatorId }
     GET_IMAGE_BY_ID: id => `/images/${id}`, // NEW
@@ -115,6 +117,9 @@ export const API_ENDPOINTS = {
     // Admin Categories CRUD
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_CATEGORY: id => `/admin/categories/${id}`,
+    ADMIN_TEMPLATES: '/admin/templates',
+    ADMIN_TEMPLATE: id => `/admin/templates/${id}`,
+    ADMIN_UPLOAD_TEMPLATE_ASSET: '/admin/templates/upload',
 
     // Public categories (no auth, GET /categories -> getPublicCategories)
     PUBLIC_CATEGORIES: '/categories',

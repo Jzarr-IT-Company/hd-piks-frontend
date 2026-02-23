@@ -358,6 +358,7 @@ import UsersPage from "../Admin/pages/Users";
 import CreatorsPage from "../Admin/pages/Creators";
 import ImagesPage from "../Admin/pages/Images";
 import AnalyticsPage from "../Admin/pages/Analytics";
+import TemplatesPage from "../Admin/pages/Templates";
 import AdminSidebar from "../Admin/components/Sidebar";
 import AdminTopbar from "../Admin/components/Topbar";
 import NotFound from "../Pages/NotFound"; // Adjust the path if needed
@@ -505,6 +506,7 @@ function Routing() {
         { path: "users", element: <UsersPage /> },
         { path: "creators", element: <CreatorsPage /> },
         { path: "images", element: <ImagesPage /> },
+        { path: "templates", element: <TemplatesPage /> },
         { path: "blogs", element: <AdminBlogs /> },
         // { path: 'blog-categories', element: <BlogCategories /> },
         { path: "analytics", element: <AnalyticsPage /> },

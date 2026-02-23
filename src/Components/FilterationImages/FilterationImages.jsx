@@ -1,6 +1,8 @@
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
-import { FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { FiChevronLeft, FiChevronRight, FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../../config/api.config';
@@ -11,6 +13,7 @@ import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '.
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
+import AppFooter from '../AppFooter/AppFooter.jsx';
 import './FilterationImages.css';
 
 function FilterationMedia({ img, src, alt }) {
@@ -95,7 +98,11 @@ function FilterationImages({
     searchSubSubcategory = undefined,
     collectionAssetIds = undefined,   // NEW: limit to these asset IDs
     similarMatchMode = false,
+    showFooter = false,
 }) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const [activeSubcategory, setActiveSubcategory] = useState('all');
     const [activeSubsubcategory, setActiveSubsubcategory] = useState('all');
     const navigate = useNavigate();
@@ -103,6 +110,7 @@ function FilterationImages({
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showCollectionModal, setShowCollectionModal] = useState(false);
     const [selectedAssetId, setSelectedAssetId] = useState(null);
+    const pillsRowRef = useRef(null);
 
     const isSearchMode = !!searchSubcategory;
 
@@ -299,12 +307,9 @@ function FilterationImages({
         }
     }, [presetSubcategory]);
 
-    const getColumns = useMemo(() => {
-        const width = window.innerWidth;
-        if (width < 567) return 2;
-        if (width < 900) return 3;
-        return 4;
-    }, []);
+    const gridColumns = isMobile ? 2 : (isTablet ? 3 : 4);
+    const gridGap = isMobile ? 10 : 8;
+    const gridVariant = isMobile ? 'standard' : 'masonry';
 
     // Build SEO-friendly URL: /asset/:categorySlug/:subSlug/:id
     const buildAssetUrl = useCallback(
@@ -534,6 +539,13 @@ function FilterationImages({
         [isSearchMode, navigate]
     );
 
+    const scrollPills = useCallback((direction) => {
+        const row = pillsRowRef.current;
+        if (!row) return;
+        const step = Math.max(120, Math.floor(row.clientWidth * 0.6));
+        row.scrollBy({ left: direction * step, behavior: 'smooth' });
+    }, []);
+
     // NEW: shared styles for subcategory pills
     const pillBaseStyle = {
         borderRadius: 999,
@@ -554,12 +566,24 @@ function FilterationImages({
     };
 
     return (
-        <div className="container">
+        <>
+        <div className="container filteration-page-container">
             {/* Row 1: category + subcategory pills */}
-            <div
-                className="d-flex flex-wrap align-items-center gap-2 mb-3 justify-content-center justify-content-md-start"
-                style={{ background: '#f7f3ff', borderRadius: 999, padding: '6px 10px' }}
-            >
+            <div className="filteration-pill-shell mb-3">
+                <button
+                    type="button"
+                    className="filteration-pill-arrow filteration-pill-arrow-left"
+                    onClick={() => scrollPills(-1)}
+                    aria-label="Scroll categories left"
+                >
+                    <FiChevronLeft size={16} />
+                </button>
+
+                <div
+                    ref={pillsRowRef}
+                    className="filteration-pill-row d-flex flex-wrap align-items-center gap-2 justify-content-center justify-content-md-start"
+                    style={{ background: '#f7f3ff', borderRadius: 999, padding: '6px 10px' }}
+                >
                 <span
                     className="fw-bold px-3 py-1 text-white"
                     style={{
@@ -597,13 +621,29 @@ function FilterationImages({
                         {subcat}
                     </button>
                 ))}
+                </div>
+
+                <button
+                    type="button"
+                    className="filteration-pill-arrow filteration-pill-arrow-right"
+                    onClick={() => scrollPills(1)}
+                    aria-label="Scroll categories right"
+                >
+                    <FiChevronRight size={16} />
+                </button>
             </div>
 
             {loading ? (
-                <ImageList sx={{ width: '100%', height: 'auto' }} variant="masonry" cols={getColumns} gap={8}>
+                <ImageList
+                    className="filteration-grid"
+                    sx={{ width: '100%', height: 'auto' }}
+                    variant={gridVariant}
+                    cols={gridColumns}
+                    gap={gridGap}
+                >
                     {[...Array(skeletonCount)].map((_, index) => (
                         <ImageListItem key={index}>
-                            <Skeleton variant="rectangular" width="100%" height={"200px"} />
+                            <Skeleton variant="rectangular" width="100%" height={isMobile ? 140 : 200} />
                         </ImageListItem>
                     ))}
                 </ImageList>
@@ -628,12 +668,13 @@ function FilterationImages({
                                 isSearchMode && searchSubSubcategory ? searchSubSubcategory : subcat;
                             return (
                                 <div key={subcat} className="mb-4 w-100">
-                                    <h5 className="fw-semibold mb-2 text-capitalize">{sectionTitle}</h5>
+                                    <h5 className="fw-semibold mb-2 text-capitalize filteration-section-title">{sectionTitle}</h5>
                                     <ImageList
+                                        className="filteration-grid"
                                         sx={{ width: '100%', height: 'auto' }}
-                                        variant="masonry"
-                                        cols={getColumns}
-                                        gap={8}
+                                        variant={gridVariant}
+                                        cols={gridColumns}
+                                        gap={gridGap}
                                     >
                                         {items.map((img) => {
                                             const imgCreatorId =
@@ -825,6 +866,12 @@ function FilterationImages({
                 onSuccess={() => {}}
             />
         </div>
+        {showFooter ? (
+            <div className="filteration-page-footer">
+                <AppFooter />
+            </div>
+        ) : null}
+        </>
     );
 }
 
