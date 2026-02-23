@@ -76,6 +76,7 @@ export const API_ENDPOINTS = {
     GET_RELATED_ASSETS: id => `/assets/${id}/related`,
     TEMPLATES: '/templates',
     TEMPLATE_BY_ID: id => `/templates/${id}`,
+    IMAGEKIT_AUTH: '/imagekit/auth',
 
     GET_IMAGES_BY_CREATOR_ID: '/getAllImages', // POST: { id: creatorId }
     GET_IMAGE_BY_ID: id => `/images/${id}`, // NEW
@@ -127,6 +128,10 @@ export const API_ENDPOINTS = {
     // Blog (Admin)
     ADMIN_BLOGS: '/blogs',
     ADMIN_BLOG: id => `/blogs/${id}`,
+
+    // AI tools
+    AI_GENERATE_IMAGE: '/ai/generate-image',
+    AI_BG_REMOVE_PREVIEW: '/ai/bg-remove-preview',
 };
 
 export default API_BASE_URL;
