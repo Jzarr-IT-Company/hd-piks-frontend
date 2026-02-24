@@ -1,6 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { FiCpu, FiImage, FiScissors } from "react-icons/fi";
+import { FiCpu, FiEdit3, FiImage, FiMessageSquare, FiScissors } from "react-icons/fi";
 import "./AiToolsCards.css";
 
 const DEFAULT_AI_TOOLS = [
@@ -8,6 +8,8 @@ const DEFAULT_AI_TOOLS = [
 	{ id: "ai-bg-remove", label: "AI Background Remover", icon: <FiScissors size={16} /> },
 	{ id: "ai-generator", label: "AI Image Generator", icon: <FiCpu size={16} /> },
 	{ id: "ai-video-generator", label: "AI Video Generator", icon: <FiCpu size={16} /> },
+	{ id: "text-ai", label: "Text AI", icon: <FiMessageSquare size={16} /> },
+	{ id: "image-editor", label: "Image Editor", icon: <FiEdit3 size={16} />, path: "/design-hdpiks" },
 ];
 
 function AiToolsCards({ tools = DEFAULT_AI_TOOLS, onSelect }) {
@@ -15,49 +17,26 @@ function AiToolsCards({ tools = DEFAULT_AI_TOOLS, onSelect }) {
 
 	const handleClick = (tool) => {
 		if (onSelect) onSelect(tool);
+		if (tool?.path) {
+			navigate(tool.path);
+			return;
+		}
 		navigate(`/ai/${encodeURIComponent(tool.id)}`);
 	};
 
 	return (
-		<div className="d-flex flex-wrap justify-content-center gap-2 w-100 px-2">
+		<div className="ai-tools-cards-grid">
 			{tools.map((tool) => (
-				<div
-					key={tool.id}
-					className="ai-tools-card-item d-flex justify-content-center"
-				>
+				<div key={tool.id} className="ai-tools-card-item">
 					<button
 						type="button"
 						onClick={() => handleClick(tool)}
-						className="btn btn-sm w-100"
-						style={{
-							display: "inline-flex",
-							alignItems: "center",
-							justifyContent: "center",
-							gap: 8,
-							padding: "8px 14px",
-							borderRadius: 999,
-							background: "linear-gradient(90deg, rgb(143, 92, 255), rgb(184, 69, 146))",
-							color: "#ffffff",
-							border: "1px solid rgb(143, 92, 255)",
-							boxShadow: "0 1px 3px rgba(15,23,42,0.25)",
-							fontSize: 12,
-							fontWeight: 500,
-							whiteSpace: "normal",
-							textAlign: "center",
-							lineHeight: 1.2,
-							minHeight: 38,
-						}}
+						className="btn btn-sm w-100 ai-tools-card-button"
 					>
-						<span
-							style={{
-								display: "inline-flex",
-								alignItems: "center",
-								justifyContent: "center",
-							}}
-						>
+						<span className="ai-tools-card-icon">
 							{tool.icon}
 						</span>
-						<span>{tool.label}</span>
+						<span className="ai-tools-card-label">{tool.label}</span>
 					</button>
 				</div>
 			))}

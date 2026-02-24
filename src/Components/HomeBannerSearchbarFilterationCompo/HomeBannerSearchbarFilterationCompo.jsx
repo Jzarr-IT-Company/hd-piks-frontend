@@ -12,6 +12,7 @@ import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
+import './HomeBannerSearchbarFilterationCompo.css';
 
 function HomeBannerSearchbarFilterationCompo() {
     const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useUI();
@@ -32,10 +33,12 @@ function HomeBannerSearchbarFilterationCompo() {
         return String(val).trim().toLowerCase();
     }, []);
 
-    const parentOptions = useMemo(
-        () => (Array.isArray(categories) ? categories.map(c => c.name).filter(Boolean) : []),
-        [categories]
-    );
+    const parentOptions = useMemo(() => {
+        if (!Array.isArray(categories)) return [];
+        return categories
+            .map(c => (typeof c?.name === 'string' ? c.name.trim() : ''))
+            .filter(Boolean);
+    }, [categories]);
 
     const subcategorySuggestions = useMemo(() => {
         if (!categories.length || !homeBannerSearchbarFilteration) return [];
@@ -44,7 +47,9 @@ function HomeBannerSearchbarFilterationCompo() {
         );
         if (!parent) return [];
         const subs = parent.children || [];
-        let names = subs.map(c => c.name).filter(Boolean);
+        let names = subs
+            .map(c => (typeof c?.name === 'string' ? c.name.trim() : ''))
+            .filter(Boolean);
         const q = normalize(searchQuerry);
         if (q) {
             names = names.filter(n => normalize(n).includes(q));
@@ -56,7 +61,7 @@ function HomeBannerSearchbarFilterationCompo() {
             if (!k || seen.has(k)) continue;
             seen.add(k);
             unique.push(n);
-            if (unique.length >= 8) break;
+            if (unique.length >= 6) break;
         }
         return unique;
     }, [categories, homeBannerSearchbarFilteration, searchQuerry, normalize]);
@@ -273,61 +278,19 @@ function HomeBannerSearchbarFilterationCompo() {
 
                                 {/* Autocomplete panel under bar (unchanged) */}
                                 {showSuggestions && subcategorySuggestions.length > 0 && (
-                                    <div
-                                        style={{
-                                            position: 'absolute',
-                                            top: '100%',
-                                            left: 0,
-                                            marginTop: 8,
-                                            width: '100%',
-                                            zIndex: 1050,
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                maxHeight: 260,
-                                                overflowY: 'auto',
-                                                background: '#ffffff',
-                                                borderRadius: 12,
-                                                boxShadow: '0 8px 30px rgba(15,23,42,0.18)',
-                                                padding: '6px 0',
-                                            }}
-                                        >
+                                    <div className="home-search-autocomplete">
+                                        <div className="home-search-autocomplete-panel">
                                             {subcategorySuggestions.map((name) => (
                                                 <button
                                                     key={name}
                                                     type="button"
                                                     onClick={() => handleSuggestionClick(name)}
-                                                    style={{
-                                                        width: '100%',
-                                                        border: 'none',
-                                                        background: 'transparent',
-                                                        padding: '8px 14px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        textAlign: 'left',
-                                                        fontSize: 13,
-                                                        cursor: 'pointer',
-                                                    }}
                                                     className="search-suggestion-row"
                                                 >
-                                                    <span
-                                                        style={{
-                                                            width: 22,
-                                                            height: 22,
-                                                            borderRadius: '50%',
-                                                            background: '#f2f3ff',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            marginRight: 10,
-                                                            color: '#4f46e5',
-                                                            fontSize: 11,
-                                                        }}
-                                                    >
+                                                    <span className="search-suggestion-icon">
                                                         <i className="fa-solid fa-magnifying-glass" />
                                                     </span>
-                                                    <span style={{ color: '#111827' }}>{name}</span>
+                                                    <span className="search-suggestion-text">{name}</span>
                                                 </button>
                                             ))}
                                         </div>

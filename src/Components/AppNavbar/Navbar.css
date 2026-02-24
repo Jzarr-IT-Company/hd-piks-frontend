@@ -66,7 +66,7 @@
 }
 
 .main-div-custmoe-css {
-    height: 550px;
+    min-height: 550px;
 }
 
 .custome-css-card {
@@ -88,17 +88,20 @@
     height: 550px !important;
     position: relative;
     position: relative;
-    bottom: 60px;
+    bottom: 0;
 }
 
 .card-img-overlay-css {
     background-color: rgba(0, 0, 0, 0.5) !important;
     overflow: hidden;
+    justify-content: flex-start !important;
+    padding-top: clamp(1.25rem, 3vw, 2.75rem);
 }
 
 .hero-content-stack {
-    width: min(100%, 920px);
+    width: min(100%, 1120px);
     margin: 0 auto;
+    padding-inline: 0.5rem;
 }
 
 .hero-content-stack h1,
@@ -107,14 +110,29 @@
 }
 
 .text-container h1 {
-    font-size: 2rem;
-    line-height: 1.5;
-    margin-bottom: 1rem;
+    font-size: clamp(2.05rem, 3.7vw, 4rem);
+    line-height: 1.14;
+    margin-bottom: 0.9rem;
+    max-width: 42ch;
+    margin-inline: auto;
+    white-space: nowrap;
 }
 
 .text-container p {
-    font-size: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: clamp(1rem, 1.05vw, 1.4rem);
+    line-height: 1.42;
+    margin-bottom: 1.1rem;
+    max-width: 72ch;
+    margin-inline: auto;
+    text-wrap: balance;
+}
+
+.hero-heading-break {
+    display: block;
+}
+
+.hero-content-stack .mb-0.pb-5 {
+    padding-bottom: 1.2rem !important;
 }
 
 @media (max-width: 576px) {
@@ -191,8 +209,13 @@
         letter-spacing: -0.01em;
         margin-inline: auto;
         margin-bottom: 0.8rem;
+        white-space: normal;
         text-wrap: balance;
 	}
+
+    .hero-heading-break {
+        display: none;
+    }
 
 	.text-container p {
 		font-size: 0.92rem;

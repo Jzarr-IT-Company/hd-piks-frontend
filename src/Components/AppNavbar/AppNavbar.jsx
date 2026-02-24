@@ -58,12 +58,16 @@ function AppNavbar() {
                                 id='coustome-img-css' alt="banner-img" />
                             <div className="card-img-overlay card-img-overlay-css d-flex flex-column justify-content-center align-items-center">
                                 <div className="text-container hero-content-stack">
-                                    <h1 className="text-white text-center fw-bold">Free Stunning high-quality photos, videos & AI for all your creative projects.</h1>
+                                    <h1 className="text-white text-center fw-bold">
+                                        Free Stunning high-quality photos, videos & AI{" "}
+                                        <br className="hero-heading-break" />
+                                        for all your creative projects.
+                                    </h1>
                                     <p className="text-white text-center">
                                         Explore high-quality, royalty-free images and videos for all your creative needs.
                                     </p>
                                     <HomeBannerSearchbarFilterationCompo />
-                                    <div className="mb-2 mb-md-5 px-1 px-md-0 w-100" >
+                                    <div className="mb-2 mb-md-3 px-1 px-md-0 w-100" >
                                         <AiToolsCards
                                         />
                                     </div>

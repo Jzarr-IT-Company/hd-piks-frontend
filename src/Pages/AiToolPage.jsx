@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import api from "../Services/api";
 import { API_ENDPOINTS } from "../config/api.config.js";
+import TopNavOnly from "../Components/AppNavbar/TopNavOnly";
 import "./AiToolPage.css";
 
 const primaryBtnStyle = {
@@ -13,19 +14,6 @@ const primaryBtnStyle = {
 	boxShadow: "0 1px 3px rgba(15,23,42,0.25)",
 	fontSize: 14,
 	fontWeight: 500,
-};
-
-const secondaryBtnStyle = {
-	borderRadius: 999,
-	padding: "6px 16px",
-	backgroundColor: "#020617",
-	color: "#ffffff",
-	border: "1px solid #020617",
-	fontSize: 13,
-	textDecoration: "none",
-	display: "inline-flex",
-	alignItems: "center",
-	gap: 6,
 };
 
 const AI_IMAGE_STYLE_OPTIONS = [
@@ -87,6 +75,25 @@ const AI_PROMPT_PRESETS = [
 			"Confident anime character portrait in futuristic streetwear, neon city background, sharp linework, vibrant colors, dynamic framing",
 	},
 ];
+
+const TEXT_AI_QUICK_PROMPTS = [
+	"Write an Instagram caption for a product launch.",
+	"Give me 5 ad headline ideas for my brand.",
+	"Rewrite my text in a professional tone.",
+	"Create SEO-friendly product description copy.",
+];
+
+const buildTextAiReply = (input) => {
+	const normalized = String(input || "").trim();
+	if (!normalized) return "Please share a prompt and I will help you write it better.";
+	return [
+		"Here is a refined draft:",
+		normalized,
+		"",
+		"Improved version:",
+		"Clear, engaging, and conversion-focused copy that keeps your original intent while improving structure, tone, and readability.",
+	].join("\n");
+};
 
 const extensionFromMime = (mimeType) => {
 	const mime = String(mimeType || "").toLowerCase();
@@ -187,6 +194,7 @@ function AiToolPage() {
 	const { id } = useParams();
 	const bgRemoveInputRef = useRef(null);
 	const aiGenerateStageTimersRef = useRef([]);
+	const textAiListRef = useRef(null);
 	const [aiPrompt, setAiPrompt] = useState("");
 	const [aiStyle, setAiStyle] = useState("photorealistic");
 	const [aiAspectRatio, setAiAspectRatio] = useState("1:1");
@@ -209,12 +217,22 @@ function AiToolPage() {
 	const [bgRemoveFileName, setBgRemoveFileName] = useState("");
 	const [bgRemoveDragActive, setBgRemoveDragActive] = useState(false);
 	const [bgRemovePreviewPhase, setBgRemovePreviewPhase] = useState("idle");
+	const [textAiInput, setTextAiInput] = useState("");
+	const [textAiSending, setTextAiSending] = useState(false);
+	const [textAiMessages, setTextAiMessages] = useState(() => [
+		{
+			role: "assistant",
+			content:
+				"Hi, I am Text AI. Share your prompt and I can help with captions, ads, rewrite, and long-form content.",
+		},
+	]);
 
 	const titleMap = {
 		"ai-text-voiceover": "AI Image Voiceover",
 		"ai-bg-remove": "AI Background Remover",
 		"ai-generator": "AI Image Generator",
 		"ai-video-generator": "AI Video Generator",
+		"text-ai": "Text AI Assistant",
 	};
 
 	const descMap = {
@@ -226,6 +244,8 @@ function AiToolPage() {
 			"Describe your idea and let AI generate stunning visuals for your projects.",
 		"ai-video-generator":
 			"Generate high-quality videos with a prompt or an image, choosing from multiple generation models.",
+		"text-ai":
+			"Chat-style writing assistant for captions, ads, script drafts, and polished brand copy.",
 	};
 
 	const pageTitle = titleMap[id] || "AI Tool";
@@ -288,6 +308,43 @@ function AiToolPage() {
 		if (preset.style) setAiStyle(String(preset.style));
 		if (preset.aspectRatio) setAiAspectRatio(String(preset.aspectRatio));
 		setAiEnhanceError("");
+	};
+
+	const handleTextAiQuickPrompt = (prompt) => {
+		setTextAiInput(String(prompt || ""));
+	};
+
+	const handleSendTextAiMessage = async () => {
+		const userText = String(textAiInput || "").trim();
+		if (!userText || textAiSending) return;
+
+		setTextAiInput("");
+		setTextAiSending(true);
+		setTextAiMessages((prev) => [...prev, { role: "user", content: userText }]);
+
+		await sleep(650);
+		const aiReply = buildTextAiReply(userText);
+		setTextAiMessages((prev) => [...prev, { role: "assistant", content: aiReply }]);
+		setTextAiSending(false);
+	};
+
+	const handleTextAiInputKeyDown = (event) => {
+		if (event.key === "Enter" && !event.shiftKey) {
+			event.preventDefault();
+			handleSendTextAiMessage();
+		}
+	};
+
+	const handleClearTextAiChat = () => {
+		setTextAiMessages([
+			{
+				role: "assistant",
+				content:
+					"Hi, I am Text AI. Share your prompt and I can help with captions, ads, rewrite, and long-form content.",
+			},
+		]);
+		setTextAiInput("");
+		setTextAiSending(false);
 	};
 
 	const handleGenerateAiImage = async () => {
@@ -406,6 +463,13 @@ function AiToolPage() {
 			clearAiGenerateStageTimers();
 		};
 	}, []);
+
+	useEffect(() => {
+		if (id !== "text-ai") return;
+		const listEl = textAiListRef.current;
+		if (!listEl) return;
+		listEl.scrollTop = listEl.scrollHeight;
+	}, [id, textAiMessages, textAiSending]);
 
 	useEffect(() => {
 		if (!bgRemoveResultUrl) return;
@@ -650,6 +714,95 @@ function AiToolPage() {
 
 	const renderContent = () => {
 		switch (id) {
+			case "text-ai":
+				return (
+					<div className="row g-4">
+						<div className="col-md-4">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
+								<h5 className="fw-semibold mb-2">Prompt ideas</h5>
+								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
+									Use these quick prompts, then continue like ChatGPT in the chat panel.
+								</p>
+								<div className="d-flex flex-column gap-2">
+									{TEXT_AI_QUICK_PROMPTS.map((prompt, index) => (
+										<button
+											key={`text-ai-prompt-${index}`}
+											type="button"
+											className="text-ai-chip-btn"
+											onClick={() => handleTextAiQuickPrompt(prompt)}
+											disabled={textAiSending}
+										>
+											{prompt}
+										</button>
+									))}
+								</div>
+								<hr className="my-4" />
+								<button
+									type="button"
+									className="btn btn-sm btn-outline-secondary"
+									onClick={handleClearTextAiChat}
+									disabled={textAiSending}
+								>
+									Clear chat
+								</button>
+							</div>
+						</div>
+						<div className="col-md-8">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 d-flex flex-column ai-tool-panel">
+								<div className="d-flex justify-content-between align-items-center mb-3">
+									<h5 className="fw-semibold mb-0">Text AI Chat</h5>
+									<small className="text-muted">{textAiMessages.length} messages</small>
+								</div>
+								<div ref={textAiListRef} className="text-ai-chat-list">
+									{textAiMessages.map((message, index) => (
+										<div
+											key={`text-ai-msg-${index}`}
+											className={`text-ai-bubble ${
+												message.role === "user" ? "is-user" : "is-assistant"
+											}`}
+										>
+											<div className="text-ai-bubble-role">
+												{message.role === "user" ? "You" : "Text AI"}
+											</div>
+											<div className="text-ai-bubble-content">{message.content}</div>
+										</div>
+									))}
+									{textAiSending ? (
+										<div className="text-ai-bubble is-assistant">
+											<div className="text-ai-bubble-role">Text AI</div>
+											<div className="text-ai-typing-dots">
+												<span />
+												<span />
+												<span />
+											</div>
+										</div>
+									) : null}
+								</div>
+								<div className="text-ai-input-wrap mt-3">
+									<textarea
+										className="form-control"
+										rows={3}
+										placeholder="Ask Text AI anything... e.g. write a LinkedIn post for my design launch."
+										value={textAiInput}
+										onChange={(event) => setTextAiInput(event.target.value)}
+										onKeyDown={handleTextAiInputKeyDown}
+										disabled={textAiSending}
+									/>
+									<div className="d-flex justify-content-end mt-2">
+										<button
+											type="button"
+											style={primaryBtnStyle}
+											onClick={handleSendTextAiMessage}
+											disabled={!textAiInput.trim() || textAiSending}
+										>
+											{textAiSending ? "Generating..." : "Send"}
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				);
 			case "ai-text-voiceover":
 				return (
 					<div className="row g-4">
@@ -738,7 +891,7 @@ function AiToolPage() {
 				return (
 					<div className="row g-4">
 						<div className="col-md-7">
-							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
 								<h5 className="fw-semibold mb-2">Upload image</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
 									Upload a JPG, PNG, or WEBP image and watch the transform from original to clean cutout.
@@ -833,7 +986,7 @@ function AiToolPage() {
 							</div>
 						</div>
 						<div className="col-md-5">
-							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
 								<h5 className="fw-semibold mb-2">Preview</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
 									Live transformation preview: original image to final background-removed output.
@@ -937,7 +1090,7 @@ function AiToolPage() {
 				return (
 					<div className="row g-4">
 						<div className="col-md-6">
-							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
 								<h5 className="fw-semibold mb-2">Describe your image</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
 									Enter a prompt, choose style/ratio/count, then generate production-ready visuals.
@@ -1057,7 +1210,7 @@ function AiToolPage() {
 							</div>
 						</div>
 						<div className="col-md-6">
-							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
 								<div className="d-flex justify-content-between align-items-center mb-2 gap-2">
 									<h5 className="fw-semibold mb-0">Results</h5>
 									{!aiGenerating && aiGeneratedImages.length > 1 ? (
@@ -1144,7 +1297,7 @@ function AiToolPage() {
 					<div className="row g-4">
 						{/* Left: prompt / image input */}
 						<div className="col-md-6">
-							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
 								<h5 className="fw-semibold mb-2">1. Describe or upload your scene</h5>
 								<p className="text-muted mb-2" style={{ fontSize: 14 }}>
 									Generate high-quality videos with a prompt or an image, choosing from multiple
@@ -1184,7 +1337,7 @@ function AiToolPage() {
 
 						{/* Right: model, duration, resolution, results */}
 						<div className="col-md-6">
-							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
+							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
 								<h5 className="fw-semibold mb-2">2. Choose model & settings</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
 									Pick a generation model, duration and resolution, then generate a video preview.
@@ -1263,7 +1416,7 @@ function AiToolPage() {
 
 			default:
 				return (
-					<div className="p-3 p-md-4 border rounded-4 bg-white">
+					<div className="p-3 p-md-4 border rounded-4 bg-white ai-tool-panel">
 						<p className="text-muted mb-0" style={{ fontSize: 14 }}>
 							Select an AI tool from the homepage AI tools bar to get started.
 						</p>
@@ -1273,22 +1426,22 @@ function AiToolPage() {
 	};
 
 	return (
-		<div className="container py-4">
-			<div className="mb-3">
-				<Link to="/" style={secondaryBtnStyle}>
-					<span>←</span>
-					<span>Back to Home</span>
-				</Link>
+		<>
+			<TopNavOnly />
+			<div className="ai-tool-page">
+				<div className="ai-tool-ambient ai-tool-ambient-1" />
+				<div className="ai-tool-ambient ai-tool-ambient-2" />
+				<div className="container py-4 ai-tool-page-container">
+					<header className="ai-tool-header">
+						<h1 className="fw-bold mb-2 ai-tool-title">{pageTitle}</h1>
+						<p className="text-muted mb-0 ai-tool-subtitle">{pageDesc}</p>
+					</header>
+					{renderContent()}
+				</div>
 			</div>
-			<h1 className="fw-bold mb-2" style={{ fontSize: "1.8rem" }}>
-				{pageTitle}
-			</h1>
-			<p className="text-muted mb-4" style={{ maxWidth: 640 }}>
-				{pageDesc}
-			</p>
-			{renderContent()}
-		</div>
+		</>
 	);
 }
 
 export default AiToolPage;
+
