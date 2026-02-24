@@ -46,6 +46,48 @@ const AI_IMAGE_RATIO_OPTIONS = [
 	{ value: "2:3", label: "2:3 Portrait" },
 ];
 
+const AI_IMAGE_COUNT_OPTIONS = [
+	{ value: 1, label: "1 image" },
+	{ value: 2, label: "2 images" },
+	{ value: 3, label: "3 images" },
+	{ value: 4, label: "4 images" },
+];
+
+const AI_PROMPT_PRESETS = [
+	{
+		id: "product-ad",
+		label: "Product Ad",
+		style: "photorealistic",
+		aspectRatio: "1:1",
+		prompt:
+			"Premium skincare bottle on a reflective marble surface, soft studio lighting, subtle water droplets, clean luxury product ad composition",
+	},
+	{
+		id: "food-poster",
+		label: "Food Poster",
+		style: "cinematic",
+		aspectRatio: "4:5",
+		prompt:
+			"Top-down gourmet burger with fries and sauce splashes, dramatic side lighting, rich textures, appetizing commercial food photography",
+	},
+	{
+		id: "travel-scene",
+		label: "Travel Scene",
+		style: "photorealistic",
+		aspectRatio: "16:9",
+		prompt:
+			"Golden hour mountain valley with a winding road and mist, ultra-detailed landscape, cinematic depth and natural color grading",
+	},
+	{
+		id: "anime-portrait",
+		label: "Anime Portrait",
+		style: "anime",
+		aspectRatio: "3:4",
+		prompt:
+			"Confident anime character portrait in futuristic streetwear, neon city background, sharp linework, vibrant colors, dynamic framing",
+	},
+];
+
 const extensionFromMime = (mimeType) => {
 	const mime = String(mimeType || "").toLowerCase();
 	if (mime.includes("png")) return "png";
@@ -66,6 +108,7 @@ const BG_REMOVE_MAX_DIMENSION = 1800;
 const BG_REMOVE_PREPROCESS_SIZE_BYTES = 8 * 1024 * 1024;
 const BG_REMOVE_MIN_PROCESSING_VISUAL_MS = 2000;
 const BG_REMOVE_REVEAL_MS = 1350;
+const AI_GENERATE_MIN_VISUAL_MS = 1600;
 
 const loadImageElement = (src) =>
 	new Promise((resolve, reject) => {
@@ -143,11 +186,18 @@ const preprocessImageForBgRemove = async (file) => {
 function AiToolPage() {
 	const { id } = useParams();
 	const bgRemoveInputRef = useRef(null);
+	const aiGenerateStageTimersRef = useRef([]);
 	const [aiPrompt, setAiPrompt] = useState("");
 	const [aiStyle, setAiStyle] = useState("photorealistic");
 	const [aiAspectRatio, setAiAspectRatio] = useState("1:1");
+	const [aiImageCount, setAiImageCount] = useState(1);
 	const [aiGenerating, setAiGenerating] = useState(false);
+	const [aiGenerationStep, setAiGenerationStep] = useState("idle");
 	const [aiGenerateError, setAiGenerateError] = useState("");
+	const [aiEnhanceError, setAiEnhanceError] = useState("");
+	const [aiEnhancing, setAiEnhancing] = useState(false);
+	const [aiSelectedPresetId, setAiSelectedPresetId] = useState("");
+	const [aiResultsAnimationKey, setAiResultsAnimationKey] = useState(0);
 	const [aiGeneratedImages, setAiGeneratedImages] = useState([]);
 	const [bgRemoveUploading, setBgRemoveUploading] = useState(false);
 	const [bgRemoveProcessing, setBgRemoveProcessing] = useState(false);
@@ -183,19 +233,81 @@ function AiToolPage() {
 		descMap[id] ||
 		"Use AI-powered tools to enhance and generate creative assets for your projects.";
 
+	const clearAiGenerateStageTimers = () => {
+		aiGenerateStageTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+		aiGenerateStageTimersRef.current = [];
+	};
+
+	const mapAiErrorMessage = (error, defaultMessage) => {
+		const statusCode = Number(error?.response?.status || 0);
+		const errorCode = String(error?.response?.data?.errorCode || "").trim().toLowerCase();
+		const serverMessage = String(error?.response?.data?.message || "").trim();
+		const fallbackMessage = serverMessage || error?.message || defaultMessage;
+
+		if (errorCode === "quota_exceeded") {
+			return "Daily/plan quota reached. Please check billing or try again later.";
+		}
+		if (errorCode === "rate_limited") {
+			return "Too many requests right now. Wait a few seconds and retry.";
+		}
+		if (errorCode === "provider_timeout" || statusCode === 504) {
+			return "Generation timed out. Try a shorter prompt or retry.";
+		}
+		if (errorCode === "provider_auth_error") {
+			return "AI provider key/config is invalid on server. Please check backend env.";
+		}
+		if (statusCode === 429) {
+			return "Request limit reached. Please retry after a short wait.";
+		}
+		if (statusCode >= 500) {
+			return "AI service is temporarily unavailable. Please try again.";
+		}
+		return fallbackMessage;
+	};
+
+	const scheduleAiGenerationStages = () => {
+		clearAiGenerateStageTimers();
+		const steps = [
+			{ afterMs: 500, step: "generating" },
+			{ afterMs: 1900, step: "finalizing" },
+		];
+		steps.forEach(({ afterMs, step }) => {
+			const timerId = window.setTimeout(() => {
+				setAiGenerationStep((current) =>
+					current === "error" || current === "done" ? current : step
+				);
+			}, afterMs);
+			aiGenerateStageTimersRef.current.push(timerId);
+		});
+	};
+
+	const handleApplyPromptPreset = (preset) => {
+		if (!preset) return;
+		setAiSelectedPresetId(preset.id);
+		setAiPrompt(String(preset.prompt || ""));
+		if (preset.style) setAiStyle(String(preset.style));
+		if (preset.aspectRatio) setAiAspectRatio(String(preset.aspectRatio));
+		setAiEnhanceError("");
+	};
+
 	const handleGenerateAiImage = async () => {
 		const trimmedPrompt = aiPrompt.trim();
 		if (!trimmedPrompt || aiGenerating) return;
 
 		try {
+			const requestStartTime = Date.now();
 			setAiGenerating(true);
+			setAiGenerationStep("sending");
 			setAiGenerateError("");
+			setAiEnhanceError("");
+			setAiGeneratedImages([]);
+			scheduleAiGenerationStages();
 
 			const response = await api.post(API_ENDPOINTS.AI_GENERATE_IMAGE, {
 				prompt: trimmedPrompt,
 				style: aiStyle,
 				aspectRatio: aiAspectRatio,
-				count: 1,
+				count: aiImageCount,
 			});
 
 			const images = Array.isArray(response?.data?.data?.images)
@@ -205,18 +317,50 @@ function AiToolPage() {
 			if (!images.length) {
 				setAiGeneratedImages([]);
 				setAiGenerateError("No image returned. Try another prompt.");
+				setAiGenerationStep("error");
 				return;
 			}
 
+			const elapsedMs = Date.now() - requestStartTime;
+			if (elapsedMs < AI_GENERATE_MIN_VISUAL_MS) {
+				await sleep(AI_GENERATE_MIN_VISUAL_MS - elapsedMs);
+			}
+
 			setAiGeneratedImages(images);
+			setAiResultsAnimationKey((value) => value + 1);
+			setAiGenerationStep("done");
 		} catch (error) {
-			const message =
-				error?.response?.data?.message ||
-				error?.message ||
-				"Image generation failed. Please try again.";
+			const message = mapAiErrorMessage(error, "Image generation failed. Please try again.");
 			setAiGenerateError(message);
+			setAiGenerationStep("error");
 		} finally {
+			clearAiGenerateStageTimers();
 			setAiGenerating(false);
+		}
+	};
+
+	const handleEnhancePrompt = async () => {
+		const trimmedPrompt = aiPrompt.trim();
+		if (!trimmedPrompt || aiEnhancing || aiGenerating) return;
+
+		try {
+			setAiEnhancing(true);
+			setAiEnhanceError("");
+			const response = await api.post(API_ENDPOINTS.AI_ENHANCE_PROMPT, {
+				prompt: trimmedPrompt,
+				style: aiStyle,
+				aspectRatio: aiAspectRatio,
+			});
+			const enhancedPrompt = String(response?.data?.data?.enhancedPrompt || "").trim();
+			if (!enhancedPrompt) {
+				throw new Error("Prompt enhancement returned empty text.");
+			}
+			setAiPrompt(enhancedPrompt);
+			setAiSelectedPresetId("");
+		} catch (error) {
+			setAiEnhanceError(mapAiErrorMessage(error, "Failed to enhance prompt. Please try again."));
+		} finally {
+			setAiEnhancing(false);
 		}
 	};
 
@@ -240,6 +384,15 @@ function AiToolPage() {
 		document.body.removeChild(link);
 	};
 
+	const handleDownloadAllGeneratedImages = () => {
+		if (!Array.isArray(aiGeneratedImages) || !aiGeneratedImages.length) return;
+		aiGeneratedImages.forEach((image, index) => {
+			window.setTimeout(() => {
+				handleDownloadGeneratedImage(image, index);
+			}, index * 150);
+		});
+	};
+
 	useEffect(() => {
 		return () => {
 			if (bgRemoveOriginalPreviewUrl && bgRemoveOriginalPreviewUrl.startsWith("blob:")) {
@@ -247,6 +400,12 @@ function AiToolPage() {
 			}
 		};
 	}, [bgRemoveOriginalPreviewUrl]);
+
+	useEffect(() => {
+		return () => {
+			clearAiGenerateStageTimers();
+		};
+	}, []);
 
 	useEffect(() => {
 		if (!bgRemoveResultUrl) return;
@@ -304,6 +463,30 @@ function AiToolPage() {
 		return "idle";
 	};
 
+	const aiGenerationSteps = [
+		{ key: "sending", label: "Sending prompt" },
+		{ key: "generating", label: "Generating visual" },
+		{ key: "finalizing", label: "Finalizing output" },
+	];
+
+	const aiStepOrder = {
+		idle: 0,
+		sending: 1,
+		generating: 2,
+		finalizing: 3,
+		done: 4,
+		error: 4,
+	};
+
+	const getAiGenerationStepState = (stepKey) => {
+		const currentOrder = aiStepOrder[aiGenerationStep] || 0;
+		const stepOrder = aiStepOrder[stepKey] || 0;
+		if (aiGenerationStep === "error" && stepOrder <= 3) return "error";
+		if (currentOrder > stepOrder) return "done";
+		if (currentOrder === stepOrder && aiGenerating) return "active";
+		return "idle";
+	};
+
 	const openBgRemoveFilePicker = () => {
 		if (bgRemoveBusy) return;
 		bgRemoveInputRef.current?.click();
@@ -317,52 +500,20 @@ function AiToolPage() {
 		setBgRemovePreviewPhase("idle");
 	};
 
-	const triggerBackgroundRemovePreview = async (assetUrl) => {
-		const response = await api.post(API_ENDPOINTS.AI_BG_REMOVE_PREVIEW, {
-			assetUrl,
-			replaceBg: false,
+	const processBgRemovePublic = async (file) => {
+		const formData = new FormData();
+		formData.append("file", file);
+		formData.append("replaceBg", "false");
+		const response = await api.post(API_ENDPOINTS.AI_BG_REMOVE, formData, {
+			headers: {
+				"Content-Type": "multipart/form-data",
+			},
 		});
 		const previewUrl = String(response?.data?.data?.previewUrl || "").trim();
 		if (!previewUrl) {
 			throw new Error("No background-removed preview returned.");
 		}
 		return previewUrl;
-	};
-
-	const uploadFileToImageKit = async (file) => {
-		const authResponse = await api.get(API_ENDPOINTS.IMAGEKIT_AUTH);
-		const authData = authResponse?.data?.data;
-		if (!authData?.publicKey || !authData?.authenticationParameters) {
-			throw new Error("ImageKit auth params missing from backend.");
-		}
-
-		const safeName = sanitizeFileName(file?.name || "ai-bg-remove-image");
-		const formData = new FormData();
-		formData.append("file", file);
-		formData.append("fileName", `hdpiks-ai-bg-${Date.now()}-${safeName}`);
-		formData.append("publicKey", authData.publicKey);
-		formData.append("token", authData.authenticationParameters.token);
-		formData.append("signature", authData.authenticationParameters.signature);
-		formData.append("expire", String(authData.authenticationParameters.expire));
-		formData.append("useUniqueFileName", "true");
-		formData.append("folder", "/ai/bg-remove");
-
-		const uploadResponse = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
-			method: "POST",
-			body: formData,
-		});
-
-		if (!uploadResponse.ok) {
-			const errorText = await uploadResponse.text();
-			throw new Error(errorText || "ImageKit upload failed");
-		}
-
-		const payload = await uploadResponse.json();
-		const uploadedUrl = String(payload?.url || "").trim();
-		if (!uploadedUrl) {
-			throw new Error("ImageKit upload URL is missing.");
-		}
-		return uploadedUrl;
 	};
 
 	const runBgRemoveFlow = async (inputFile) => {
@@ -396,19 +547,13 @@ function AiToolPage() {
 			setBgRemoveUploading(true);
 			setBgRemoveUploadProgress(15);
 			const uploadFile = await preprocessImageForBgRemove(file);
-			setBgRemoveUploadProgress(40);
-			const assetUrl = await uploadFileToImageKit(uploadFile);
 			setBgRemoveUploadProgress(100);
-			if (!assetUrl) {
-				throw new Error("Upload failed before AI background remove.");
-			}
-
 			setBgRemoveUploading(false);
 			setBgRemoveProcessing(true);
 			setBgRemoveProcessingProgress(15);
 			setBgRemovePreviewPhase("processing");
 			const processingStartTime = Date.now();
-			const previewUrl = await triggerBackgroundRemovePreview(assetUrl);
+			const previewUrl = await processBgRemovePublic(uploadFile);
 			const cacheBustedPreviewUrl = `${previewUrl}${previewUrl.includes("?") ? "&" : "?"}v=${Date.now()}`;
 			await preloadImage(cacheBustedPreviewUrl);
 			const elapsedMs = Date.now() - processingStartTime;
@@ -428,8 +573,12 @@ function AiToolPage() {
 				rawMessage.toLowerCase().includes("elimit") ||
 				rawMessage.toLowerCase().includes("size of the input image");
 			const message =
-				statusCode === 401
-					? "Please login to use AI background remover."
+				statusCode === 429
+					? "Too many requests. Please wait a moment and try again."
+					: statusCode === 413
+					? "File is too large. Please upload up to 30MB."
+					: statusCode === 401
+					? "Background remover is temporarily unavailable."
 					: isImageKitLimitError
 					? "Image is still too large for background removal. Please upload a smaller image."
 					: rawMessage;
@@ -791,21 +940,39 @@ function AiToolPage() {
 							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
 								<h5 className="fw-semibold mb-2">Describe your image</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
-									Enter a detailed prompt and choose style and aspect ratio.
+									Enter a prompt, choose style/ratio/count, then generate production-ready visuals.
 								</p>
+								<div className="ai-prompt-presets mb-3">
+									{AI_PROMPT_PRESETS.map((preset) => (
+										<button
+											key={preset.id}
+											type="button"
+											className={`ai-preset-chip ${aiSelectedPresetId === preset.id ? "is-active" : ""}`}
+											onClick={() => handleApplyPromptPreset(preset)}
+											disabled={aiGenerating || aiEnhancing}
+										>
+											{preset.label}
+										</button>
+									))}
+								</div>
 								<textarea
 									className="form-control mb-3"
 									rows={4}
 									placeholder="e.g. neon city skyline at night, cinematic lighting"
 									value={aiPrompt}
 									onChange={(e) => setAiPrompt(e.target.value)}
+									disabled={aiGenerating || aiEnhancing}
 								/>
+								<div className="d-flex justify-content-end mb-3">
+									<small className="text-muted">{aiPrompt.trim().length}/2000</small>
+								</div>
 								<div className="mb-3">
 									<label className="form-label mb-1">Style</label>
 									<select
 										className="form-select form-select-sm"
 										value={aiStyle}
 										onChange={(e) => setAiStyle(e.target.value)}
+										disabled={aiGenerating || aiEnhancing}
 									>
 										{AI_IMAGE_STYLE_OPTIONS.map((option) => (
 											<option key={option.value} value={option.value}>
@@ -820,6 +987,7 @@ function AiToolPage() {
 										className="form-select form-select-sm"
 										value={aiAspectRatio}
 										onChange={(e) => setAiAspectRatio(e.target.value)}
+										disabled={aiGenerating || aiEnhancing}
 									>
 										{AI_IMAGE_RATIO_OPTIONS.map((option) => (
 											<option key={option.value} value={option.value}>
@@ -828,14 +996,59 @@ function AiToolPage() {
 										))}
 									</select>
 								</div>
-								<button
-									type="button"
-									style={primaryBtnStyle}
-									onClick={handleGenerateAiImage}
-									disabled={aiGenerating || !aiPrompt.trim()}
-								>
-									{aiGenerating ? "Generating..." : "Generate Image"}
-								</button>
+								<div className="mb-3">
+									<label className="form-label mb-1">Number of images</label>
+									<select
+										className="form-select form-select-sm"
+										value={aiImageCount}
+										onChange={(e) => setAiImageCount(Number(e.target.value || 1))}
+										disabled={aiGenerating || aiEnhancing}
+									>
+										{AI_IMAGE_COUNT_OPTIONS.map((option) => (
+											<option key={option.value} value={option.value}>
+												{option.label}
+											</option>
+										))}
+									</select>
+								</div>
+								<div className="d-flex gap-2 flex-wrap">
+									<button
+										type="button"
+										className="btn btn-sm btn-outline-secondary"
+										onClick={handleEnhancePrompt}
+										disabled={aiEnhancing || aiGenerating || !aiPrompt.trim()}
+									>
+										{aiEnhancing ? "Enhancing..." : "Enhance prompt"}
+									</button>
+									<button
+										type="button"
+										style={primaryBtnStyle}
+										onClick={handleGenerateAiImage}
+										disabled={aiGenerating || aiEnhancing || !aiPrompt.trim()}
+									>
+										{aiGenerating ? "Generating..." : "Generate Image"}
+									</button>
+								</div>
+								{aiGenerationStep !== "idle" ? (
+									<div className="ai-gen-stage mt-3">
+										<div className="ai-gen-stage-list">
+											{aiGenerationSteps.map((step) => {
+												const state = getAiGenerationStepState(step.key);
+												return (
+													<div key={step.key} className={`ai-gen-stage-item is-${state}`}>
+														<span className="ai-gen-stage-dot" />
+														<span>{step.label}</span>
+													</div>
+												);
+											})}
+										</div>
+									</div>
+								) : null}
+								{aiEnhanceError ? (
+									<p className="text-danger mt-3 mb-0" style={{ fontSize: 13 }}>
+										{aiEnhanceError}
+									</p>
+								) : null}
 								{aiGenerateError ? (
 									<p className="text-danger mt-3 mb-0" style={{ fontSize: 13 }}>
 										{aiGenerateError}
@@ -845,15 +1058,40 @@ function AiToolPage() {
 						</div>
 						<div className="col-md-6">
 							<div className="p-3 p-md-4 border rounded-4 bg-white h-100">
-								<h5 className="fw-semibold mb-2">Results</h5>
+								<div className="d-flex justify-content-between align-items-center mb-2 gap-2">
+									<h5 className="fw-semibold mb-0">Results</h5>
+									{!aiGenerating && aiGeneratedImages.length > 1 ? (
+										<button
+											type="button"
+											className="btn btn-sm btn-outline-secondary"
+											onClick={handleDownloadAllGeneratedImages}
+										>
+											Download all
+										</button>
+									) : null}
+								</div>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
-									Your generated images will appear here. Click to preview or download.
+									Your generated images appear here with individual downloads.
 								</p>
-								{aiGeneratedImages.length ? (
+								{aiGenerating ? (
+									<div className="row g-2">
+										{Array.from({ length: aiImageCount }).map((_, index) => (
+											<div className={aiImageCount === 1 ? "col-12" : "col-sm-6"} key={`ai-skeleton-${index}`}>
+												<div className="ai-gen-skeleton-card">
+													<div className="ai-gen-skeleton-image" />
+													<div className="ai-gen-skeleton-line" />
+												</div>
+											</div>
+										))}
+									</div>
+								) : aiGeneratedImages.length ? (
 									<div className="row g-2">
 										{aiGeneratedImages.map((image, index) => (
-											<div className="col-12" key={`ai-generated-${index}`}>
-												<div className="border rounded-3 p-2">
+											<div
+												className={aiGeneratedImages.length === 1 ? "col-12" : "col-sm-6"}
+												key={`ai-generated-${aiResultsAnimationKey}-${index}`}
+											>
+												<div className="border rounded-3 p-2 ai-gen-result-card">
 													<div
 														className="border rounded-3 overflow-hidden bg-light"
 														style={{ minHeight: 220 }}
@@ -1054,4 +1292,3 @@ function AiToolPage() {
 }
 
 export default AiToolPage;
-

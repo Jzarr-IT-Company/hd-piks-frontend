@@ -385,12 +385,137 @@
 	}
 }
 
+.ai-prompt-presets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+}
+
+.ai-preset-chip {
+	border: 1px solid #d1d5db;
+	background: #f8fafc;
+	color: #334155;
+	border-radius: 999px;
+	font-size: 12px;
+	padding: 5px 11px;
+	transition: all 0.2s ease;
+}
+
+.ai-preset-chip:hover {
+	border-color: #8f5cff;
+	color: #4c1d95;
+}
+
+.ai-preset-chip.is-active {
+	background: rgba(143, 92, 255, 0.14);
+	border-color: rgba(143, 92, 255, 0.5);
+	color: #5b21b6;
+}
+
+.ai-gen-stage {
+	border: 1px solid #e2e8f0;
+	background: #f8fafc;
+	border-radius: 12px;
+	padding: 10px;
+}
+
+.ai-gen-stage-list {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.ai-gen-stage-item {
+	font-size: 11px;
+	color: #64748b;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.ai-gen-stage-dot {
+	width: 8px;
+	height: 8px;
+	border-radius: 999px;
+	background: #cbd5e1;
+	flex-shrink: 0;
+}
+
+.ai-gen-stage-item.is-active {
+	color: #4338ca;
+}
+
+.ai-gen-stage-item.is-active .ai-gen-stage-dot {
+	background: #8f5cff;
+	box-shadow: 0 0 0 5px rgba(143, 92, 255, 0.12);
+}
+
+.ai-gen-stage-item.is-done {
+	color: #166534;
+}
+
+.ai-gen-stage-item.is-done .ai-gen-stage-dot {
+	background: #22c55e;
+}
+
+.ai-gen-stage-item.is-error {
+	color: #b91c1c;
+}
+
+.ai-gen-stage-item.is-error .ai-gen-stage-dot {
+	background: #ef4444;
+}
+
+.ai-gen-skeleton-card {
+	border: 1px solid #e2e8f0;
+	border-radius: 12px;
+	padding: 8px;
+	background: #ffffff;
+}
+
+.ai-gen-skeleton-image {
+	height: 220px;
+	border-radius: 10px;
+	background: linear-gradient(110deg, #f1f5f9 30%, #e2e8f0 45%, #f1f5f9 60%);
+	background-size: 200% 100%;
+	animation: ai-bg-progress 1.2s linear infinite;
+}
+
+.ai-gen-skeleton-line {
+	height: 10px;
+	width: 58%;
+	margin-top: 10px;
+	border-radius: 999px;
+	background: linear-gradient(110deg, #f1f5f9 30%, #e2e8f0 45%, #f1f5f9 60%);
+	background-size: 200% 100%;
+	animation: ai-bg-progress 1.2s linear infinite;
+}
+
+.ai-gen-result-card {
+	animation: ai-gen-pop-in 0.35s ease;
+}
+
+@keyframes ai-gen-pop-in {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.985);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
 @media (max-width: 991px) {
 	.ai-bg-dropzone {
 		min-height: 280px;
 	}
 
 	.ai-bg-step-list {
+		grid-template-columns: 1fr;
+	}
+
+	.ai-gen-stage-list {
 		grid-template-columns: 1fr;
 	}
 }

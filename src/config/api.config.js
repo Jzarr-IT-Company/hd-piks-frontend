@@ -131,6 +131,8 @@ export const API_ENDPOINTS = {
 
     // AI tools
     AI_GENERATE_IMAGE: '/ai/generate-image',
+    AI_ENHANCE_PROMPT: '/ai/enhance-prompt',
+    AI_BG_REMOVE: '/ai/bg-remove',
     AI_BG_REMOVE_PREVIEW: '/ai/bg-remove-preview',
 };
 
