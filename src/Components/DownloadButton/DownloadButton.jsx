@@ -50,8 +50,10 @@ const DownloadButton = ({ imageUrl, fileKey, imageUrlOnly, imgeUrlSep, assetId, 
             const fallbackName = fileName || (nameFromKey.includes('.') ? nameFromKey : `${nameFromKey}${ext || ''}`);
 
             let href = sourceUrl;
-            await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
-            if (downloadKey) {
+            const tracked = await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
+            if (tracked?.downloadUrl) {
+                href = tracked.downloadUrl;
+            } else if (downloadKey) {
                 const params = new URLSearchParams();
                 params.set('key', downloadKey);
                 params.set('filename', fallbackName);
@@ -67,7 +69,7 @@ const DownloadButton = ({ imageUrl, fileKey, imageUrlOnly, imgeUrlSep, assetId, 
             document.body.removeChild(link);
         } catch (error) {
             console.error('Error downloading file:', error);
-            alert('Error downloading file');
+            alert(error?.message || 'Error downloading file');
         } finally {
             setIsLoading(false);
         }

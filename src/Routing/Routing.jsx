@@ -359,6 +359,7 @@ import CreatorsPage from "../Admin/pages/Creators";
 import ImagesPage from "../Admin/pages/Images";
 import AnalyticsPage from "../Admin/pages/Analytics";
 import TemplatesPage from "../Admin/pages/Templates";
+import PricingRulesPage from "../Admin/pages/PricingRules";
 import AdminSidebar from "../Admin/components/Sidebar";
 import AdminTopbar from "../Admin/components/Topbar";
 import NotFound from "../Pages/NotFound"; // Adjust the path if needed
@@ -403,6 +404,8 @@ import UnderRevision from "../Pages/UnderRevision";
 import Rejections from "../Pages/Rejections";
 import Published from "../Pages/Published";
 import TermsAndConditions from "../Pages/TermsAndConditions";
+import MyOrders from "../Pages/MyOrders";
+import MyPurchases from "../Pages/MyPurchases";
 import VideoPage from "../Pages/VideoPage";
 // import BlogsList from '../Pages/BlogsList';
 import AdminBlogs from "../Admin/pages/Blogs";
@@ -506,6 +509,7 @@ function Routing() {
         { path: "users", element: <UsersPage /> },
         { path: "creators", element: <CreatorsPage /> },
         { path: "images", element: <ImagesPage /> },
+        { path: "pricing-rules", element: <PricingRulesPage /> },
         { path: "templates", element: <TemplatesPage /> },
         { path: "blogs", element: <AdminBlogs /> },
         // { path: 'blog-categories', element: <BlogCategories /> },
@@ -669,6 +673,22 @@ function Routing() {
       element: (
         <ProtectedRoute>
           <Setting />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-orders",
+      element: (
+        <ProtectedRoute>
+          <MyOrders />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-purchases",
+      element: (
+        <ProtectedRoute>
+          <MyPurchases />
         </ProtectedRoute>
       ),
     },

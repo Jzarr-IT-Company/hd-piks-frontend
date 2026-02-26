@@ -261,6 +261,7 @@ function AiToolPage() {
 	const mapAiErrorMessage = (error, defaultMessage) => {
 		const statusCode = Number(error?.response?.status || 0);
 		const errorCode = String(error?.response?.data?.errorCode || "").trim().toLowerCase();
+		const clientErrorCode = String(error?.code || "").trim().toUpperCase();
 		const serverMessage = String(error?.response?.data?.message || "").trim();
 		const fallbackMessage = serverMessage || error?.message || defaultMessage;
 
@@ -272,6 +273,9 @@ function AiToolPage() {
 		}
 		if (errorCode === "provider_timeout" || statusCode === 504) {
 			return "Generation timed out. Try a shorter prompt or retry.";
+		}
+		if (clientErrorCode === "ECONNABORTED" || /timeout/i.test(String(error?.message || ""))) {
+			return "Generation is taking longer than expected. Please retry or reduce image count.";
 		}
 		if (errorCode === "provider_auth_error") {
 			return "AI provider key/config is invalid on server. Please check backend env.";
@@ -360,12 +364,20 @@ function AiToolPage() {
 			setAiGeneratedImages([]);
 			scheduleAiGenerationStages();
 
-			const response = await api.post(API_ENDPOINTS.AI_GENERATE_IMAGE, {
-				prompt: trimmedPrompt,
-				style: aiStyle,
-				aspectRatio: aiAspectRatio,
-				count: aiImageCount,
-			});
+			const requestTimeoutMs = Math.min(
+				240000,
+				Math.max(90000, Number(aiImageCount || 1) * 65000)
+			);
+			const response = await api.post(
+				API_ENDPOINTS.AI_GENERATE_IMAGE,
+				{
+					prompt: trimmedPrompt,
+					style: aiStyle,
+					aspectRatio: aiAspectRatio,
+					count: aiImageCount,
+				},
+				{ timeout: requestTimeoutMs }
+			);
 
 			const images = Array.isArray(response?.data?.data?.images)
 				? response.data.data.images

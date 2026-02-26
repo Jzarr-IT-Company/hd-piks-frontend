@@ -74,6 +74,7 @@ export const API_ENDPOINTS = {
     GET_PUBLIC_ASSET_BY_ID: id => `/assets/${id}`,
     GET_PUBLIC_ASSET_INFO: id => `/assets/${id}/info`,
     GET_RELATED_ASSETS: id => `/assets/${id}/related`,
+    ASSET_PURCHASE_STATUS: id => `/assets/${id}/purchase-status`,
     TEMPLATES: '/templates',
     TEMPLATE_BY_ID: id => `/templates/${id}`,
     IMAGEKIT_AUTH: '/imagekit/auth',
@@ -81,6 +82,9 @@ export const API_ENDPOINTS = {
     GET_IMAGES_BY_CREATOR_ID: '/getAllImages', // POST: { id: creatorId }
     GET_IMAGE_BY_ID: id => `/images/${id}`, // NEW
     TRACK_ASSET_DOWNLOAD: id => `/assets/${id}/download`,
+    CREATE_ASSET_PAYMENT_INTENT: id => `/payments/assets/${id}/intent`,
+    ME_ORDERS: '/me/orders',
+    ME_PURCHASES: '/me/purchases',
     SAVE_IMAGES: '/saveImages',
     DELETE_IMAGE: '/fileObjectDelete',
     // Search images by keyword/category/title/description.
@@ -96,10 +100,6 @@ export const API_ENDPOINTS = {
     ASSET_LIKE: id => `/assets/${id}/like`,
     ASSET_LIKE_STATUS: id => `/assets/${id}/like-status`,
     ASSET_LIKE_COUNT: id => `/assets/${id}/like-count`,
-    
-    // Payment
-    PAYMENT: '/payment',
-    ADD_PAYMENT_DETAIL: '/addPaymentDetail',
     
     // S3
     GET_PRESIGNED_URL: '/getPresignedUploadUrl',
@@ -118,6 +118,8 @@ export const API_ENDPOINTS = {
     // Admin Categories CRUD
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_CATEGORY: id => `/admin/categories/${id}`,
+    ADMIN_PRICING_RULES: '/admin/pricing-rules',
+    ADMIN_PRICING_RULE: id => `/admin/pricing-rules/${id}`,
     ADMIN_TEMPLATES: '/admin/templates',
     ADMIN_TEMPLATE: id => `/admin/templates/${id}`,
     ADMIN_UPLOAD_TEMPLATE_ASSET: '/admin/templates/upload',

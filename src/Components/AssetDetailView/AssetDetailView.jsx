@@ -4,15 +4,17 @@ import { useNavigate, useParams, Link, useLocation } from 'react-router-dom';
 import { ImageList, ImageListItem, Skeleton } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3, FiInfo } from 'react-icons/fi';
+import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3, FiInfo, FiCreditCard } from 'react-icons/fi';
 import Cookies from 'js-cookie';
 import api from '../../Services/api';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config';
+import { getAssetPurchaseStatus, createAssetPaymentIntent } from '../../Services/payment.js';
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import BackBtnCompo from '../BackBtnCompo/BackBtnCompo';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { getMediaVariantUrl, getResponsiveImageProps } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import { loadStripeJs } from '../../utils/stripeClient.js';
 import { useAssetDetailQuery, useRelatedAssetsQuery } from '../../query/assetDetailQueries.js';
 import { useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
@@ -98,6 +100,14 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
     );
 }
 
+const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
+const isPremiumLicense = (value) => normalizeLicenseValue(value) === 'premium';
+const formatPriceUsd = (amountCents) => {
+    const numeric = Number(amountCents);
+    if (!Number.isFinite(numeric) || numeric < 0) return '';
+    return `$${(numeric / 100).toFixed(2)}`;
+};
+
 function AssetDetailView() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -122,6 +132,19 @@ function AssetDetailView() {
     const [assetInfo, setAssetInfo] = useState(null);
     const [assetInfoLoading, setAssetInfoLoading] = useState(false);
     const [assetInfoError, setAssetInfoError] = useState('');
+    const [purchaseStatus, setPurchaseStatus] = useState(null);
+    const [purchaseStatusLoading, setPurchaseStatusLoading] = useState(false);
+    const [purchaseStatusError, setPurchaseStatusError] = useState('');
+    const [checkoutLoading, setCheckoutLoading] = useState(false);
+    const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+    const [paymentIntentMeta, setPaymentIntentMeta] = useState(null);
+    const [checkoutError, setCheckoutError] = useState('');
+    const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
+    const [checkoutSuccessMessage, setCheckoutSuccessMessage] = useState('');
+    const stripeCardMountRef = useRef(null);
+    const stripeInstanceRef = useRef(null);
+    const stripeElementsRef = useRef(null);
+    const stripeCardElementRef = useRef(null);
 
     const getObjectId = useCallback((value) => {
         if (!value) return '';
@@ -326,6 +349,16 @@ function AssetDetailView() {
         return asset?.imagetype || asset?.fileMetadata?.mimeType || '';
     }, [asset]);
 
+    const stripePublishableKey = useMemo(
+        () => String(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '').trim(),
+        []
+    );
+
+    const inferredMainAssetPremium = useMemo(
+        () => isPremiumLicense(asset?.freePremium),
+        [asset?.freePremium]
+    );
+
     const assetDimensions = useMemo(() => {
         const width = asset?.fileMetadata?.dimensions?.width;
         const height = asset?.fileMetadata?.dimensions?.height;
@@ -335,7 +368,7 @@ function AssetDetailView() {
 
     const assetLicenseLabel = useMemo(() => {
         if (!asset?.freePremium) return '';
-        const value = String(asset.freePremium).trim().toLowerCase();
+        const value = normalizeLicenseValue(asset.freePremium);
         if (!value) return '';
         return value.charAt(0).toUpperCase() + value.slice(1);
     }, [asset]);
@@ -346,6 +379,73 @@ function AssetDetailView() {
         if (!isInfoRoute) return location.pathname;
         return location.pathname.slice(0, -5);
     }, [isInfoRoute, location.pathname]);
+
+    const refreshPurchaseStatus = useCallback(
+        async ({ withRetry = false } = {}) => {
+            if (!id) return null;
+            setPurchaseStatusLoading(true);
+            setPurchaseStatusError('');
+            try {
+                const attemptFetch = async () => {
+                    const nextStatus = await getAssetPurchaseStatus(id);
+                    setPurchaseStatus(nextStatus || null);
+                    return nextStatus || null;
+                };
+
+                if (!withRetry) {
+                    return await attemptFetch();
+                }
+
+                let latest = null;
+                for (let attempt = 0; attempt < 4; attempt += 1) {
+                    latest = await attemptFetch();
+                    if (latest?.canDownload || latest?.hasEntitlement) break;
+                    await new Promise((resolve) => setTimeout(resolve, 1400));
+                }
+                return latest;
+            } catch (error) {
+                const message = error?.response?.data?.message || 'Failed to fetch purchase status.';
+                setPurchaseStatusError(message);
+                setPurchaseStatus((prev) => (
+                    prev || {
+                        assetId: id,
+                        isFree: !inferredMainAssetPremium,
+                        isPremium: inferredMainAssetPremium,
+                        canDownload: !inferredMainAssetPremium,
+                        canBuy: inferredMainAssetPremium,
+                        canBuyAgain: false,
+                        hasEntitlement: false,
+                        priceConfigured: false,
+                        priceCents: null,
+                        currency: 'USD',
+                    }
+                ));
+                return null;
+            } finally {
+                setPurchaseStatusLoading(false);
+            }
+        },
+        [id, inferredMainAssetPremium]
+    );
+
+    useEffect(() => {
+        let mounted = true;
+        const loadStatus = async () => {
+            if (!mounted || !id) return;
+            await refreshPurchaseStatus();
+        };
+        loadStatus();
+        return () => {
+            mounted = false;
+        };
+    }, [id, refreshPurchaseStatus]);
+
+    useEffect(() => {
+        setCheckoutError('');
+        setCheckoutSuccessMessage('');
+        setShowCheckoutModal(false);
+        setPaymentIntentMeta(null);
+    }, [id]);
 
     useEffect(() => {
         if (typeof owner?.followersCount === 'number') {
@@ -394,6 +494,166 @@ function AssetDetailView() {
         };
         fetchFollowState();
     }, [creatorId, userData?._id]);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const setupCardElement = async () => {
+            if (!showCheckoutModal || !paymentIntentMeta?.clientSecret || !stripeCardMountRef.current) return;
+            if (!stripePublishableKey) {
+                setCheckoutError('Stripe is not configured. Missing VITE_STRIPE_PUBLISHABLE_KEY.');
+                return;
+            }
+
+            try {
+                setCheckoutError('');
+                const StripeFactory = await loadStripeJs();
+                if (cancelled) return;
+
+                stripeInstanceRef.current = StripeFactory(stripePublishableKey);
+                stripeElementsRef.current = stripeInstanceRef.current.elements({
+                    clientSecret: paymentIntentMeta.clientSecret,
+                });
+                stripeCardElementRef.current = stripeElementsRef.current.create('card', {
+                    hidePostalCode: true,
+                });
+                stripeCardElementRef.current.mount(stripeCardMountRef.current);
+            } catch (error) {
+                if (!cancelled) {
+                    setCheckoutError(error?.message || 'Failed to initialize payment form.');
+                }
+            }
+        };
+
+        setupCardElement();
+
+        return () => {
+            cancelled = true;
+            if (stripeCardElementRef.current) {
+                stripeCardElementRef.current.destroy();
+                stripeCardElementRef.current = null;
+            }
+            stripeElementsRef.current = null;
+            stripeInstanceRef.current = null;
+        };
+    }, [showCheckoutModal, paymentIntentMeta?.clientSecret, stripePublishableKey]);
+
+    const resolvedPurchaseStatus = useMemo(() => {
+        const fallbackIsPremium = inferredMainAssetPremium;
+        const fallbackIsFree = !fallbackIsPremium;
+        const status = purchaseStatus || {};
+
+        return {
+            isPremium: Boolean(status.isPremium ?? fallbackIsPremium),
+            isFree: Boolean(status.isFree ?? fallbackIsFree),
+            hasEntitlement: Boolean(status.hasEntitlement),
+            canDownload: Boolean(status.canDownload ?? fallbackIsFree),
+            canBuy: Boolean(status.canBuy ?? fallbackIsPremium),
+            canBuyAgain: Boolean(status.canBuyAgain),
+            canPurchase: Boolean(status.canPurchase ?? fallbackIsPremium),
+            requiresLoginForPurchase: Boolean(status.requiresLoginForPurchase),
+            priceConfigured: Boolean(status.priceConfigured ?? (status.priceCents != null)),
+            priceCents: status.priceCents ?? null,
+            currency: String(status.currency || 'USD').toUpperCase(),
+        };
+    }, [purchaseStatus, inferredMainAssetPremium]);
+
+    const purchasePriceLabel = useMemo(
+        () => formatPriceUsd(resolvedPurchaseStatus.priceCents),
+        [resolvedPurchaseStatus.priceCents]
+    );
+
+    const handleOpenCheckout = useCallback(async () => {
+        if (!asset?._id) return;
+        if (!userData?._id) {
+            navigate('/login', { state: { from: window.location.pathname } });
+            return;
+        }
+        if (!resolvedPurchaseStatus.canPurchase) {
+            alert('This asset cannot be purchased right now.');
+            return;
+        }
+        if (!resolvedPurchaseStatus.priceConfigured) {
+            alert('Pricing is not configured for this asset yet.');
+            return;
+        }
+        if (!stripePublishableKey) {
+            alert('Stripe publishable key is missing. Configure VITE_STRIPE_PUBLISHABLE_KEY.');
+            return;
+        }
+
+        setCheckoutLoading(true);
+        setCheckoutError('');
+        setCheckoutSuccessMessage('');
+        try {
+            const payment = await createAssetPaymentIntent(asset._id);
+            if (!payment?.clientSecret) {
+                throw new Error('Missing Stripe client secret in payment intent response.');
+            }
+            setPaymentIntentMeta(payment);
+            setShowCheckoutModal(true);
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || 'Failed to start checkout.';
+            setCheckoutError(message);
+            alert(message);
+        } finally {
+            setCheckoutLoading(false);
+        }
+    }, [
+        asset?._id,
+        userData?._id,
+        navigate,
+        resolvedPurchaseStatus.canPurchase,
+        resolvedPurchaseStatus.priceConfigured,
+        stripePublishableKey,
+    ]);
+
+    const closeCheckoutModal = useCallback(() => {
+        setShowCheckoutModal(false);
+        setPaymentIntentMeta(null);
+        setCheckoutSubmitting(false);
+        setCheckoutError('');
+    }, []);
+
+    const handleSubmitCheckoutPayment = useCallback(async () => {
+        if (!stripeInstanceRef.current || !stripeCardElementRef.current || !paymentIntentMeta?.clientSecret) {
+            setCheckoutError('Payment form is not ready yet. Please wait a moment.');
+            return;
+        }
+
+        setCheckoutSubmitting(true);
+        setCheckoutError('');
+        try {
+            const result = await stripeInstanceRef.current.confirmCardPayment(
+                paymentIntentMeta.clientSecret,
+                {
+                    payment_method: {
+                        card: stripeCardElementRef.current,
+                    },
+                }
+            );
+
+            if (result?.error) {
+                setCheckoutError(result.error.message || 'Payment failed.');
+                return;
+            }
+
+            const status = result?.paymentIntent?.status || '';
+            if (status === 'succeeded' || status === 'processing' || status === 'requires_capture') {
+                setCheckoutSuccessMessage('Payment successful. Finalizing your access...');
+                await refreshPurchaseStatus({ withRetry: true });
+                closeCheckoutModal();
+                setCheckoutSuccessMessage('Payment successful. You can download this asset now.');
+                return;
+            }
+
+            setCheckoutError(`Payment status: ${status || 'unknown'}`);
+        } catch (error) {
+            setCheckoutError(error?.message || 'Checkout failed.');
+        } finally {
+            setCheckoutSubmitting(false);
+        }
+    }, [paymentIntentMeta?.clientSecret, refreshPurchaseStatus, closeCheckoutModal]);
 
     // Follow/unfollow handlers
     const handleFollow = async () => {
@@ -493,6 +753,10 @@ function AssetDetailView() {
     // CHANGE: open modal for main asset instead of immediate download
     const handleDownload = () => {
         if (!asset) return;
+        if (!resolvedPurchaseStatus.canDownload && resolvedPurchaseStatus.isPremium) {
+            handleOpenCheckout();
+            return;
+        }
         setDownloadTarget(asset);
         setShowDownloadModal(true);
     };
@@ -536,6 +800,10 @@ function AssetDetailView() {
     // CHANGE: for related items, also open the same modal
     const handleDownloadItem = (item) => {
         if (!item) return;
+        if (isPremiumLicense(item?.freePremium)) {
+            navigate(buildAssetUrl(item));
+            return;
+        }
         setDownloadTarget(item);
         setShowDownloadModal(true);
     };
@@ -586,41 +854,47 @@ function AssetDetailView() {
     const handleVariantDownload = async (variant, item) => {
         if (!variant || !variant.url) return;
 
-        const label = variant.variant
-            ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
-            : 'Original';
+        try {
+            const label = variant.variant
+                ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
+                : 'Original';
 
-        const w = variant.dimensions?.width;
-        const h = variant.dimensions?.height;
-        const sizeSuffix = w && h ? `-${w}x${h}px` : '';
-        const baseTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
-        const ext = getExtensionFromUrl(variant.url) || '';
-        const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
+            const w = variant.dimensions?.width;
+            const h = variant.dimensions?.height;
+            const sizeSuffix = w && h ? `-${w}x${h}px` : '';
+            const baseTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const ext = getExtensionFromUrl(variant.url) || '';
+            const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
 
-        let href = variant.url;
+            let href = variant.url;
+            const tracked = await trackAssetDownloadEvent({
+                assetId: item?._id,
+                fileName,
+            });
 
-        if (variant.s3Key) {
-            const params = new URLSearchParams();
-            params.set('key', variant.s3Key);
-            params.set('filename', fileName);
-            href = `${API_BASE_URL}/download?${params.toString()}`;
+            if (tracked?.downloadUrl) {
+                href = tracked.downloadUrl;
+            } else if (variant.s3Key) {
+                const params = new URLSearchParams();
+                params.set('key', variant.s3Key);
+                params.set('filename', fileName);
+                href = `${API_BASE_URL}/download?${params.toString()}`;
+            }
+
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = fileName;
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setShowDownloadModal(false);
+            setDownloadTarget(null);
+        } catch (error) {
+            console.error('Error downloading asset variant:', error);
+            alert(error?.message || 'Error downloading file');
         }
-
-        await trackAssetDownloadEvent({
-            assetId: item?._id,
-            fileName,
-        });
-
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = fileName;
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setShowDownloadModal(false);
-        setDownloadTarget(null);
     };
 
     const formatBytes = (bytes) => {
@@ -707,15 +981,66 @@ function AssetDetailView() {
                         <FiShare2 size={16} />
                         <span>Share</span>
                     </button>
-                    <button className="asset-hero__toolbar-btn" type="button" onClick={handleDownload}>
-                        <FiDownload size={16} />
-                        <span>Download</span>
-                    </button>
+                    {purchaseStatusLoading ? (
+                        <button className="asset-hero__toolbar-btn" type="button" disabled>
+                            <FiDownload size={16} />
+                            <span>Checking...</span>
+                        </button>
+                    ) : resolvedPurchaseStatus.canDownload ? (
+                        <button className="asset-hero__toolbar-btn asset-hero__toolbar-btn--download" type="button" onClick={handleDownload}>
+                            <FiDownload size={16} />
+                            <span>{resolvedPurchaseStatus.isFree ? 'Free Download' : 'Download'}</span>
+                        </button>
+                    ) : resolvedPurchaseStatus.canPurchase ? (
+                        <button
+                            className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium"
+                            type="button"
+                            onClick={handleOpenCheckout}
+                            disabled={checkoutLoading}
+                        >
+                            <FiCreditCard size={16} />
+                            <span>
+                                {checkoutLoading
+                                    ? 'Opening checkout...'
+                                    : `Buy Now${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
+                            </span>
+                        </button>
+                    ) : (
+                        <button className="asset-hero__toolbar-btn" type="button" disabled>
+                            <FiCreditCard size={16} />
+                            <span>{resolvedPurchaseStatus.isPremium ? 'Premium unavailable' : 'Download unavailable'}</span>
+                        </button>
+                    )}
+                    {resolvedPurchaseStatus.canBuyAgain && (
+                        <button
+                            className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium-alt"
+                            type="button"
+                            onClick={handleOpenCheckout}
+                            disabled={checkoutLoading}
+                        >
+                            <FiCreditCard size={16} />
+                            <span>
+                                {checkoutLoading
+                                    ? 'Opening checkout...'
+                                    : `Buy Again${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
+                            </span>
+                        </button>
+                    )}
                     <button className="asset-hero__toolbar-btn" type="button" onClick={handleMoreInfo}>
                         <FiInfo size={16} />
                         <span>More info</span>
                     </button>
                 </div>
+                {purchaseStatusError && (
+                    <div className="alert alert-warning rounded-0 mb-0 py-2 px-3">
+                        {purchaseStatusError}
+                    </div>
+                )}
+                {checkoutSuccessMessage && (
+                    <div className="alert alert-success rounded-0 mb-0 py-2 px-3">
+                        {checkoutSuccessMessage}
+                    </div>
+                )}
 
                 <div className="asset-hero__meta p-3">
                     <div className="asset-hero__heading mb-3">
@@ -1158,6 +1483,62 @@ function AssetDetailView() {
                                 </button>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {showCheckoutModal && paymentIntentMeta && (
+                <div
+                    className="download-modal-backdrop"
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1060,
+                    }}
+                    onClick={closeCheckoutModal}
+                >
+                    <div
+                        className="asset-payment-modal"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h5 className="mb-2">Complete purchase</h5>
+                        <div className="small text-muted mb-3">
+                            {asset?.title || 'Asset'}
+                        </div>
+                        <div className="asset-payment-modal__amount">
+                            {(paymentIntentMeta?.currency || resolvedPurchaseStatus.currency || 'USD').toUpperCase()} {formatPriceUsd(paymentIntentMeta?.amountCents || resolvedPurchaseStatus.priceCents)?.replace('$', '')}
+                        </div>
+                        <div
+                            ref={stripeCardMountRef}
+                            className="asset-payment-modal__card-element"
+                        />
+                        {checkoutError && (
+                            <div className="alert alert-danger py-2 px-2 mt-3 mb-0">
+                                {checkoutError}
+                            </div>
+                        )}
+                        <div className="d-flex gap-2 mt-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary w-100"
+                                onClick={closeCheckoutModal}
+                                disabled={checkoutSubmitting}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary w-100"
+                                onClick={handleSubmitCheckoutPayment}
+                                disabled={checkoutSubmitting}
+                            >
+                                {checkoutSubmitting ? 'Processing...' : 'Pay now'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

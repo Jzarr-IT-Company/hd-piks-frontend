@@ -13,6 +13,9 @@ import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import '../LazyLoadImage2/LazyLoadImage.css';
 import './HomeGallery.css';
 
+const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
+const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
+
 // Reusable gallery card
 function GalleryItem({
     asset,
@@ -34,6 +37,7 @@ function GalleryItem({
         || asset?.imagetype?.startsWith('video/')
         || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
     );
+    const isPremiumAsset = isPremiumByLicense(asset?.freePremium);
 
     const formatDuration = useCallback((durationSeconds) => {
         const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
@@ -136,6 +140,11 @@ function GalleryItem({
                     {durationLabel}
                 </div>
             )}
+            <span
+                className={`home-gallery__license-tag ${isPremiumAsset ? 'home-gallery__license-tag--premium' : 'home-gallery__license-tag--free'}`}
+            >
+                {isPremiumAsset ? 'Premium' : 'Free'}
+            </span>
 
             <div className="home-gallery__hover-actions">
                 <div className="home-gallery__overlay-top">
@@ -358,9 +367,13 @@ function HomeGallery() {
 
     const handleDownload = useCallback((asset) => {
         if (!asset) return;
+        if (isPremiumByLicense(asset?.freePremium)) {
+            navigate(buildAssetUrl(asset));
+            return;
+        }
         setDownloadTarget(asset);
         setShowDownloadModal(true);
-    }, []);
+    }, [navigate, buildAssetUrl]);
 
     const handleSaveToCollection = useCallback((asset) => {
         if (!asset?._id) return;
@@ -384,39 +397,46 @@ function HomeGallery() {
     const handleVariantDownload = useCallback(async (variant, item) => {
         if (!variant || !variant.url) return;
 
-        const label = variant.variant
-            ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
-            : 'Original';
-        const w = variant.dimensions?.width;
-        const h = variant.dimensions?.height;
-        const sizeSuffix = w && h ? `-${w}x${h}px` : '';
-        const baseTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
-        const ext = getExtensionFromUrl(variant.url) || '';
-        const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
+        try {
+            const label = variant.variant
+                ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
+                : 'Original';
+            const w = variant.dimensions?.width;
+            const h = variant.dimensions?.height;
+            const sizeSuffix = w && h ? `-${w}x${h}px` : '';
+            const baseTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const ext = getExtensionFromUrl(variant.url) || '';
+            const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
 
-        let href = variant.url;
-        if (variant.s3Key) {
-            const params = new URLSearchParams();
-            params.set('key', variant.s3Key);
-            params.set('filename', fileName);
-            href = `${API_BASE_URL}/download?${params.toString()}`;
+            let href = variant.url;
+            const tracked = await trackAssetDownloadEvent({
+                assetId: item?._id,
+                fileName,
+            });
+
+            if (tracked?.downloadUrl) {
+                href = tracked.downloadUrl;
+            } else if (variant.s3Key) {
+                const params = new URLSearchParams();
+                params.set('key', variant.s3Key);
+                params.set('filename', fileName);
+                href = `${API_BASE_URL}/download?${params.toString()}`;
+            }
+
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = fileName;
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setShowDownloadModal(false);
+            setDownloadTarget(null);
+        } catch (error) {
+            console.error('Error downloading asset variant:', error);
+            alert(error?.message || 'Error downloading file');
         }
-
-        await trackAssetDownloadEvent({
-            assetId: item?._id,
-            fileName,
-        });
-
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = fileName;
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setShowDownloadModal(false);
-        setDownloadTarget(null);
     }, [getExtensionFromUrl]);
 
     return (

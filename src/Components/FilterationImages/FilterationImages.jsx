@@ -16,6 +16,9 @@ import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
 import './FilterationImages.css';
 
+const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
+const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
+
 function FilterationMedia({ img, src, alt }) {
     const [videoDuration, setVideoDuration] = useState(null);
     const videoRef = useRef(null);
@@ -415,49 +418,59 @@ function FilterationImages({
     const handleDownload = useCallback((event, img) => {
         event.stopPropagation();
         if (!img) return;
+        if (isPremiumByLicense(img?.freePremium)) {
+            navigate(buildAssetUrl(img));
+            return;
+        }
         setDownloadTarget(img);
         setShowDownloadModal(true);
-    }, []);
+    }, [navigate, buildAssetUrl]);
 
     // NEW: download the selected variant via backend proxy
     const handleVariantDownload = useCallback(async (variant, img) => {
         if (!variant || !variant.url) return;
 
-        const label = variant.variant
-            ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
-            : 'Original';
+        try {
+            const label = variant.variant
+                ? variant.variant.charAt(0).toUpperCase() + variant.variant.slice(1)
+                : 'Original';
 
-        const w = variant.dimensions?.width;
-        const h = variant.dimensions?.height;
-        const sizeSuffix = w && h ? `-${w}x${h}px` : '';
-        const baseTitle = (img.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
-        const ext = getExtensionFromUrl(variant.url) || '';
-        const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
+            const w = variant.dimensions?.width;
+            const h = variant.dimensions?.height;
+            const sizeSuffix = w && h ? `-${w}x${h}px` : '';
+            const baseTitle = (img.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const ext = getExtensionFromUrl(variant.url) || '';
+            const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
 
-        let href = variant.url;
+            let href = variant.url;
+            const tracked = await trackAssetDownloadEvent({
+                assetId: img?._id,
+                fileName,
+            });
 
-        if (variant.s3Key) {
-            const params = new URLSearchParams();
-            params.set('key', variant.s3Key);
-            params.set('filename', fileName);
-            href = `${API_BASE_URL}/download?${params.toString()}`;
+            if (tracked?.downloadUrl) {
+                href = tracked.downloadUrl;
+            } else if (variant.s3Key) {
+                const params = new URLSearchParams();
+                params.set('key', variant.s3Key);
+                params.set('filename', fileName);
+                href = `${API_BASE_URL}/download?${params.toString()}`;
+            }
+
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = fileName;
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+
+            setShowDownloadModal(false);
+            setDownloadTarget(null);
+        } catch (error) {
+            console.error('Error downloading asset variant:', error);
+            alert(error?.message || 'Error downloading file');
         }
-
-        await trackAssetDownloadEvent({
-            assetId: img?._id,
-            fileName,
-        });
-
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = fileName;
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-
-        setShowDownloadModal(false);
-        setDownloadTarget(null);
     }, [getExtensionFromUrl]);
 
     const handleSaveToCollection = useCallback((event, img) => {
@@ -695,6 +708,11 @@ function FilterationImages({
                                                                 getSubSubcategoryName(img.subsubcategory)
                                                             }
                                                         />
+                                                        <span
+                                                            className={`filteration-license-tag ${isPremiumByLicense(img?.freePremium) ? 'filteration-license-tag--premium' : 'filteration-license-tag--free'}`}
+                                                        >
+                                                            {isPremiumByLicense(img?.freePremium) ? 'Premium' : 'Free'}
+                                                        </span>
                                                         <div className="card-img-overlay rounded-4 content-hide d-flex flex-column justify-content-end">
                                                             <div className="filteration-actions">
                                                                 <button

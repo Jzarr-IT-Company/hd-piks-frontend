@@ -92,26 +92,33 @@ function VideoCompo({ categoryname }) {
         event.stopPropagation();
         if (!item?.imageUrl) return;
 
-        const fallbackKey = item?.s3Key || getS3KeyFromUrl(item.imageUrl);
-        const safeTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
-        const fileName = safeTitle.includes('.') ? safeTitle : `${safeTitle}.mp4`;
+        try {
+            const fallbackKey = item?.s3Key || getS3KeyFromUrl(item.imageUrl);
+            const safeTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const fileName = safeTitle.includes('.') ? safeTitle : `${safeTitle}.mp4`;
 
-        let href = item.imageUrl;
-        await trackAssetDownloadEvent({ assetId: item?._id, fileName });
-        if (fallbackKey) {
-            const params = new URLSearchParams();
-            params.set('key', fallbackKey);
-            params.set('filename', fileName);
-            href = `${API_BASE_URL}/download?${params.toString()}`;
+            let href = item.imageUrl;
+            const tracked = await trackAssetDownloadEvent({ assetId: item?._id, fileName });
+            if (tracked?.downloadUrl) {
+                href = tracked.downloadUrl;
+            } else if (fallbackKey) {
+                const params = new URLSearchParams();
+                params.set('key', fallbackKey);
+                params.set('filename', fileName);
+                href = `${API_BASE_URL}/download?${params.toString()}`;
+            }
+
+            const link = document.createElement('a');
+            link.href = href;
+            link.download = fileName;
+            link.rel = 'noopener noreferrer';
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch (error) {
+            console.error('Error downloading video:', error);
+            alert(error?.message || 'Error downloading video');
         }
-
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = fileName;
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
     };
 
     const handleSaveToCollection = (event) => {

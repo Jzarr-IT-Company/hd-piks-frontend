@@ -2,8 +2,9 @@ import React, { useMemo, useState } from 'react';
 import { useUpload } from '../../Context/UploadContext';
 import { uploadImageToS3, formatFileSize } from '../../Services/S3Service.js';
 import { message } from 'antd';
+import PropTypes from 'prop-types';
 
-function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
+function UploadBanner1ImageCompo({ selectedCategoryName = '', uploadPolicy = null }) {
     const { 
         category,
         selectedSubCategory,
@@ -35,10 +36,29 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
     }, [selectedCategoryName]);
 
     const acceptedInputTypes = useMemo(() => {
+        if (uploadPolicy?.allowedMimeTypes?.length) {
+            return uploadPolicy.allowedMimeTypes.join(",");
+        }
         if (expectedMediaKind === 'video') return 'video/mp4';
         if (expectedMediaKind === 'image') return 'image/png,image/jpeg,image/jpg,image/gif,image/webp';
         return '.png,.jpg,.jpeg,.gif,.webp,.mp4';
-    }, [expectedMediaKind]);
+    }, [expectedMediaKind, uploadPolicy]);
+
+    const policyMinSize = useMemo(() => {
+        if (uploadPolicy?.minFileSizeBytes !== null && uploadPolicy?.minFileSizeBytes !== undefined) {
+            const parsed = Number(uploadPolicy.minFileSizeBytes);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+        return null;
+    }, [uploadPolicy]);
+
+    const policyMaxSize = useMemo(() => {
+        if (uploadPolicy?.maxFileSizeBytes !== null && uploadPolicy?.maxFileSizeBytes !== undefined) {
+            const parsed = Number(uploadPolicy.maxFileSizeBytes);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+        return null;
+    }, [uploadPolicy]);
     
     const handleFileChange = async (event) => {
         const files = Array.from(event.target.files);
@@ -56,18 +76,42 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
         setImageUrl('');
         
         for (let file of files) {
-            if (!allowedFileTypes.includes(file.type)) {
+            const normalizedType = String(file.type || "").toLowerCase();
+            const policyMimeAllowList = Array.isArray(uploadPolicy?.allowedMimeTypes)
+                ? uploadPolicy.allowedMimeTypes
+                : [];
+            const hasPolicyMimeRules = policyMimeAllowList.length > 0;
+            if (hasPolicyMimeRules && !policyMimeAllowList.includes(normalizedType)) {
+                message.error(
+                    `File type ${normalizedType} is not allowed for ${uploadPolicy?.sourceName || "selected category"}. Allowed formats: ${policyMimeAllowList.join(", ")}.`
+                );
+                return;
+            }
+            if (!hasPolicyMimeRules && !allowedFileTypes.includes(normalizedType)) {
                 message.error("Invalid file type. Only PNG, JPG, JPEG, GIF, WEBP and MP4 are allowed.");
                 return;
             }
 
-            const isVideo = file.type.startsWith('video/');
+            const isVideo = normalizedType.startsWith('video/');
             if (expectedMediaKind === 'video' && !isVideo) {
                 message.error('Selected category is Video. Please upload only MP4 video files.');
                 return;
             }
             if (expectedMediaKind === 'image' && isVideo) {
                 message.error(`Selected category is ${selectedCategoryName || 'Image'}. Please upload only image files.`);
+                return;
+            }
+
+            if (policyMinSize !== null && file.size < policyMinSize) {
+                message.error(
+                    `File too small for ${uploadPolicy?.sourceName || "selected category"}. Minimum ${formatFileSize(policyMinSize)} required.`
+                );
+                return;
+            }
+            if (policyMaxSize !== null && file.size > policyMaxSize) {
+                message.error(
+                    `File too large for ${uploadPolicy?.sourceName || "selected category"}. Maximum ${formatFileSize(policyMaxSize)} allowed.`
+                );
                 return;
             }
             if (isVideo) {
@@ -109,8 +153,6 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
                     selectedSubCategory,
                     selectedSubSubCategory
                 );
-                
-                console.log("S3 Upload successful:", s3Result);
 
                 // Update selected images preview
                 setSelectedImages((prevImages) => [
@@ -148,8 +190,7 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
 
                 message.success("Image uploaded successfully to S3!");
                 
-            } catch (error) {
-                console.error("S3 Upload failed:", error);
+            } catch {
                 message.error("Image upload failed. Please try again.");
             } finally {
                 setIsLoading(false);
@@ -240,14 +281,18 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
                                 <p className="small text-danger mb-1">Select category first to enable file upload.</p>
                             ) : null}
                             <p className="small text-muted">
-                                {expectedMediaKind === 'video'
-                                    ? 'Supported format: MP4'
-                                    : 'Supported formats: JPG, PNG, JPEG, GIF, WEBP'}
+                                {uploadPolicy?.allowedMimeTypes?.length
+                                    ? `Allowed formats: ${uploadPolicy.allowedMimeTypes.join(', ')}`
+                                    : (expectedMediaKind === 'video'
+                                        ? 'Supported format: MP4'
+                                        : 'Supported formats: JPG, PNG, JPEG, GIF, WEBP')}
                             </p>
                             <p className="small text-muted mb-0">
-                                {expectedMediaKind === 'video'
-                                    ? 'Video size limit: up to 120MB'
-                                    : 'Image size limits: minimum 1.5MB, maximum 15MB'}
+                                {policyMinSize !== null || policyMaxSize !== null
+                                    ? `Category size policy: ${policyMinSize !== null ? `min ${formatFileSize(policyMinSize)}` : 'no minimum'}, ${policyMaxSize !== null ? `max ${formatFileSize(policyMaxSize)}` : 'no maximum'}`
+                                    : (expectedMediaKind === 'video'
+                                        ? 'Video size limit: up to 120MB'
+                                        : 'Image size limits: minimum 1.5MB, maximum 15MB')}
                             </p>
                         </div>
                     )}
@@ -256,5 +301,15 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '' }) {
         </div>
     );
 }
+
+UploadBanner1ImageCompo.propTypes = {
+    selectedCategoryName: PropTypes.string,
+    uploadPolicy: PropTypes.shape({
+        sourceName: PropTypes.string,
+        allowedMimeTypes: PropTypes.arrayOf(PropTypes.string),
+        minFileSizeBytes: PropTypes.number,
+        maxFileSizeBytes: PropTypes.number,
+    }),
+};
 
 export default UploadBanner1ImageCompo;

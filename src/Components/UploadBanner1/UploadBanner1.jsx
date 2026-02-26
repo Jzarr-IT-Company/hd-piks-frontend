@@ -12,10 +12,22 @@ import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 
 function UploadBanner1() {
-    const ZIP_REQUIRED_NAMES = ['mockups', 'vector', 'psd', 'templates', 'icons', 'nft'];
-    const ZIP_OPTIONAL_NAMES = ['image'];
+    const ZIP_MODE_HIDDEN = 'hidden';
+    const ZIP_MODE_OPTIONAL = 'optional';
+    const ZIP_MODE_REQUIRED = 'required';
+    const LEGACY_ZIP_REQUIRED_NAMES = ['mockups', 'vector', 'psd', 'templates', 'icons', 'nft'];
+    const LEGACY_ZIP_OPTIONAL_NAMES = ['image'];
     const MIN_ZIP_BYTES = 1 * 1024 * 1024; // 1MB
     const MAX_ZIP_BYTES = 500 * 1024 * 1024; // 500MB
+    const DEFAULT_ZIP_ALLOWED_MIME_TYPES = ['application/zip', 'application/x-zip-compressed', 'multipart/x-zip'];
+    const formatBytesAsMb = (bytes) => {
+        const numeric = Number(bytes || 0);
+        if (!Number.isFinite(numeric) || numeric <= 0) return '0 MB';
+        const mb = numeric / (1024 * 1024);
+        const rounded = mb >= 10 ? mb.toFixed(0) : mb.toFixed(2).replace(/\.00$/, '');
+        return `${rounded} MB`;
+    };
+    const formatSizeHint = (bytes) => `${formatBytesAsMb(bytes)} (${bytes} bytes)`;
 
     const {
         category,
@@ -48,15 +60,10 @@ function UploadBanner1() {
         setImageUrl,
         imageType,
         setImageType,
-        imageSize,
         setImageSize,
-        s3Keys,
         setS3Keys,
-        s3Urls,
         setS3Urls,
-        fileMetadata,
         setFileMetadata,
-        imageData,
         setImageData,
     } = useUpload();
     const { creatorData } = useAuth();
@@ -93,15 +100,95 @@ function UploadBanner1() {
             .map((name) => name.trim().toLowerCase());
     }, [selectedCategoryNode, selectedSubCategoryNode, selectedSubSubCategoryNode]);
 
-    const isZipRequired = useMemo(() => {
-        return selectedNames.some((name) => ZIP_REQUIRED_NAMES.includes(name));
-    }, [selectedNames]);
+    const effectiveUploadPolicy = useMemo(() => {
+        const parseNodePolicy = (node) => {
+            if (!node || typeof node !== 'object') return null;
+            const allowedMimeTypes = Array.isArray(node.allowedMimeTypes)
+                ? [...new Set(node.allowedMimeTypes.map((item) => String(item || '').trim().toLowerCase()).filter(Boolean))]
+                : [];
+            const minFileSizeBytes =
+                node.minFileSizeBytes !== null && node.minFileSizeBytes !== undefined && node.minFileSizeBytes !== ''
+                    ? Number(node.minFileSizeBytes)
+                    : null;
+            const maxFileSizeBytes =
+                node.maxFileSizeBytes !== null && node.maxFileSizeBytes !== undefined && node.maxFileSizeBytes !== ''
+                    ? Number(node.maxFileSizeBytes)
+                    : null;
+            const hasRules =
+                allowedMimeTypes.length > 0 ||
+                Number.isFinite(minFileSizeBytes) ||
+                Number.isFinite(maxFileSizeBytes);
+            if (!hasRules) return null;
+            return {
+                sourceName: node.name || 'selected category',
+                allowedMimeTypes,
+                minFileSizeBytes: Number.isFinite(minFileSizeBytes) ? minFileSizeBytes : null,
+                maxFileSizeBytes: Number.isFinite(maxFileSizeBytes) ? maxFileSizeBytes : null,
+            };
+        };
 
-    const isZipVisible = useMemo(() => {
-        return selectedNames.some((name) =>
-            ZIP_REQUIRED_NAMES.includes(name) || ZIP_OPTIONAL_NAMES.includes(name)
+        return (
+            parseNodePolicy(selectedSubSubCategoryNode) ||
+            parseNodePolicy(selectedSubCategoryNode) ||
+            parseNodePolicy(selectedCategoryNode) ||
+            null
         );
-    }, [selectedNames]);
+    }, [selectedCategoryNode, selectedSubCategoryNode, selectedSubSubCategoryNode]);
+
+    const effectiveZipPolicy = useMemo(() => {
+        const parseNodeZipPolicy = (node) => {
+            if (!node || typeof node !== 'object') return null;
+            const normalizedMode = ['hidden', 'optional', 'required'].includes(String(node.zipMode || '').toLowerCase())
+                ? String(node.zipMode).toLowerCase()
+                : '';
+            const allowedMimeTypes = Array.isArray(node.zipAllowedMimeTypes)
+                ? [...new Set(node.zipAllowedMimeTypes.map((item) => String(item || '').trim().toLowerCase()).filter(Boolean))]
+                : [];
+            const minFileSizeBytes =
+                node.zipMinFileSizeBytes !== null && node.zipMinFileSizeBytes !== undefined && node.zipMinFileSizeBytes !== ''
+                    ? Number(node.zipMinFileSizeBytes)
+                    : null;
+            const maxFileSizeBytes =
+                node.zipMaxFileSizeBytes !== null && node.zipMaxFileSizeBytes !== undefined && node.zipMaxFileSizeBytes !== ''
+                    ? Number(node.zipMaxFileSizeBytes)
+                    : null;
+            const hasRules =
+                Boolean(normalizedMode) ||
+                allowedMimeTypes.length > 0 ||
+                Number.isFinite(minFileSizeBytes) ||
+                Number.isFinite(maxFileSizeBytes);
+            if (!hasRules) return null;
+            return {
+                sourceName: node.name || 'selected category',
+                zipMode: normalizedMode || ZIP_MODE_OPTIONAL,
+                allowedMimeTypes: allowedMimeTypes.length ? allowedMimeTypes : DEFAULT_ZIP_ALLOWED_MIME_TYPES,
+                minFileSizeBytes: Number.isFinite(minFileSizeBytes) ? minFileSizeBytes : MIN_ZIP_BYTES,
+                maxFileSizeBytes: Number.isFinite(maxFileSizeBytes) ? maxFileSizeBytes : MAX_ZIP_BYTES,
+            };
+        };
+
+        const explicitPolicy =
+            parseNodeZipPolicy(selectedSubSubCategoryNode) ||
+            parseNodeZipPolicy(selectedSubCategoryNode) ||
+            parseNodeZipPolicy(selectedCategoryNode);
+        if (explicitPolicy) return explicitPolicy;
+
+        const legacyMode = selectedNames.some((name) => LEGACY_ZIP_REQUIRED_NAMES.includes(name))
+            ? ZIP_MODE_REQUIRED
+            : selectedNames.some((name) => LEGACY_ZIP_OPTIONAL_NAMES.includes(name))
+                ? ZIP_MODE_OPTIONAL
+                : ZIP_MODE_HIDDEN;
+        return {
+            sourceName: selectedSubSubCategoryNode?.name || selectedSubCategoryNode?.name || selectedCategoryNode?.name || 'selected category',
+            zipMode: legacyMode,
+            allowedMimeTypes: DEFAULT_ZIP_ALLOWED_MIME_TYPES,
+            minFileSizeBytes: MIN_ZIP_BYTES,
+            maxFileSizeBytes: MAX_ZIP_BYTES,
+        };
+    }, [selectedCategoryNode, selectedSubCategoryNode, selectedSubSubCategoryNode, selectedNames]);
+
+    const isZipRequired = effectiveZipPolicy.zipMode === ZIP_MODE_REQUIRED;
+    const isZipVisible = effectiveZipPolicy.zipMode !== ZIP_MODE_HIDDEN;
 
     const currentZipKey = useMemo(() => {
         if (Array.isArray(zipFolder)) {
@@ -130,6 +217,13 @@ function UploadBanner1() {
         const withoutQuery = source.split('?')[0];
         return withoutQuery.split('/').pop() || source;
     }, [currentZipKey, currentZipUrl]);
+
+    const currentZipSize = useMemo(() => {
+        const first = Array.isArray(zipFolder) ? zipFolder[0] : zipFolder;
+        if (!first || typeof first !== 'object') return null;
+        const size = Number(first.fileSize || 0);
+        return Number.isFinite(size) && size > 0 ? size : null;
+    }, [zipFolder]);
 
     // Fetch categories from backend only if creatorData exists
     useEffect(() => {
@@ -227,12 +321,28 @@ function UploadBanner1() {
             message.error('Only .zip file is allowed.');
             return;
         }
-        if (file.size < MIN_ZIP_BYTES) {
-            message.error('ZIP too small. Minimum 1MB required.');
+        const policyMinSize = Number.isFinite(Number(effectiveZipPolicy?.minFileSizeBytes))
+            ? Number(effectiveZipPolicy.minFileSizeBytes)
+            : MIN_ZIP_BYTES;
+        const policyMaxSize = Number.isFinite(Number(effectiveZipPolicy?.maxFileSizeBytes))
+            ? Number(effectiveZipPolicy.maxFileSizeBytes)
+            : MAX_ZIP_BYTES;
+        const policyMimeAllowList = Array.isArray(effectiveZipPolicy?.allowedMimeTypes)
+            ? effectiveZipPolicy.allowedMimeTypes
+            : [];
+        const normalizedBrowserMime = String(file.type || '').trim().toLowerCase();
+        if (normalizedBrowserMime && policyMimeAllowList.length && !policyMimeAllowList.includes(normalizedBrowserMime)) {
+            message.error(
+                `ZIP type ${normalizedBrowserMime} is not allowed. Allowed formats: ${policyMimeAllowList.join(', ')}.`
+            );
             return;
         }
-        if (file.size > MAX_ZIP_BYTES) {
-            message.error('ZIP too large. Max 500MB allowed.');
+        if (file.size < policyMinSize) {
+            message.error(`ZIP too small. Minimum ${formatSizeHint(policyMinSize)} required.`);
+            return;
+        }
+        if (file.size > policyMaxSize) {
+            message.error(`ZIP too large. Maximum ${formatSizeHint(policyMaxSize)} allowed.`);
             return;
         }
         setLoading(true);
@@ -287,7 +397,10 @@ function UploadBanner1() {
                         <img src={imageUrl} alt="Preview" style={{ width: '100%', borderRadius: '8px' }} />
                     )
                 ) : null}
-                <UploadBanner1ImageCompo selectedCategoryName={selectedCategoryNode?.name || ''} />
+                <UploadBanner1ImageCompo
+                    selectedCategoryName={selectedCategoryNode?.name || ''}
+                    uploadPolicy={effectiveUploadPolicy}
+                />
             </div>
 
             <div className="upload-card upload-card--form">
@@ -436,6 +549,9 @@ function UploadBanner1() {
                             {!loading && currentZipName ? (
                                 <div className="mt-2 small text-muted">
                                     Current ZIP: <strong>{currentZipName}</strong>
+                                    {currentZipSize ? (
+                                        <span> ({formatBytesAsMb(currentZipSize)})</span>
+                                    ) : null}
                                     {currentZipUrl ? (
                                         <>
                                             {' '}
@@ -451,7 +567,14 @@ function UploadBanner1() {
                                     ) : null}
                                 </div>
                             ) : null}
-                            <div className="small text-muted mt-1">Allowed ZIP size: 1MB to 500MB</div>
+                            <div className="small text-muted mt-1">
+                                Allowed ZIP size: {formatSizeHint(effectiveZipPolicy?.minFileSizeBytes ?? MIN_ZIP_BYTES)} to {formatSizeHint(effectiveZipPolicy?.maxFileSizeBytes ?? MAX_ZIP_BYTES)}
+                            </div>
+                            {effectiveZipPolicy?.allowedMimeTypes?.length ? (
+                                <div className="small text-muted mt-1">
+                                    Allowed ZIP formats: {effectiveZipPolicy.allowedMimeTypes.join(', ')}
+                                </div>
+                            ) : null}
                         </div>
                     )}
 
@@ -471,7 +594,7 @@ function UploadBanner1() {
                         </label>
                     </div>
 
-                    <UploadBtn isZipRequired={isZipRequired} />
+                    <UploadBtn isZipRequired={isZipRequired} uploadPolicy={effectiveUploadPolicy} zipPolicy={effectiveZipPolicy} />
                 </div>
             </div>
         </div>

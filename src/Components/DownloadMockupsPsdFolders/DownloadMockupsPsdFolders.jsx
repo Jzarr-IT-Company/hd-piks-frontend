@@ -32,8 +32,10 @@ function DownloadMockupsPsdFolders({ zipfolderurl, assetId, fileName }) {
             const fallbackName = fileName || (downloadKey.split('/').pop() || 'asset.zip');
             let href = zipfolderurl;
 
-            await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
-            if (downloadKey) {
+            const tracked = await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
+            if (tracked?.downloadUrl) {
+                href = tracked.downloadUrl;
+            } else if (downloadKey) {
                 const params = new URLSearchParams();
                 params.set('key', downloadKey);
                 params.set('filename', fallbackName);
@@ -49,7 +51,7 @@ function DownloadMockupsPsdFolders({ zipfolderurl, assetId, fileName }) {
             document.body.removeChild(link);
         } catch (error) {
             console.error('Error downloading file:', error);
-            alert('Error downloading file');
+            alert(error?.message || 'Error downloading file');
         } finally {
             setIsLoading(false);
         }

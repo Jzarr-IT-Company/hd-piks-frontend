@@ -77,126 +77,80 @@ import { API_ENDPOINTS } from '../config/api.config.js';
 
 // Get presigned URL for upload from backend
 export const getPresignedUploadUrl = async (fileName, fileType, category, subcategory, subsubcategory) => {
-    try {
-        const response = await api.post(API_ENDPOINTS.GET_PRESIGNED_URL, {
-            fileName,
-            fileType,
-            category,
-            subcategory,
-            subsubcategory
-        });
-        return response.data.data;
-    } catch (error) {
-        console.error("Error getting presigned URL:", error);
-        throw error;
-    }
+    const response = await api.post(API_ENDPOINTS.GET_PRESIGNED_URL, {
+        fileName,
+        fileType,
+        category,
+        subcategory,
+        subsubcategory
+    });
+    return response.data.data;
 };
 
 // Upload file directly to S3 using presigned URL (bypasses backend)
 export const uploadFileToS3 = async (presignedUrl, file, onProgress) => {
-    try {
-        const config = {
-            headers: {
-                'Content-Type': file.type
-            },
-            onUploadProgress: (progressEvent) => {
-                const percentCompleted = Math.round(
-                    (progressEvent.loaded * 100) / progressEvent.total
-                );
-                if (onProgress) {
-                    onProgress(percentCompleted);
-                }
-                console.log(`Upload Progress: ${percentCompleted}%`);
-            }
-        };
-
-        // Direct PUT request to S3 - not using our api instance
-        const response = await fetch(presignedUrl, {
-            method: 'PUT',
-            body: file,
-            headers: {
-                'Content-Type': file.type
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`S3 upload failed: ${response.statusText}`);
+    // Direct PUT request to S3 - not using our api instance
+    const response = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: {
+            'Content-Type': file.type
         }
+    });
 
-        return response;
-    } catch (error) {
-        console.error("Error uploading to S3:", error);
-        throw error;
+    if (!response.ok) {
+        throw new Error(`S3 upload failed: ${response.statusText}`);
     }
+    if (onProgress) onProgress(100);
+    return response;
 };
 
 // Delete file from S3 via backend
 export const deleteFileFromS3 = async (s3Key) => {
-    try {
-        const response = await api.post(API_ENDPOINTS.DELETE_S3_FILE, {
-            s3Key
-        });
-        return response.data;
-    } catch (error) {
-        console.error("Error deleting file:", error);
-        throw error;
-    }
+    const response = await api.post(API_ENDPOINTS.DELETE_S3_FILE, {
+        s3Key
+    });
+    return response.data;
 };
 
 // Composite function: Get presigned URL and upload file to S3
 export const uploadImageToS3 = async (file, onProgress, category, subcategory, subsubcategory) => {
-    try {
-        console.log(`Starting S3 upload for: ${file.name}`);
-        
-        // Step 1: Get presigned URL from backend
-        const { presignedUrl, s3Key, s3Url } = await getPresignedUploadUrl(
-            file.name,
-            file.type,
-            category,
-            subcategory,
-            subsubcategory
-        );
-        
-        console.log('Presigned URL received:', { s3Key, s3Url });
+    // Step 1: Get presigned URL from backend
+    const { presignedUrl, s3Key, s3Url } = await getPresignedUploadUrl(
+        file.name,
+        file.type,
+        category,
+        subcategory,
+        subsubcategory
+    );
 
-        // Step 2: Upload file directly to S3 using presigned URL
-        await uploadFileToS3(presignedUrl, file, onProgress);
+    // Step 2: Upload file directly to S3 using presigned URL
+    await uploadFileToS3(presignedUrl, file, onProgress);
 
-        console.log('File uploaded successfully to S3');
-
-        // Return S3 details for storage in database
-        return {
-            s3Key,
-            s3Url,
-            fileName: file.name,
-            fileSize: file.size,
-            mimeType: file.type,
-            uploadedAt: new Date().toISOString()
-        };
-    } catch (error) {
-        console.error("Error in S3 upload process:", error);
-        throw error;
-    }
+    // Return S3 details for storage in database
+    return {
+        s3Key,
+        s3Url,
+        fileName: file.name,
+        fileSize: file.size,
+        mimeType: file.type,
+        uploadedAt: new Date().toISOString()
+    };
 };
 
 // Upload multiple files to S3
 export const uploadMultipleFilesToS3 = async (files, onProgressCallback, category, subcategory, subsubcategory) => {
-    try {
-        const uploadPromises = files.map(async (file, index) => {
-            const onProgress = (progress) => {
-                if (onProgressCallback) {
-                    onProgressCallback(index, progress);
-                }
-            };
-            return await uploadImageToS3(file, onProgress, category, subcategory, subsubcategory);
-        });
+    const uploadPromises = files.map(async (file, index) => {
+        const onProgress = (progress) => {
+            if (onProgressCallback) {
+                onProgressCallback(index, progress);
+            }
+        };
+        return await uploadImageToS3(file, onProgress, category, subcategory, subsubcategory);
+    });
 
-        const results = await Promise.all(uploadPromises);
-        return results;
-    } catch (error) {
-        console.error("Error uploading multiple files:", error);
-        throw error;
-    }
+    const results = await Promise.all(uploadPromises);
+    return results;
 };
 
 // Get file size formatted
