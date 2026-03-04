@@ -2,9 +2,8 @@ import React, { useEffect, useState } from 'react';
 import FilterationComponent from '../FilterationComponent/FilterationComponent';
 import FilterationImages from '../FilterationImages/FilterationImages';
 import HomeBannerSearchFilterationCompo2 from '../HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
-import { Link } from 'react-router-dom';
 import { useParams, useSearchParams } from 'react-router-dom';
-import logo from '../../assets/logo1.webp';
+import TopNavOnly from '../AppNavbar/TopNavOnly';
 import './Sidebar.css';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
@@ -15,7 +14,6 @@ function Sidebar() {
     const [subcategories, setSubcategories] = useState([]);
     const [presetSubcategory, setPresetSubcategory] = useState('all');
     const [collectionAssetIds, setCollectionAssetIds] = useState(null);
-    const [collectionTitle, setCollectionTitle] = useState('');          // NEW
     const { name } = useParams();
     const [searchParams] = useSearchParams();
     const collectionSlug = searchParams.get('collection');             // NEW
@@ -63,7 +61,6 @@ function Sidebar() {
     useEffect(() => {
         if (!collectionSlug) {
             setCollectionAssetIds(null);
-            setCollectionTitle('');                                      // NEW
             return;
         }
 
@@ -75,7 +72,6 @@ function Sidebar() {
                 const col = res.data?.data;
                 if (!col) {
                     setCollectionAssetIds(null);
-                    setCollectionTitle('');
                     return;
                 }
 
@@ -91,11 +87,9 @@ function Sidebar() {
                     ? col.assetIds.map((a) => (a._id || a).toString())
                     : [];
                 setCollectionAssetIds(ids);
-                setCollectionTitle(col.name || '');                       // NEW
             } catch (err) {
                 console.error('Sidebar: failed to load collection by slug', err);
                 setCollectionAssetIds(null);
-                setCollectionTitle('');                                  // NEW
             }
         };
 
@@ -151,25 +145,14 @@ function Sidebar() {
         setCategoryName(category);
     };
 
-    // Decide heading text
-    const headingLabel = collectionSlug && collectionTitle
-        ? collectionTitle                                     // e.g. "top wallpapers"
-        : (name || categoryname || '');                       // fallback
-
     return (
         <>
-            <div className="container pt-2">
-                <div className="d-flex align-items-center sidebar-search-top-row">
-                    <Link to="/" className="sidebar-search-logo-link">
-                        <img src={logo} alt="Hdpiks" className="sidebar-search-logo" />
-                    </Link>
-                    <div className="flex-grow-1">
-                        <HomeBannerSearchFilterationCompo2 showOnDesktop compact />
-                    </div>
-                </div>
+            <TopNavOnly />
+            <div className="container top-nav-content sidebar-searchbar-wrap">
+                <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding />
             </div>
 
-            <div className="sidebar-main pt-2 mb-0">
+            <div className="sidebar-main mb-0">
                 <div className="sidebar-content">
                     <FilterationComponent
                         changeCategory={handleCategoryChange}

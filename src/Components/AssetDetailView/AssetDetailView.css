@@ -11,17 +11,25 @@
   position: relative;
   background: linear-gradient(180deg, #edf4ff 0%, #f8fbff 100%);
   min-height: 380px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
-.asset-hero__media-inner {
+.asset-hero__media-layout {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
   padding: 12px;
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+}
+
+.asset-hero__media-inner {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .asset-hero__media-el {
@@ -31,6 +39,68 @@
   object-fit: contain;
   background: transparent;
   max-height: 520px;
+}
+
+.asset-hero__purchase-panel {
+  width: 300px;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+}
+
+.asset-hero__purchase-card {
+  width: 100%;
+  background: #ffffff;
+  border: 1px solid #d5e1f1;
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+.asset-hero__purchase-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.asset-hero__purchase-plan {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.asset-hero__purchase-plan--free {
+  background: #ebfff2;
+  color: #166534;
+  border: 1px solid #9ed8b0;
+}
+
+.asset-hero__purchase-plan--premium {
+  background: #fff4d7;
+  color: #7a4200;
+  border: 1px solid #f0c26c;
+}
+
+.asset-hero__purchase-price {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.asset-hero__purchase-note {
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 12px;
+}
+
+.asset-hero__panel-btn {
+  width: 100%;
+  justify-content: center;
 }
 
 .related-card {
@@ -232,6 +302,17 @@
   border-color: #e3b971;
 }
 
+.asset-hero__toolbar-btn--subscription {
+  border-color: #bfd2f3;
+  background: #f5f8ff;
+  color: #1b4a9a;
+}
+
+.asset-hero__toolbar-btn--subscription:hover {
+  background: #eaf1ff;
+  border-color: #9fbce9;
+}
+
 .asset-payment-modal {
   width: min(460px, 92vw);
   border-radius: 14px;
@@ -254,9 +335,51 @@
   min-height: 44px;
 }
 
+.asset-payment-modal__paypal-buttons {
+  min-height: 42px;
+}
+
 .asset-hero__meta {
   background: #ffffff;
   padding: 16px 18px !important;
+}
+
+.asset-hero__meta-layout {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.asset-hero__meta-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.asset-hero__creator-panel {
+  width: 360px;
+  max-width: 100%;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.asset-hero__creator-row {
+  width: 100%;
+  max-width: 340px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.asset-hero__creator-details {
+  min-width: 0;
+}
+
+.asset-hero__creator-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
 .asset-hero__heading h4 {
@@ -320,9 +443,10 @@
 }
 
 @media (min-width: 1440px) {
-  .asset-hero__media-inner {
-    max-width: 1200px;
+  .asset-hero__media-layout {
+    max-width: 1260px;
     padding: 10px 12px;
+    gap: 14px;
   }
 
   .asset-hero__media-el {
@@ -359,6 +483,15 @@
 }
 
 @media (max-width: 768px) {
+  .asset-hero__media-layout {
+    display: block;
+    padding: 10px;
+  }
+
+  .asset-hero__purchase-panel {
+    display: none;
+  }
+
   .asset-hero__media {
     min-height: 300px;
   }
@@ -402,6 +535,20 @@
 
   .asset-hero__meta {
     padding: 12px !important;
+  }
+
+  .asset-hero__meta-layout {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .asset-hero__creator-panel {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .asset-hero__creator-row {
+    max-width: 100%;
   }
 
   .asset-hero__heading {
@@ -499,12 +646,12 @@
     border-radius: 14px;
   }
 
-  .asset-hero__media {
-    min-height: 240px;
+  .asset-hero__media-layout {
+    padding: 8px;
   }
 
-  .asset-hero__media-inner {
-    padding: 8px;
+  .asset-hero__media {
+    min-height: 240px;
   }
 
   .asset-hero__media-el {

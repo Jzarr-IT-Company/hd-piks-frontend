@@ -49,6 +49,8 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   const flatActive = useMemo(() => location.pathname, [location.pathname]);
   const personalMenu = useMemo(() => ([
     { label: 'Collections', to: '/collections', count: '', Icon: Layers },
+    { label: 'My Subscription', to: '/my-subscription', count: '', Icon: SparkleIcon },
+    { label: 'Subscription Orders', to: '/my-subscription-orders', count: '', Icon: CreditCard },
     { label: 'My Purchases', to: '/my-purchases', count: '', Icon: Inbox },
     { label: 'My Orders', to: '/my-orders', count: '', Icon: CreditCard },
     { label: 'Profile', to: '/profile', count: '', Icon: Users },
@@ -56,7 +58,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   ]), [statusLabel]);
 
   const personalOnlyRoutes = useMemo(
-    () => ['/profile', '/collections', '/setting', '/profile/contributor', '/my-orders', '/my-purchases'],
+    () => ['/profile', '/collections', '/setting', '/profile/contributor', '/my-orders', '/my-purchases', '/my-subscription', '/my-subscription-orders'],
     []
   );
   const isInPersonalArea = useMemo(

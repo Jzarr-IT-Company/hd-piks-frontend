@@ -248,7 +248,7 @@
     .filteration-pill-row {
         justify-content: flex-start !important;
         border-radius: 14px !important;
-        padding: 8px 32px !important;
+        padding: 8px 10px !important;
         flex-wrap: nowrap !important;
         overflow-x: auto;
         overflow-y: hidden;
@@ -264,6 +264,11 @@
 
     .filteration-pill-row > * {
         flex: 0 0 auto;
+    }
+
+    .filteration-pill-row.filteration-pill-row--with-arrows {
+        padding-left: 32px !important;
+        padding-right: 32px !important;
     }
 
     .filteration-pill-arrow {

@@ -11,7 +11,7 @@ const SidebarCompo = React.lazy(() => import('../SidebarCompo/SidebarCompo'));
 
 function TopNavOnly() {
     return (
-        <section className="main-div-custmoe-css" style={{margin:0, padding:0, minHeight:'unset', height:'unset'}}>
+        <section className="main-div-custmoe-css top-nav-only">
             <Navbar expand="lg">
                 <Container fluid className='d-flex align-items-center'>
                     <div className="d-flex align-items-center justify-content-between">

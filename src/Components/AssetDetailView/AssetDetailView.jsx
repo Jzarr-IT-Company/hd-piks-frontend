@@ -8,13 +8,19 @@ import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3, FiInfo, FiCredi
 import Cookies from 'js-cookie';
 import api from '../../Services/api';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config';
-import { getAssetPurchaseStatus, createAssetPaymentIntent } from '../../Services/payment.js';
+import {
+    getAssetPurchaseStatus,
+    createAssetCheckout,
+    capturePayPalAssetOrder,
+    cancelPayPalAssetOrder,
+} from '../../Services/payment.js';
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import BackBtnCompo from '../BackBtnCompo/BackBtnCompo';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { getMediaVariantUrl, getResponsiveImageProps } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { loadStripeJs } from '../../utils/stripeClient.js';
+import { loadPayPalJs } from '../../utils/paypalClient.js';
 import { useAssetDetailQuery, useRelatedAssetsQuery } from '../../query/assetDetailQueries.js';
 import { useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
@@ -136,8 +142,13 @@ function AssetDetailView() {
     const [purchaseStatusLoading, setPurchaseStatusLoading] = useState(false);
     const [purchaseStatusError, setPurchaseStatusError] = useState('');
     const [checkoutLoading, setCheckoutLoading] = useState(false);
+    const [showBuyAgainConfirmModal, setShowBuyAgainConfirmModal] = useState(false);
+    const [showCheckoutProviderModal, setShowCheckoutProviderModal] = useState(false);
     const [showCheckoutModal, setShowCheckoutModal] = useState(false);
     const [paymentIntentMeta, setPaymentIntentMeta] = useState(null);
+    const [showPayPalCheckoutModal, setShowPayPalCheckoutModal] = useState(false);
+    const [payPalOrderMeta, setPayPalOrderMeta] = useState(null);
+    const [payPalCheckoutError, setPayPalCheckoutError] = useState('');
     const [checkoutError, setCheckoutError] = useState('');
     const [checkoutSubmitting, setCheckoutSubmitting] = useState(false);
     const [checkoutSuccessMessage, setCheckoutSuccessMessage] = useState('');
@@ -145,6 +156,8 @@ function AssetDetailView() {
     const stripeInstanceRef = useRef(null);
     const stripeElementsRef = useRef(null);
     const stripeCardElementRef = useRef(null);
+    const payPalButtonsHostRef = useRef(null);
+    const payPalButtonsRef = useRef(null);
 
     const getObjectId = useCallback((value) => {
         if (!value) return '';
@@ -353,6 +366,14 @@ function AssetDetailView() {
         () => String(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '').trim(),
         []
     );
+    const payPalClientId = useMemo(
+        () => String(import.meta.env.VITE_PAYPAL_CLIENT_ID || '').trim(),
+        []
+    );
+    const hasStripeCheckout = Boolean(stripePublishableKey);
+    const hasPayPalCheckout = Boolean(payPalClientId);
+    const showDesktopPurchasePanel = !isTablet;
+    const showToolbarPurchaseActions = !showDesktopPurchasePanel;
 
     const inferredMainAssetPremium = useMemo(
         () => isPremiumLicense(asset?.freePremium),
@@ -442,9 +463,14 @@ function AssetDetailView() {
 
     useEffect(() => {
         setCheckoutError('');
+        setPayPalCheckoutError('');
         setCheckoutSuccessMessage('');
+        setShowBuyAgainConfirmModal(false);
+        setShowCheckoutProviderModal(false);
         setShowCheckoutModal(false);
         setPaymentIntentMeta(null);
+        setShowPayPalCheckoutModal(false);
+        setPayPalOrderMeta(null);
     }, [id]);
 
     useEffect(() => {
@@ -563,6 +589,92 @@ function AssetDetailView() {
         [resolvedPurchaseStatus.priceCents]
     );
 
+    const closeCheckoutModal = useCallback(() => {
+        setShowCheckoutModal(false);
+        setPaymentIntentMeta(null);
+        setCheckoutSubmitting(false);
+        setCheckoutError('');
+    }, []);
+
+    const closeCheckoutProviderModal = useCallback(() => {
+        setShowCheckoutProviderModal(false);
+    }, []);
+
+    const closePayPalCheckoutModal = useCallback(() => {
+        setShowPayPalCheckoutModal(false);
+        setPayPalOrderMeta(null);
+        setPayPalCheckoutError('');
+        setCheckoutSubmitting(false);
+    }, []);
+
+    const startStripeCheckout = useCallback(async () => {
+        if (!asset?._id) return;
+        if (!hasStripeCheckout) {
+            alert('Stripe is not configured. Configure VITE_STRIPE_PUBLISHABLE_KEY.');
+            return;
+        }
+
+        setCheckoutLoading(true);
+        setCheckoutError('');
+        setCheckoutSuccessMessage('');
+        setPayPalCheckoutError('');
+        setPurchaseStatusError('');
+        try {
+            const payment = await createAssetCheckout(asset._id, 'stripe');
+            if (!payment?.clientSecret) {
+                throw new Error('Missing Stripe client secret in checkout response.');
+            }
+            setPaymentIntentMeta(payment);
+            setShowCheckoutModal(true);
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || 'Failed to start Stripe checkout.';
+            setCheckoutError(message);
+            alert(message);
+        } finally {
+            setCheckoutLoading(false);
+        }
+    }, [asset?._id, hasStripeCheckout]);
+
+    const startPayPalCheckout = useCallback(async () => {
+        if (!asset?._id) return;
+        if (!hasPayPalCheckout) {
+            alert('PayPal is not configured. Configure VITE_PAYPAL_CLIENT_ID.');
+            return;
+        }
+
+        setCheckoutLoading(true);
+        setCheckoutError('');
+        setCheckoutSuccessMessage('');
+        setPayPalCheckoutError('');
+        setPurchaseStatusError('');
+        try {
+            const payment = await createAssetCheckout(asset._id, 'paypal');
+            if (!payment?.paypalOrderId) {
+                throw new Error('Missing PayPal order id in checkout response.');
+            }
+            setPayPalOrderMeta(payment);
+            setShowPayPalCheckoutModal(true);
+        } catch (error) {
+            const message = error?.response?.data?.message || error?.message || 'Failed to start PayPal checkout.';
+            setPayPalCheckoutError(message);
+            alert(message);
+        } finally {
+            setCheckoutLoading(false);
+        }
+    }, [asset?._id, hasPayPalCheckout]);
+
+    const handleSelectCheckoutProvider = useCallback(
+        async (provider) => {
+            setShowCheckoutProviderModal(false);
+            if (provider === 'paypal') {
+                await startPayPalCheckout();
+                return;
+            }
+            await startStripeCheckout();
+        },
+        [startPayPalCheckout, startStripeCheckout]
+    );
+
     const handleOpenCheckout = useCallback(async () => {
         if (!asset?._id) return;
         if (!userData?._id) {
@@ -577,43 +689,174 @@ function AssetDetailView() {
             alert('Pricing is not configured for this asset yet.');
             return;
         }
-        if (!stripePublishableKey) {
-            alert('Stripe publishable key is missing. Configure VITE_STRIPE_PUBLISHABLE_KEY.');
+        if (!hasStripeCheckout && !hasPayPalCheckout) {
+            alert('No payment provider is configured. Set Stripe and/or PayPal keys.');
             return;
         }
-
-        setCheckoutLoading(true);
-        setCheckoutError('');
-        setCheckoutSuccessMessage('');
-        try {
-            const payment = await createAssetPaymentIntent(asset._id);
-            if (!payment?.clientSecret) {
-                throw new Error('Missing Stripe client secret in payment intent response.');
-            }
-            setPaymentIntentMeta(payment);
-            setShowCheckoutModal(true);
-        } catch (error) {
-            const message = error?.response?.data?.message || error?.message || 'Failed to start checkout.';
-            setCheckoutError(message);
-            alert(message);
-        } finally {
-            setCheckoutLoading(false);
+        if (hasStripeCheckout && hasPayPalCheckout) {
+            setShowCheckoutProviderModal(true);
+            return;
         }
+        if (hasStripeCheckout) {
+            await startStripeCheckout();
+            return;
+        }
+        await startPayPalCheckout();
     }, [
         asset?._id,
         userData?._id,
         navigate,
         resolvedPurchaseStatus.canPurchase,
         resolvedPurchaseStatus.priceConfigured,
-        stripePublishableKey,
+        hasStripeCheckout,
+        hasPayPalCheckout,
+        startStripeCheckout,
+        startPayPalCheckout,
     ]);
 
-    const closeCheckoutModal = useCallback(() => {
-        setShowCheckoutModal(false);
-        setPaymentIntentMeta(null);
-        setCheckoutSubmitting(false);
-        setCheckoutError('');
+    const openBuyAgainConfirmModal = useCallback(() => {
+        if (!resolvedPurchaseStatus.canBuyAgain || checkoutLoading) return;
+        setShowBuyAgainConfirmModal(true);
+    }, [resolvedPurchaseStatus.canBuyAgain, checkoutLoading]);
+
+    const closeBuyAgainConfirmModal = useCallback(() => {
+        setShowBuyAgainConfirmModal(false);
     }, []);
+
+    const handleConfirmBuyAgain = useCallback(() => {
+        setShowBuyAgainConfirmModal(false);
+        handleOpenCheckout();
+    }, [handleOpenCheckout]);
+
+    const finalizePendingPayPalOrder = useCallback(
+        async ({ status = 'canceled', note = '' } = {}) => {
+            const paypalOrderId = payPalOrderMeta?.paypalOrderId || null;
+            const orderId = payPalOrderMeta?.orderId || null;
+            if (!paypalOrderId && !orderId) return null;
+            try {
+                return await cancelPayPalAssetOrder({
+                    paypalOrderId,
+                    orderId,
+                    status,
+                    note,
+                });
+            } catch {
+                return null;
+            }
+        },
+        [payPalOrderMeta?.paypalOrderId, payPalOrderMeta?.orderId]
+    );
+
+    useEffect(() => {
+        let cancelled = false;
+        const renderPayPalButtons = async () => {
+            if (!showPayPalCheckoutModal || !payPalOrderMeta?.paypalOrderId) return;
+            if (!payPalClientId) {
+                setPayPalCheckoutError('PayPal is not configured. Missing VITE_PAYPAL_CLIENT_ID.');
+                return;
+            }
+            if (!payPalButtonsHostRef.current) return;
+
+            try {
+                setPayPalCheckoutError('');
+                const paypal = await loadPayPalJs({
+                    clientId: payPalClientId,
+                    currency: String(payPalOrderMeta?.currency || resolvedPurchaseStatus.currency || 'USD').toUpperCase(),
+                });
+                if (cancelled) return;
+
+                if (payPalButtonsRef.current?.close) {
+                    payPalButtonsRef.current.close();
+                    payPalButtonsRef.current = null;
+                }
+                payPalButtonsHostRef.current.innerHTML = '';
+
+                const buttons = paypal.Buttons({
+                    style: {
+                        layout: 'vertical',
+                        shape: 'rect',
+                        label: 'paypal',
+                    },
+                    createOrder: async () => payPalOrderMeta.paypalOrderId,
+                    onApprove: async (data) => {
+                        setCheckoutSubmitting(true);
+                        setPayPalCheckoutError('');
+                        try {
+                            await capturePayPalAssetOrder({
+                                paypalOrderId: data?.orderID || payPalOrderMeta.paypalOrderId,
+                                orderId: payPalOrderMeta.orderId || null,
+                            });
+                            setCheckoutSuccessMessage('Payment successful. Finalizing your access...');
+                            await refreshPurchaseStatus({ withRetry: true });
+                            closePayPalCheckoutModal();
+                            setCheckoutSuccessMessage('Payment successful. You can download this asset now.');
+                        } catch (error) {
+                            const message = error?.response?.data?.message || error?.message || 'Failed to capture PayPal payment.';
+                            setPayPalCheckoutError(message);
+                        } finally {
+                            setCheckoutSubmitting(false);
+                        }
+                    },
+                    onCancel: () => {
+                        (async () => {
+                            setCheckoutSubmitting(true);
+                            await finalizePendingPayPalOrder({
+                                status: 'canceled',
+                                note: 'paypal.checkout_canceled_by_buyer',
+                            });
+                            closePayPalCheckoutModal();
+                            setCheckoutSubmitting(false);
+                            setPurchaseStatusError('PayPal checkout cancelled.');
+                        })();
+                    },
+                    onError: (error) => {
+                        (async () => {
+                            const reason = error?.message || 'paypal.checkout_failed_in_popup';
+                            setPayPalCheckoutError(error?.message || 'PayPal checkout failed.');
+                            setCheckoutSubmitting(true);
+                            await finalizePendingPayPalOrder({
+                                status: 'failed',
+                                note: reason,
+                            });
+                            closePayPalCheckoutModal();
+                            setCheckoutSubmitting(false);
+                            setPurchaseStatusError('PayPal checkout failed. Please try again.');
+                        })();
+                    },
+                });
+
+                payPalButtonsRef.current = buttons;
+                await buttons.render(payPalButtonsHostRef.current);
+            } catch (error) {
+                if (!cancelled) {
+                    setPayPalCheckoutError(error?.message || 'Failed to initialize PayPal checkout.');
+                }
+            }
+        };
+
+        renderPayPalButtons();
+
+        return () => {
+            cancelled = true;
+            if (payPalButtonsRef.current?.close) {
+                payPalButtonsRef.current.close();
+                payPalButtonsRef.current = null;
+            }
+            if (payPalButtonsHostRef.current) {
+                payPalButtonsHostRef.current.innerHTML = '';
+            }
+        };
+    }, [
+        showPayPalCheckoutModal,
+        payPalOrderMeta?.paypalOrderId,
+        payPalOrderMeta?.orderId,
+        payPalOrderMeta?.currency,
+        payPalClientId,
+        resolvedPurchaseStatus.currency,
+        refreshPurchaseStatus,
+        closePayPalCheckoutModal,
+        finalizePendingPayPalOrder,
+    ]);
 
     const handleSubmitCheckoutPayment = useCallback(async () => {
         if (!stripeInstanceRef.current || !stripeCardElementRef.current || !paymentIntentMeta?.clientSecret) {
@@ -916,7 +1159,7 @@ function AssetDetailView() {
     if (loading) {
         return (
             <>
-                <div className="container py-5">
+                <div className="container top-nav-content py-5">
                     <Skeleton variant="rectangular" width="100%" height={420} className="mb-4" />
                     <div className="d-flex gap-3">
                         {[...Array(4)].map((_, idx) => (
@@ -932,7 +1175,7 @@ function AssetDetailView() {
     if (error || !asset) {
         return (
             <>
-                <div className="container py-5">
+                <div className="container top-nav-content py-5">
                     <BackBtnCompo />
                     <p className="mt-4 text-danger fw-semibold">{error || 'Asset not found'}</p>
                 </div>
@@ -943,22 +1186,104 @@ function AssetDetailView() {
 
     return (
         <>
-        <div className="container py-4">
+        <div className="container top-nav-content py-4">
             <BackBtnCompo />
 
             <div className="asset-hero card shadow-sm border-0 overflow-hidden rounded-4 my-4">
                 <div className="asset-hero__media">
-                    <div className="asset-hero__media-inner">
-                        {isVideo ? (
-                            <video src={heroMedia.src || asset.imageUrl} controls className="asset-hero__media-el" />
-                        ) : (
-                            <img
-                                src={heroMedia.src || asset.imageUrl}
-                                srcSet={heroMedia.srcSet || undefined}
-                                sizes={heroMedia.sizes || undefined}
-                                alt={asset.title || getSubcategoryName(asset.subcategory) || 'Asset'}
-                                className="asset-hero__media-el"
-                            />
+                    <div className="asset-hero__media-layout">
+                        <div className="asset-hero__media-inner">
+                            {isVideo ? (
+                                <video src={heroMedia.src || asset.imageUrl} controls className="asset-hero__media-el" />
+                            ) : (
+                                <img
+                                    src={heroMedia.src || asset.imageUrl}
+                                    srcSet={heroMedia.srcSet || undefined}
+                                    sizes={heroMedia.sizes || undefined}
+                                    alt={asset.title || getSubcategoryName(asset.subcategory) || 'Asset'}
+                                    className="asset-hero__media-el"
+                                />
+                            )}
+                        </div>
+                        {showDesktopPurchasePanel && (
+                            <aside className="asset-hero__purchase-panel">
+                                <div className="asset-hero__purchase-card">
+                                    <div className="asset-hero__purchase-head">
+                                        <span className={`asset-hero__purchase-plan ${resolvedPurchaseStatus.isFree ? 'asset-hero__purchase-plan--free' : 'asset-hero__purchase-plan--premium'}`}>
+                                            {resolvedPurchaseStatus.isFree ? 'Free Asset' : 'Premium Asset'}
+                                        </span>
+                                        {resolvedPurchaseStatus.isPremium && purchasePriceLabel && (
+                                            <span className="asset-hero__purchase-price">{purchasePriceLabel}</span>
+                                        )}
+                                    </div>
+                                    <div className="asset-hero__purchase-note">
+                                        {resolvedPurchaseStatus.canDownload
+                                            ? 'You can download this asset now.'
+                                            : 'Choose a payment method to unlock download access.'}
+                                    </div>
+                                    <div className="d-grid gap-2">
+                                        {purchaseStatusLoading ? (
+                                            <button className="asset-hero__toolbar-btn asset-hero__panel-btn" type="button" disabled>
+                                                <FiDownload size={16} />
+                                                <span>Checking...</span>
+                                            </button>
+                                        ) : resolvedPurchaseStatus.canDownload ? (
+                                            <button
+                                                className="asset-hero__toolbar-btn asset-hero__toolbar-btn--download asset-hero__panel-btn"
+                                                type="button"
+                                                onClick={handleDownload}
+                                            >
+                                                <FiDownload size={16} />
+                                                <span>{resolvedPurchaseStatus.isFree ? 'Free Download' : 'Download'}</span>
+                                            </button>
+                                        ) : resolvedPurchaseStatus.canPurchase ? (
+                                            <button
+                                                className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium asset-hero__panel-btn"
+                                                type="button"
+                                                onClick={handleOpenCheckout}
+                                                disabled={checkoutLoading}
+                                            >
+                                                <FiCreditCard size={16} />
+                                                <span>
+                                                    {checkoutLoading
+                                                        ? 'Opening checkout...'
+                                                        : `Buy Now${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
+                                                </span>
+                                            </button>
+                                        ) : (
+                                            <button className="asset-hero__toolbar-btn asset-hero__panel-btn" type="button" disabled>
+                                                <FiCreditCard size={16} />
+                                                <span>{resolvedPurchaseStatus.isPremium ? 'Premium unavailable' : 'Download unavailable'}</span>
+                                            </button>
+                                        )}
+                                        {resolvedPurchaseStatus.canBuyAgain && (
+                                            <button
+                                                className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium-alt asset-hero__panel-btn"
+                                                type="button"
+                                                onClick={openBuyAgainConfirmModal}
+                                                disabled={checkoutLoading}
+                                            >
+                                                <FiCreditCard size={16} />
+                                                <span>
+                                                    {checkoutLoading
+                                                        ? 'Opening checkout...'
+                                                        : `Buy Again${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
+                                                </span>
+                                            </button>
+                                        )}
+                                        {resolvedPurchaseStatus.isPremium && (
+                                            <button
+                                                className="asset-hero__toolbar-btn asset-hero__toolbar-btn--subscription asset-hero__panel-btn"
+                                                type="button"
+                                                onClick={() => navigate('/pricing')}
+                                            >
+                                                <FiCreditCard size={16} />
+                                                <span>Buy Subscription</span>
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </aside>
                         )}
                     </div>
                 </div>
@@ -981,50 +1306,54 @@ function AssetDetailView() {
                         <FiShare2 size={16} />
                         <span>Share</span>
                     </button>
-                    {purchaseStatusLoading ? (
-                        <button className="asset-hero__toolbar-btn" type="button" disabled>
-                            <FiDownload size={16} />
-                            <span>Checking...</span>
-                        </button>
-                    ) : resolvedPurchaseStatus.canDownload ? (
-                        <button className="asset-hero__toolbar-btn asset-hero__toolbar-btn--download" type="button" onClick={handleDownload}>
-                            <FiDownload size={16} />
-                            <span>{resolvedPurchaseStatus.isFree ? 'Free Download' : 'Download'}</span>
-                        </button>
-                    ) : resolvedPurchaseStatus.canPurchase ? (
-                        <button
-                            className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium"
-                            type="button"
-                            onClick={handleOpenCheckout}
-                            disabled={checkoutLoading}
-                        >
-                            <FiCreditCard size={16} />
-                            <span>
-                                {checkoutLoading
-                                    ? 'Opening checkout...'
-                                    : `Buy Now${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
-                            </span>
-                        </button>
-                    ) : (
-                        <button className="asset-hero__toolbar-btn" type="button" disabled>
-                            <FiCreditCard size={16} />
-                            <span>{resolvedPurchaseStatus.isPremium ? 'Premium unavailable' : 'Download unavailable'}</span>
-                        </button>
-                    )}
-                    {resolvedPurchaseStatus.canBuyAgain && (
-                        <button
-                            className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium-alt"
-                            type="button"
-                            onClick={handleOpenCheckout}
-                            disabled={checkoutLoading}
-                        >
-                            <FiCreditCard size={16} />
-                            <span>
-                                {checkoutLoading
-                                    ? 'Opening checkout...'
-                                    : `Buy Again${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
-                            </span>
-                        </button>
+                    {showToolbarPurchaseActions && (
+                        <>
+                            {purchaseStatusLoading ? (
+                                <button className="asset-hero__toolbar-btn" type="button" disabled>
+                                    <FiDownload size={16} />
+                                    <span>Checking...</span>
+                                </button>
+                            ) : resolvedPurchaseStatus.canDownload ? (
+                                <button className="asset-hero__toolbar-btn asset-hero__toolbar-btn--download" type="button" onClick={handleDownload}>
+                                    <FiDownload size={16} />
+                                    <span>{resolvedPurchaseStatus.isFree ? 'Free Download' : 'Download'}</span>
+                                </button>
+                            ) : resolvedPurchaseStatus.canPurchase ? (
+                                <button
+                                    className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium"
+                                    type="button"
+                                    onClick={handleOpenCheckout}
+                                    disabled={checkoutLoading}
+                                >
+                                    <FiCreditCard size={16} />
+                                    <span>
+                                        {checkoutLoading
+                                            ? 'Opening checkout...'
+                                            : `Buy Now${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
+                                    </span>
+                                </button>
+                            ) : (
+                                <button className="asset-hero__toolbar-btn" type="button" disabled>
+                                    <FiCreditCard size={16} />
+                                    <span>{resolvedPurchaseStatus.isPremium ? 'Premium unavailable' : 'Download unavailable'}</span>
+                                </button>
+                            )}
+                            {resolvedPurchaseStatus.canBuyAgain && (
+                                <button
+                                    className="asset-hero__toolbar-btn asset-hero__toolbar-btn--premium-alt"
+                                    type="button"
+                                    onClick={openBuyAgainConfirmModal}
+                                    disabled={checkoutLoading}
+                                >
+                                    <FiCreditCard size={16} />
+                                    <span>
+                                        {checkoutLoading
+                                            ? 'Opening checkout...'
+                                            : `Buy Again${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
+                                    </span>
+                                </button>
+                            )}
+                        </>
                     )}
                     <button className="asset-hero__toolbar-btn" type="button" onClick={handleMoreInfo}>
                         <FiInfo size={16} />
@@ -1043,51 +1372,19 @@ function AssetDetailView() {
                 )}
 
                 <div className="asset-hero__meta p-3">
-                    <div className="asset-hero__heading mb-3">
-                        <h4 className="mb-1 fw-semibold">{asset?.title || 'Untitled asset'}</h4>
-                        <div className="asset-hero__facts">
-                            {assetLicenseLabel && <span className="asset-hero__fact">{assetLicenseLabel}</span>}
-                            {assetMimeType && <span className="asset-hero__fact">{assetMimeType}</span>}
-                            {assetDimensions && <span className="asset-hero__fact">{assetDimensions}</span>}
-                        </div>
-                    </div>
-
-                    <div className="d-flex align-items-center mb-3">
-                        <img
-                            src={owner?.profile?.profileImage?.url || owner?.profile?.profileImage || 'https://via.placeholder.com/48'}
-                            alt={owner?.profile?.displayName || owner?.name || 'author'}
-                            className="rounded-circle"
-                            style={{ width: 48, height: 48, objectFit: 'cover' }}
-                        />
-                        <div className="ms-3">
-                            <div className="asset-hero__author-row fw-semibold mb-1 d-flex align-items-center">
-                                <span className="asset-hero__author-label">Author:</span>
-                                <span className="asset-hero__author-name">
-                                    {owner?.profile?.displayName || owner?.name || 'Unknown creator'}
-                                </span>
-                                {!!ownerUserId && ownerUserId !== viewerUserId && (
-                                    <>
-                                        <button
-                                            className={`btn btn-sm ${isFollowing ? 'btn-outline-primary' : 'btn-primary'}`}
-                                            style={{ minWidth: 90, marginRight: 8 }}
-                                            onClick={isFollowing ? handleUnfollow : handleFollow}
-                                            disabled={followLoading}
-                                        >
-                                            {isFollowing ? 'Unfollow' : 'Follow'}
-                                        </button>
-                                        <span className="asset-hero__followers-text">
-                                            {followersCount} follower{followersCount === 1 ? '' : 's'}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                            {followError && (
-                                <div className="asset-hero__follow-error text-danger mt-1">
-                                    {followError}
+                    <div className="asset-hero__meta-layout">
+                        <div className="asset-hero__meta-main">
+                            <div className="asset-hero__heading mb-3">
+                                <h4 className="mb-1 fw-semibold">{asset?.title || 'Untitled asset'}</h4>
+                                <div className="asset-hero__facts">
+                                    {assetLicenseLabel && <span className="asset-hero__fact">{assetLicenseLabel}</span>}
+                                    {assetMimeType && <span className="asset-hero__fact">{assetMimeType}</span>}
+                                    {assetDimensions && <span className="asset-hero__fact">{assetDimensions}</span>}
                                 </div>
-                            )}
-                            <div className="asset-hero__category-line text-muted">
-                                { [
+                            </div>
+
+                            <div className="asset-hero__category-line text-muted mb-3">
+                                {[
                                     getCategoryName(asset.category),
                                     getSubcategoryName(asset.subcategory),
                                     getSubSubcategoryName(asset.subsubcategory),
@@ -1095,20 +1392,60 @@ function AssetDetailView() {
                                     .filter(Boolean)
                                     .join(' / ')}
                             </div>
+
+                            <div className="d-flex flex-wrap gap-2">
+                                {getSubcategoryName(asset.subcategory) && (
+                                    <span className="badge bg-light text-dark">{getSubcategoryName(asset.subcategory)}</span>
+                                )}
+                                {getSubSubcategoryName(asset.subsubcategory) && (
+                                    <span className="badge bg-light text-dark">{getSubSubcategoryName(asset.subsubcategory)}</span>
+                                )}
+                                {asset.keywords?.slice(0, 4).map((kw) => (
+                                    <span key={kw} className="badge bg-secondary-subtle text-dark">
+                                        {kw}
+                                    </span>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                    <div className="d-flex flex-wrap gap-2">
-                        {getSubcategoryName(asset.subcategory) && (
-                            <span className="badge bg-light text-dark">{getSubcategoryName(asset.subcategory)}</span>
-                        )}
-                        {getSubSubcategoryName(asset.subsubcategory) && (
-                            <span className="badge bg-light text-dark">{getSubSubcategoryName(asset.subsubcategory)}</span>
-                        )}
-                        {asset.keywords?.slice(0, 4).map((kw) => (
-                            <span key={kw} className="badge bg-secondary-subtle text-dark">
-                                {kw}
-                            </span>
-                        ))}
+
+                        <aside className="asset-hero__creator-panel">
+                            <div className="asset-hero__creator-row">
+                                <img
+                                    src={owner?.profile?.profileImage?.url || owner?.profile?.profileImage || 'https://via.placeholder.com/48'}
+                                    alt={owner?.profile?.displayName || owner?.name || 'author'}
+                                    className="rounded-circle"
+                                    style={{ width: 48, height: 48, objectFit: 'cover' }}
+                                />
+                                <div className="asset-hero__creator-details">
+                                    <div className="asset-hero__author-row fw-semibold mb-1 d-flex align-items-center">
+                                        <span className="asset-hero__author-label">Author:</span>
+                                        <span className="asset-hero__author-name">
+                                            {owner?.profile?.displayName || owner?.name || 'Unknown creator'}
+                                        </span>
+                                    </div>
+                                    <div className="asset-hero__creator-actions">
+                                        {!!ownerUserId && ownerUserId !== viewerUserId && (
+                                            <button
+                                                className={`btn btn-sm ${isFollowing ? 'btn-outline-primary' : 'btn-primary'}`}
+                                                style={{ minWidth: 90 }}
+                                                onClick={isFollowing ? handleUnfollow : handleFollow}
+                                                disabled={followLoading}
+                                            >
+                                                {isFollowing ? 'Unfollow' : 'Follow'}
+                                            </button>
+                                        )}
+                                        <span className="asset-hero__followers-text">
+                                            {followersCount} follower{followersCount === 1 ? '' : 's'}
+                                        </span>
+                                    </div>
+                                    {followError && (
+                                        <div className="asset-hero__follow-error text-danger mt-1">
+                                            {followError}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </aside>
                     </div>
                 </div>
 
@@ -1483,6 +1820,157 @@ function AssetDetailView() {
                                 </button>
                             );
                         })}
+                    </div>
+                </div>
+            )}
+
+            {showBuyAgainConfirmModal && (
+                <div
+                    className="download-modal-backdrop"
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1060,
+                    }}
+                    onClick={closeBuyAgainConfirmModal}
+                >
+                    <div
+                        className="asset-payment-modal"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h5 className="mb-2">Buy again?</h5>
+                        <div className="small text-muted mb-3">
+                            You already own this asset. Continue only if you want to place a new purchase.
+                        </div>
+                        <div className="asset-payment-modal__amount">
+                            {purchasePriceLabel
+                                ? `Amount: ${purchasePriceLabel}`
+                                : 'Amount will be confirmed in checkout'}
+                        </div>
+                        <div className="d-flex gap-2 mt-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary w-100"
+                                onClick={closeBuyAgainConfirmModal}
+                                disabled={checkoutLoading}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-primary w-100"
+                                onClick={handleConfirmBuyAgain}
+                                disabled={checkoutLoading}
+                            >
+                                {checkoutLoading ? 'Opening checkout...' : 'Continue'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showCheckoutProviderModal && (
+                <div
+                    className="download-modal-backdrop"
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1060,
+                    }}
+                    onClick={closeCheckoutProviderModal}
+                >
+                    <div
+                        className="asset-payment-modal"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h5 className="mb-2">Choose payment method</h5>
+                        <div className="small text-muted mb-3">
+                            Select how you want to pay for this asset.
+                        </div>
+                        <div className="d-grid gap-2">
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary"
+                                onClick={() => handleSelectCheckoutProvider('stripe')}
+                                disabled={checkoutLoading || !hasStripeCheckout}
+                            >
+                                Pay with Card (Stripe)
+                            </button>
+                            <button
+                                type="button"
+                                className="btn btn-outline-primary"
+                                onClick={() => handleSelectCheckoutProvider('paypal')}
+                                disabled={checkoutLoading || !hasPayPalCheckout}
+                            >
+                                Pay with PayPal
+                            </button>
+                        </div>
+                        <div className="d-flex mt-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary w-100"
+                                onClick={closeCheckoutProviderModal}
+                                disabled={checkoutLoading}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showPayPalCheckoutModal && payPalOrderMeta && (
+                <div
+                    className="download-modal-backdrop"
+                    style={{
+                        position: 'fixed',
+                        inset: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 1060,
+                    }}
+                    onClick={closePayPalCheckoutModal}
+                >
+                    <div
+                        className="asset-payment-modal"
+                        onClick={(event) => event.stopPropagation()}
+                    >
+                        <h5 className="mb-2">Complete purchase</h5>
+                        <div className="small text-muted mb-3">
+                            {asset?.title || 'Asset'} via PayPal
+                        </div>
+                        <div className="asset-payment-modal__amount">
+                            {(payPalOrderMeta?.currency || resolvedPurchaseStatus.currency || 'USD').toUpperCase()} {formatPriceUsd(payPalOrderMeta?.amountCents || resolvedPurchaseStatus.priceCents)?.replace('$', '')}
+                        </div>
+                        <div
+                            ref={payPalButtonsHostRef}
+                            className="asset-payment-modal__paypal-buttons"
+                        />
+                        {payPalCheckoutError && (
+                            <div className="alert alert-danger py-2 px-2 mt-3 mb-0">
+                                {payPalCheckoutError}
+                            </div>
+                        )}
+                        <div className="d-flex gap-2 mt-3">
+                            <button
+                                type="button"
+                                className="btn btn-outline-secondary w-100"
+                                onClick={closePayPalCheckoutModal}
+                                disabled={checkoutSubmitting}
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
-import { getMyPurchases } from '../Services/payment.js';
+import { getMyPurchaseDetail, getMyPurchases } from '../Services/payment.js';
 import { getMediaVariantUrl } from '../utils/mediaVariants.js';
 
 const normalizeName = (value) => {
@@ -30,6 +30,13 @@ const formatMoney = (amountCents, currency = 'USD') => {
     return `${String(currency || 'USD').toUpperCase()} ${(cents / 100).toFixed(2)}`;
 };
 
+const formatProviderLabel = (value) => {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'paypal') return 'PayPal';
+    if (normalized === 'stripe') return 'Stripe';
+    return normalized ? normalized.toUpperCase() : 'N/A';
+};
+
 const buildAssetPath = (asset = {}) => {
     if (!asset?._id) return null;
     const categorySlug = slugify(asset?.category?.name || asset?.category) || 'image';
@@ -46,6 +53,10 @@ function MyPurchases() {
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [expandedPurchaseId, setExpandedPurchaseId] = useState('');
+    const [detailLoadingId, setDetailLoadingId] = useState('');
+    const [purchaseDetailsById, setPurchaseDetailsById] = useState({});
+    const [detailErrorsById, setDetailErrorsById] = useState({});
 
     const loadPurchases = useCallback(async () => {
         setLoading(true);
@@ -73,6 +84,36 @@ function MyPurchases() {
         if (!pagination) return 'No purchases yet';
         return `Showing ${purchases.length} of ${pagination.totalItems || 0} purchases`;
     }, [purchases.length, pagination]);
+
+    const handleToggleDetails = useCallback(async (entry) => {
+        const detailId = String(entry?.entitlementId || entry?.sourceOrderId || '').trim();
+        if (!detailId) return;
+
+        if (expandedPurchaseId === detailId) {
+            setExpandedPurchaseId('');
+            return;
+        }
+
+        setExpandedPurchaseId(detailId);
+        if (purchaseDetailsById[detailId]) return;
+
+        setDetailLoadingId(detailId);
+        setDetailErrorsById((prev) => ({ ...prev, [detailId]: '' }));
+        try {
+            const detail = await getMyPurchaseDetail(detailId);
+            setPurchaseDetailsById((prev) => ({
+                ...prev,
+                [detailId]: detail || null,
+            }));
+        } catch (err) {
+            setDetailErrorsById((prev) => ({
+                ...prev,
+                [detailId]: err?.response?.data?.message || err?.message || 'Failed to load purchase detail.',
+            }));
+        } finally {
+            setDetailLoadingId('');
+        }
+    }, [expandedPurchaseId, purchaseDetailsById]);
 
     return (
         <DashboardShell>
@@ -102,6 +143,11 @@ function MyPurchases() {
                             const asset = entry?.asset || null;
                             const assetPath = buildAssetPath(asset || {});
                             const previewUrl = getPreviewUrl(asset || {});
+                            const detailId = String(entry?.entitlementId || entry?.sourceOrderId || '').trim();
+                            const isExpanded = detailId && expandedPurchaseId === detailId;
+                            const detail = detailId ? purchaseDetailsById[detailId] : null;
+                            const detailLoading = detailId && detailLoadingId === detailId;
+                            const detailError = detailId ? detailErrorsById[detailId] : '';
                             return (
                                 <div key={entry?.entitlementId || entry?.assetId} className="col-12 col-md-6 col-xl-4">
                                     <div className="card h-100 border-0 shadow-sm">
@@ -124,7 +170,12 @@ function MyPurchases() {
                                             <div className="small mb-3">
                                                 Latest order: {entry?.latestOrder ? formatMoney(entry.latestOrder.amountCents, entry.latestOrder.currency) : 'N/A'}
                                             </div>
-                                            <div className="mt-auto d-flex gap-2">
+                                            {entry?.latestOrder?.paymentProvider && (
+                                                <div className="small mb-3 text-muted">
+                                                    Provider: {formatProviderLabel(entry.latestOrder.paymentProvider)}
+                                                </div>
+                                            )}
+                                            <div className="mt-auto d-flex gap-2 flex-wrap">
                                                 {assetPath ? (
                                                     <Link to={assetPath} className="btn btn-primary btn-sm">
                                                         Open asset
@@ -134,7 +185,60 @@ function MyPurchases() {
                                                         Asset unavailable
                                                     </button>
                                                 )}
+                                                <button
+                                                    type="button"
+                                                    className="btn btn-outline-secondary btn-sm"
+                                                    onClick={() => handleToggleDetails(entry)}
+                                                    disabled={!detailId}
+                                                >
+                                                    {isExpanded ? 'Hide details' : 'View details'}
+                                                </button>
                                             </div>
+
+                                            {isExpanded && (
+                                                <div className="border rounded p-2 mt-3 bg-light small">
+                                                    {detailLoading ? (
+                                                        <div className="text-muted">Loading purchase detail...</div>
+                                                    ) : detailError ? (
+                                                        <div className="text-danger">{detailError}</div>
+                                                    ) : detail ? (
+                                                        <>
+                                                            <div><strong>Purchase ID:</strong> {detail?.entitlementId || 'N/A'}</div>
+                                                            <div><strong>Status:</strong> {String(detail?.status || 'N/A').toUpperCase()}</div>
+                                                            <div><strong>Granted At:</strong> {formatDate(detail?.grantedAt)}</div>
+                                                            <div><strong>Source Order:</strong> {detail?.sourceOrderId || 'N/A'}</div>
+                                                            <div><strong>Creator:</strong> {detail?.creator?.displayName || 'Creator'}</div>
+                                                            <hr className="my-2" />
+                                                            <div><strong>Order Ref:</strong> {detail?.latestOrder?.orderRef || 'N/A'}</div>
+                                                            <div><strong>Payment Status:</strong> {String(detail?.latestOrder?.paymentStatus || 'N/A').toUpperCase()}</div>
+                                                            <div><strong>Provider:</strong> {formatProviderLabel(detail?.latestOrder?.paymentProvider)}</div>
+                                                            <div>
+                                                                <strong>Amount:</strong>{' '}
+                                                                {detail?.latestOrder
+                                                                    ? formatMoney(detail.latestOrder.amountCents, detail.latestOrder.currency)
+                                                                    : 'N/A'}
+                                                            </div>
+                                                            <div><strong>Format:</strong> {detail?.latestOrder?.format || 'N/A'}</div>
+                                                            <div><strong>Paid At:</strong> {formatDate(detail?.latestOrder?.paidAt)}</div>
+                                                            <div><strong>Refunded At:</strong> {formatDate(detail?.latestOrder?.refundedAt)}</div>
+                                                            {detail?.latestOrder?.paymentProvider === 'paypal' && (
+                                                                <>
+                                                                    <div><strong>PayPal Order ID:</strong> {detail?.latestOrder?.paypal?.orderId || 'N/A'}</div>
+                                                                    <div><strong>PayPal Capture ID:</strong> {detail?.latestOrder?.paypal?.captureId || 'N/A'}</div>
+                                                                </>
+                                                            )}
+                                                            {detail?.latestOrder?.paymentProvider === 'stripe' && (
+                                                                <>
+                                                                    <div><strong>Stripe PaymentIntent:</strong> {detail?.latestOrder?.stripe?.paymentIntentId || 'N/A'}</div>
+                                                                    <div><strong>Stripe Charge ID:</strong> {detail?.latestOrder?.stripe?.chargeId || 'N/A'}</div>
+                                                                </>
+                                                            )}
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-muted">No details available.</div>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

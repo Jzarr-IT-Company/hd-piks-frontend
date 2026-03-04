@@ -3,9 +3,8 @@ import { useParams } from 'react-router-dom';
 import { Skeleton } from '@mui/material';
 import FilterationImages from '../Components/FilterationImages/FilterationImages';
 import HomeBannerSearchFilterationCompo2 from '../Components/HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
+import TopNavOnly from '../Components/AppNavbar/TopNavOnly';
 import AppFooter from '../Components/AppFooter/AppFooter';
-import { Link } from 'react-router-dom';
-import logo from '../assets/logo1.webp';
 import { useAllImagesQuery } from '../query/imageQueries.js';
 import { usePublicCategoriesQuery } from '../query/categoryQueries.js';
 import { QueryErrorRetry } from '../Components/QueryState/QueryState.jsx';
@@ -170,25 +169,9 @@ function SearchPage() {
 
   return (
     <>
-      <div className="container pt-4">
-        <div className="d-flex align-items-start d-md-none" style={{ gap: 10 }}>
-          <Link to="/" style={{ marginTop: 2, flex: '0 0 auto' }}>
-            <img src={logo} alt="Hdpiks" style={{ height: 36, cursor: 'pointer' }} />
-          </Link>
-          <div className="flex-grow-1">
-            <HomeBannerSearchFilterationCompo2 showOnDesktop compact hideSearchBarMargin hideWrapperPadding />
-          </div>
-        </div>
-
-        <div className="d-none d-md-flex align-items-start">
-          <Link to="/" style={{ marginTop: -8, flex: '0 0 auto' }}>
-            <img src={logo} alt="Hdpiks" style={{ height: 40, cursor: 'pointer' }} />
-          </Link>
-
-          <div className="flex-grow-1 ms-3">
-            <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding />
-          </div>
-        </div>
+      <TopNavOnly />
+      <div className="container top-nav-content pt-3">
+        <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding />
       </div>
 
       <div className="container py-4">

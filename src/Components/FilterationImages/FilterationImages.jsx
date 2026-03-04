@@ -113,6 +113,7 @@ function FilterationImages({
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showCollectionModal, setShowCollectionModal] = useState(false);
     const [selectedAssetId, setSelectedAssetId] = useState(null);
+    const [showPillArrows, setShowPillArrows] = useState(false);
     const pillsRowRef = useRef(null);
 
     const isSearchMode = !!searchSubcategory;
@@ -559,6 +560,29 @@ function FilterationImages({
         row.scrollBy({ left: direction * step, behavior: 'smooth' });
     }, []);
 
+    const updatePillArrowVisibility = useCallback(() => {
+        const row = pillsRowRef.current;
+        if (!row || !isMobile) {
+            setShowPillArrows(false);
+            return;
+        }
+        const overflowed = row.scrollWidth > row.clientWidth + 2;
+        setShowPillArrows(overflowed);
+    }, [isMobile]);
+
+    useEffect(() => {
+        updatePillArrowVisibility();
+        window.addEventListener('resize', updatePillArrowVisibility);
+        return () => window.removeEventListener('resize', updatePillArrowVisibility);
+    }, [
+        updatePillArrowVisibility,
+        subcategories,
+        activeSubcategory,
+        isSearchMode,
+        name,
+        imagesdata.length,
+    ]);
+
     // NEW: shared styles for subcategory pills
     const pillBaseStyle = {
         borderRadius: 999,
@@ -583,18 +607,20 @@ function FilterationImages({
         <div className="container filteration-page-container">
             {/* Row 1: category + subcategory pills */}
             <div className="filteration-pill-shell mb-3">
-                <button
-                    type="button"
-                    className="filteration-pill-arrow filteration-pill-arrow-left"
-                    onClick={() => scrollPills(-1)}
-                    aria-label="Scroll categories left"
-                >
-                    <FiChevronLeft size={16} />
-                </button>
+                {showPillArrows ? (
+                    <button
+                        type="button"
+                        className="filteration-pill-arrow filteration-pill-arrow-left"
+                        onClick={() => scrollPills(-1)}
+                        aria-label="Scroll categories left"
+                    >
+                        <FiChevronLeft size={16} />
+                    </button>
+                ) : null}
 
                 <div
                     ref={pillsRowRef}
-                    className="filteration-pill-row d-flex flex-wrap align-items-center gap-2 justify-content-center justify-content-md-start"
+                    className={`filteration-pill-row d-flex flex-wrap align-items-center gap-2 justify-content-center justify-content-md-start ${showPillArrows ? 'filteration-pill-row--with-arrows' : ''}`}
                     style={{ background: '#f7f3ff', borderRadius: 999, padding: '6px 10px' }}
                 >
                 <span
@@ -636,14 +662,16 @@ function FilterationImages({
                 ))}
                 </div>
 
-                <button
-                    type="button"
-                    className="filteration-pill-arrow filteration-pill-arrow-right"
-                    onClick={() => scrollPills(1)}
-                    aria-label="Scroll categories right"
-                >
-                    <FiChevronRight size={16} />
-                </button>
+                {showPillArrows ? (
+                    <button
+                        type="button"
+                        className="filteration-pill-arrow filteration-pill-arrow-right"
+                        onClick={() => scrollPills(1)}
+                        aria-label="Scroll categories right"
+                    >
+                        <FiChevronRight size={16} />
+                    </button>
+                ) : null}
             </div>
 
             {loading ? (

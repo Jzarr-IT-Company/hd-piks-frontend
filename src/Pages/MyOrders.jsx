@@ -29,6 +29,13 @@ const formatDate = (value) => {
     return parsed.toLocaleString();
 };
 
+const formatProviderLabel = (value) => {
+    const normalized = String(value || '').trim().toLowerCase();
+    if (normalized === 'paypal') return 'PayPal';
+    if (normalized === 'stripe') return 'Stripe';
+    return normalized ? normalized.toUpperCase() : 'N/A';
+};
+
 const buildAssetPath = (asset = {}) => {
     const categorySlug = slugify(asset.categoryName) || 'image';
     const subSlug = slugify(asset.subcategoryName) || 'all';
@@ -132,6 +139,7 @@ function MyOrders() {
                                     <th>Order</th>
                                     <th>Asset</th>
                                     <th>Creator</th>
+                                    <th>Provider</th>
                                     <th>Amount</th>
                                     <th>Status</th>
                                     <th>Paid At</th>
@@ -141,15 +149,19 @@ function MyOrders() {
                             <tbody>
                                 {loading ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-4">Loading orders...</td>
+                                        <td colSpan={8} className="text-center py-4">Loading orders...</td>
                                     </tr>
                                 ) : orders.length === 0 ? (
                                     <tr>
-                                        <td colSpan={7} className="text-center py-4 text-muted">No orders found.</td>
+                                        <td colSpan={8} className="text-center py-4 text-muted">No orders found.</td>
                                     </tr>
                                 ) : (
                                     orders.map((order) => {
                                         const assetPath = buildAssetPath(order?.asset || {});
+                                        const providerLabel = formatProviderLabel(order?.paymentProvider);
+                                        const providerRef = order?.paymentProvider === 'paypal'
+                                            ? (order?.paypal?.captureId || order?.paypal?.orderId || null)
+                                            : (order?.stripe?.paymentIntentId || order?.stripe?.chargeId || null);
                                         return (
                                             <tr key={order?._id}>
                                                 <td>
@@ -165,6 +177,18 @@ function MyOrders() {
                                                     )}
                                                 </td>
                                                 <td>{order?.creator?.displayName || 'Creator'}</td>
+                                                <td>
+                                                    <div>
+                                                        <span className="badge bg-light text-dark border">
+                                                            {providerLabel}
+                                                        </span>
+                                                    </div>
+                                                    {providerRef && (
+                                                        <div className="small text-muted mt-1">
+                                                            {providerRef}
+                                                        </div>
+                                                    )}
+                                                </td>
                                                 <td>{formatMoney(order?.amountCents, order?.currency)}</td>
                                                 <td>
                                                     <span className={`badge ${getStatusBadgeClass(order?.paymentStatus)}`}>

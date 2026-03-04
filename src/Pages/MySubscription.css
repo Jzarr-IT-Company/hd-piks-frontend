@@ -1,0 +1,19 @@
+.my-subscription-empty {
+  padding: 8px 2px;
+}
+
+.my-subscription-panel {
+  border: 1px solid #e8edf4;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fff;
+  height: 100%;
+}
+
+.my-subscription-side {
+  border: 1px solid #e8edf4;
+  border-radius: 12px;
+  padding: 14px;
+  background: #fafcff;
+  height: 100%;
+}

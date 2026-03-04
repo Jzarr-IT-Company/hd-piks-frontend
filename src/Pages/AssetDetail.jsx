@@ -1,8 +1,14 @@
 import React from 'react';
 import AssetDetailView from '../Components/AssetDetailView/AssetDetailView';
+import TopNavOnly from '../Components/AppNavbar/TopNavOnly';
 
 function AssetDetail() {
-    return <AssetDetailView />;
+    return (
+        <>
+            <TopNavOnly />
+            <AssetDetailView />
+        </>
+    );
 }
 
 export default AssetDetail;

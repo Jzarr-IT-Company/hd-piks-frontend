@@ -360,6 +360,7 @@ import ImagesPage from "../Admin/pages/Images";
 import AnalyticsPage from "../Admin/pages/Analytics";
 import TemplatesPage from "../Admin/pages/Templates";
 import PricingRulesPage from "../Admin/pages/PricingRules";
+import SubscriptionPlansPage from "../Admin/pages/SubscriptionPlans";
 import AdminSidebar from "../Admin/components/Sidebar";
 import AdminTopbar from "../Admin/components/Topbar";
 import NotFound from "../Pages/NotFound"; // Adjust the path if needed
@@ -406,6 +407,8 @@ import Published from "../Pages/Published";
 import TermsAndConditions from "../Pages/TermsAndConditions";
 import MyOrders from "../Pages/MyOrders";
 import MyPurchases from "../Pages/MyPurchases";
+import MySubscription from "../Pages/MySubscription";
+import MySubscriptionOrders from "../Pages/MySubscriptionOrders";
 import VideoPage from "../Pages/VideoPage";
 // import BlogsList from '../Pages/BlogsList';
 import AdminBlogs from "../Admin/pages/Blogs";
@@ -510,6 +513,7 @@ function Routing() {
         { path: "creators", element: <CreatorsPage /> },
         { path: "images", element: <ImagesPage /> },
         { path: "pricing-rules", element: <PricingRulesPage /> },
+        { path: "subscription-plans", element: <SubscriptionPlansPage /> },
         { path: "templates", element: <TemplatesPage /> },
         { path: "blogs", element: <AdminBlogs /> },
         // { path: 'blog-categories', element: <BlogCategories /> },
@@ -689,6 +693,22 @@ function Routing() {
       element: (
         <ProtectedRoute>
           <MyPurchases />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-subscription",
+      element: (
+        <ProtectedRoute>
+          <MySubscription />
+        </ProtectedRoute>
+      ),
+    },
+    {
+      path: "/my-subscription-orders",
+      element: (
+        <ProtectedRoute>
+          <MySubscriptionOrders />
         </ProtectedRoute>
       ),
     },
