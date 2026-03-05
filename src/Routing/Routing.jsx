@@ -428,8 +428,7 @@ import { getContributorState } from "../utils/contributorStatus.js";
 import  AboutUs  from '../Pages/Company/AboutUs';
 import  ContactUs  from '../Pages/Company/ContactUs';
 import  Faq  from '../Pages/Company/Faq';
-import  Terms from '../Pages/Company/Terms';
-import  Privacy  from '../Pages/Company/Privacy';
+import Legal from "../Pages/Company/Legal";
 import DesignHdpiks from "../Pages/DesignHdpiks";
 
 function ProtectedRoute({ children }) {
@@ -751,12 +750,20 @@ function Routing() {
       element: <Faq />,
     },
     {
+      path: "/company/legal",
+      element: <Legal />,
+    },
+    {
+      path: "/company/legal/:docSlug",
+      element: <Legal />,
+    },
+    {
       path: "/company/terms",
-      element: <Terms />,
+      element: <Navigate to="/company/legal" replace />,
     },
     {
       path: "/company/privacy",
-      element: <Privacy />,
+      element: <Navigate to="/company/legal" replace />,
     },
 
     {

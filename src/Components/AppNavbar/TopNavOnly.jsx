@@ -10,6 +10,10 @@ const NavbarProfileCompo = React.lazy(() => import('../NavbarProfileCompo/Navbar
 const SidebarCompo = React.lazy(() => import('../SidebarCompo/SidebarCompo'));
 
 function TopNavOnly() {
+    const handleLogoClick = () => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    };
+
     return (
         <section className="main-div-custmoe-css top-nav-only">
             <Navbar expand="lg">
@@ -17,7 +21,7 @@ function TopNavOnly() {
                     <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex align-items-center">
                             <AppNavbarOffcanvas />
-                            <Link to="/">
+                            <Link to="/" onClick={handleLogoClick}>
                                 <span className='fs-3 text-white fw-bold'>HDpiks</span>
                             </Link>
                         </div>

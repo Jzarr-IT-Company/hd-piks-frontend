@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import TopNavOnly from '../../Components/AppNavbar/TopNavOnly';
 import AppFooter from '../../Components/AppFooter/AppFooter';
 
- function ContactUs() {
+function ContactUs() {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
   const [sending, setSending] = useState(false);
 
@@ -24,9 +25,10 @@ import AppFooter from '../../Components/AppFooter/AppFooter';
 
   return (
     <>
-      <main className="container py-5">
+      <TopNavOnly />
+      <main className="container top-nav-content py-5">
         <h1 className="h4 mb-3">Contact Us</h1>
-        <p className="text-muted">Questions, support or partnerships — send us a message.</p>
+        <p className="text-muted">Questions, support or partnerships - send us a message.</p>
 
         <form onSubmit={handleSubmit} className="row g-3 mt-3">
           <div className="col-md-6">
@@ -40,7 +42,7 @@ import AppFooter from '../../Components/AppFooter/AppFooter';
           </div>
           <div className="col-12">
             <button className="btn btn-primary" type="submit" disabled={sending}>
-              {sending ? 'Sending…' : 'Send Message'}
+              {sending ? 'Sending...' : 'Send Message'}
             </button>
           </div>
         </form>

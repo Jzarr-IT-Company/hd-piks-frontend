@@ -20,8 +20,7 @@ const publicExactPaths = new Set([
     '/company/about-us',
     '/company/contact-us',
     '/company/faq',
-    '/company/terms',
-    '/company/privacy',
+    '/company/legal',
 ]);
 
 const publicRegexPaths = [
@@ -36,6 +35,7 @@ const publicRegexPaths = [
     /^\/asset\/[^/]+$/i,
     /^\/asset\/[^/]+\/[^/]+(?:\/[^/]+)?\/[^/]+$/i,
     /^\/ai\/[^/]+$/i,
+    /^\/company\/legal\/[^/]+$/i,
 ];
 
 const normalizePathname = (pathname = '') => {

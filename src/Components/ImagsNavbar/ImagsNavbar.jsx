@@ -3,6 +3,9 @@ import logo from '../../assets/logo1.webp'
 import { Link } from 'react-router-dom'
 
 function ImagsNavbar({ showSearch = true }) {
+    const handleLogoClick = () => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    };
 
     return (
         <>
@@ -14,7 +17,7 @@ function ImagsNavbar({ showSearch = true }) {
                                 <i className="fa-solid fa-bars-staggered"></i>
                             </button>
                         </div>
-                        <Link to={'/'}>
+                        <Link to={'/'} onClick={handleLogoClick}>
                         <img
                             src={logo}
                             alt="Logo"

@@ -207,6 +207,7 @@ function AiToolPage() {
 	const [aiSelectedPresetId, setAiSelectedPresetId] = useState("");
 	const [aiResultsAnimationKey, setAiResultsAnimationKey] = useState(0);
 	const [aiGeneratedImages, setAiGeneratedImages] = useState([]);
+	const [aiSelectedImagePreview, setAiSelectedImagePreview] = useState(null);
 	const [bgRemoveUploading, setBgRemoveUploading] = useState(false);
 	const [bgRemoveProcessing, setBgRemoveProcessing] = useState(false);
 	const [bgRemoveError, setBgRemoveError] = useState("");
@@ -453,6 +454,30 @@ function AiToolPage() {
 		document.body.removeChild(link);
 	};
 
+	const getGeneratedImageSrc = (image) => {
+		const fallbackMime = "image/png";
+		const mimeType = String(image?.mimeType || fallbackMime).trim() || fallbackMime;
+		return (
+			String(image?.dataUrl || "").trim() ||
+			(String(image?.base64 || "").trim()
+				? `data:${mimeType};base64,${String(image.base64).trim()}`
+				: "")
+		);
+	};
+
+	const handleOpenGeneratedImagePreview = (image, index) => {
+		const src = getGeneratedImageSrc(image);
+		if (!src) return;
+		setAiSelectedImagePreview({
+			src,
+			alt: `Generated ${index + 1}`,
+		});
+	};
+
+	const handleCloseGeneratedImagePreview = () => {
+		setAiSelectedImagePreview(null);
+	};
+
 	const handleDownloadAllGeneratedImages = () => {
 		if (!Array.isArray(aiGeneratedImages) || !aiGeneratedImages.length) return;
 		aiGeneratedImages.forEach((image, index) => {
@@ -475,6 +500,17 @@ function AiToolPage() {
 			clearAiGenerateStageTimers();
 		};
 	}, []);
+
+	useEffect(() => {
+		if (!aiSelectedImagePreview) return undefined;
+		const handleKeyDown = (event) => {
+			if (event.key === "Escape") {
+				handleCloseGeneratedImagePreview();
+			}
+		};
+		window.addEventListener("keydown", handleKeyDown);
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [aiSelectedImagePreview]);
 
 	useEffect(() => {
 		if (id !== "text-ai") return;
@@ -1251,44 +1287,47 @@ function AiToolPage() {
 									</div>
 								) : aiGeneratedImages.length ? (
 									<div className="row g-2">
-										{aiGeneratedImages.map((image, index) => (
-											<div
-												className={aiGeneratedImages.length === 1 ? "col-12" : "col-sm-6"}
-												key={`ai-generated-${aiResultsAnimationKey}-${index}`}
-											>
-												<div className="border rounded-3 p-2 ai-gen-result-card">
-													<div
-														className="border rounded-3 overflow-hidden bg-light"
-														style={{ minHeight: 220 }}
-													>
-														<img
-															src={
-																image?.dataUrl ||
-																(image?.base64
-																	? `data:${image?.mimeType || "image/png"};base64,${image.base64}`
-																	: "")
-															}
-															alt={`Generated ${index + 1}`}
-															style={{
-																width: "100%",
-																height: "220px",
-																objectFit: "cover",
-																display: "block",
-															}}
-														/>
-													</div>
-													<div className="d-flex justify-content-end mt-2">
-														<button
-															type="button"
-															style={primaryBtnStyle}
-															onClick={() => handleDownloadGeneratedImage(image, index)}
-														>
-															Download
-														</button>
+										{aiGeneratedImages.map((image, index) => {
+											const imageSrc = getGeneratedImageSrc(image);
+											return (
+												<div
+													className={aiGeneratedImages.length === 1 ? "col-12" : "col-sm-6"}
+													key={`ai-generated-${aiResultsAnimationKey}-${index}`}
+												>
+													<div className="border rounded-3 p-2 ai-gen-result-card">
+														<div className="border rounded-3 overflow-hidden bg-light ai-gen-result-media">
+															{imageSrc ? (
+																<button
+																	type="button"
+																	className="ai-gen-result-preview-btn"
+																	onClick={() => handleOpenGeneratedImagePreview(image, index)}
+																	aria-label={`View generated image ${index + 1}`}
+																>
+																	<img
+																		src={imageSrc}
+																		alt={`Generated ${index + 1}`}
+																		className="ai-gen-result-image"
+																	/>
+																</button>
+															) : (
+																<div className="ai-gen-result-missing">
+																	Image preview unavailable.
+																</div>
+															)}
+														</div>
+														<div className="d-flex justify-content-end mt-2">
+															<button
+																type="button"
+																style={primaryBtnStyle}
+																onClick={() => handleDownloadGeneratedImage(image, index)}
+															>
+																Download
+															</button>
+														</div>
 													</div>
 												</div>
-											</div>
-										))}
+											);
+										})}
 									</div>
 								) : (
 									<div
@@ -1450,6 +1489,33 @@ function AiToolPage() {
 					</header>
 					{renderContent()}
 				</div>
+				{aiSelectedImagePreview ? (
+					<div
+						className="ai-gen-lightbox"
+						role="dialog"
+						aria-modal="true"
+						aria-label="Generated image preview"
+						onClick={handleCloseGeneratedImagePreview}
+					>
+						<div
+							className="ai-gen-lightbox-content"
+							onClick={(event) => event.stopPropagation()}
+						>
+							<button
+								type="button"
+								className="ai-gen-lightbox-close"
+								aria-label="Close preview"
+								onClick={handleCloseGeneratedImagePreview}
+							>
+								&times;
+							</button>
+							<img
+								src={aiSelectedImagePreview.src}
+								alt={aiSelectedImagePreview.alt}
+							/>
+						</div>
+					</div>
+				) : null}
 			</div>
 		</>
 	);

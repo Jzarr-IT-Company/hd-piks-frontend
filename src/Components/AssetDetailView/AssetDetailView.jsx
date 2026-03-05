@@ -1271,7 +1271,7 @@ function AssetDetailView() {
                                                 </span>
                                             </button>
                                         )}
-                                        {resolvedPurchaseStatus.isPremium && (
+                                        {(resolvedPurchaseStatus.isPremium || resolvedPurchaseStatus.isFree) && (
                                             <button
                                                 className="asset-hero__toolbar-btn asset-hero__toolbar-btn--subscription asset-hero__panel-btn"
                                                 type="button"
@@ -1351,6 +1351,16 @@ function AssetDetailView() {
                                             ? 'Opening checkout...'
                                             : `Buy Again${purchasePriceLabel ? ` ${purchasePriceLabel}` : ''}`}
                                     </span>
+                                </button>
+                            )}
+                            {(resolvedPurchaseStatus.isPremium || resolvedPurchaseStatus.isFree) && (
+                                <button
+                                    className="asset-hero__toolbar-btn asset-hero__toolbar-btn--subscription"
+                                    type="button"
+                                    onClick={() => navigate('/pricing')}
+                                >
+                                    <FiCreditCard size={16} />
+                                    <span>Buy Subscription</span>
                                 </button>
                             )}
                         </>

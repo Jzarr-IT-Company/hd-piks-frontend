@@ -222,13 +222,8 @@ function AppFooter() {
                   <h5 className="text-uppercase">Legal</h5>
                   <ul className="list-unstyled mb-0">
                     <li>
-                      <Link to="/company/terms" className="text-white">
-                        Terms & Conditions
-                      </Link>
-                    </li>
-                    <li>
-                      <Link to="/company/privacy" className="text-white">
-                        Privacy Policy
+                      <Link to="/company/legal" className="text-white">
+                        Legal
                       </Link>
                     </li>
                   </ul>

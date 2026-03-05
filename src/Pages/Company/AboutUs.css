@@ -1,0 +1,141 @@
+.about-us-page {
+  background: #ffffff;
+  color: #1f2937;
+  min-height: 100vh;
+}
+
+.about-us-page .container {
+  max-width: 1320px;
+}
+
+.about-us-page__layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+.about-us-page__sidebar {
+  position: sticky;
+  top: 96px;
+  align-self: start;
+  padding: 8px 0;
+}
+
+.about-us-page__side-title {
+  margin: 0 0 14px;
+  padding-left: 14px;
+  border-left: 3px solid #2563eb;
+  color: #2563eb;
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.about-us-page__section-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-left: 14px;
+  padding-left: 16px;
+  border-left: 2px solid #d4d4d8;
+}
+
+.about-us-page__section-link {
+  color: #1f2937;
+  text-decoration: none;
+  font-size: 1.07rem;
+  line-height: 1.45;
+}
+
+.about-us-page__section-link:hover {
+  color: #1d4ed8;
+}
+
+.about-us-page__content {
+  min-width: 0;
+}
+
+.about-us-page__heading {
+  margin-bottom: 22px;
+}
+
+.about-us-page__heading h1 {
+  margin: 0;
+  color: #3f3f46;
+  font-size: clamp(2rem, 4vw, 4rem);
+  line-height: 1.05;
+  font-weight: 700;
+}
+
+.about-us-page__meta {
+  margin-top: 16px;
+  color: #1f2937;
+  font-size: clamp(1.25rem, 2vw, 2.9rem);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.about-us-page__section {
+  margin-bottom: 28px;
+  scroll-margin-top: 110px;
+}
+
+.about-us-page__section h2 {
+  margin: 0 0 10px;
+  color: #1f2937;
+  font-size: clamp(1.25rem, 2.1vw, 2rem);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.about-us-page__section p {
+  margin: 0 0 16px;
+  color: #6b7280;
+  font-size: clamp(1rem, 1.25vw, 1.16rem);
+  line-height: 1.75;
+}
+
+.about-us-page__mobile-select {
+  display: none;
+  margin-bottom: 16px;
+}
+
+.about-us-page__mobile-select label {
+  color: #111827;
+  font-size: 0.95rem;
+}
+
+.about-us-page__mobile-select select {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+@media (max-width: 992px) {
+  .about-us-page__layout {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .about-us-page__mobile-select {
+    display: block;
+  }
+
+  .about-us-page__sidebar {
+    display: none;
+  }
+
+  .about-us-page__section {
+    scroll-margin-top: 95px;
+  }
+}
+
+@media (max-width: 576px) {
+  .about-us-page__section p {
+    line-height: 1.7;
+  }
+}

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import AppNavbar from '../Components/AppNavbar/AppNavbar';
 // Big collage: "Explore Our Collections" (Characters, Wallpaper, etc.)
 import HomeBanner1 from '../Components/HomeBanner1/HomeBanner1';
@@ -15,6 +15,10 @@ import Homebanner1Compo from '../Components/HomeBanner1Compo/HomeBanner1Compo';
 import HomeGallery from '../Components/HomeGallery/HomeGallery';
 import AppNavbarBanner1Compo from '../Components/AppNavbarBanner1Compo/AppNavbarBanner1Compo';
 function HomePage() {
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
+
   return (
     <>
       {/* navbar top  with search bar */}

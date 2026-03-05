@@ -1,170 +1,158 @@
-import React from 'react';
+import React, { useEffect, useMemo } from 'react';
+import TopNavOnly from '../../Components/AppNavbar/TopNavOnly';
 import AppFooter from '../../Components/AppFooter/AppFooter';
+import { ABOUT_US_DOCUMENT } from './aboutUsDocument';
+import './AboutUs.css';
+
+const cleanHeading = (value = '') => String(value || '').trim().replace(/:+$/, '');
+
+const toAnchorId = (heading, index) =>
+  `about-us-${index + 1}-${cleanHeading(heading)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')}`;
+
+const isLikelyHeading = (line) => {
+  const text = String(line || '').trim();
+  if (!text) return false;
+  if (text.length > 95) return false;
+  if (/^(?:[-*]|\u2022)/.test(text)) return false;
+  if (text.endsWith(':')) return true;
+  if (/[.!?]$/.test(text)) return false;
+
+  const words = text
+    .replace(/[^\w\s&/\-]/g, '')
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (words.length < 2 || words.length > 10) return false;
+
+  const titledWords = words.filter((word) => /^[A-Z]/.test(word)).length;
+  return titledWords / words.length >= 0.5;
+};
+
+const buildSectionsFromParagraphs = (paragraphs) => {
+  const lines = Array.isArray(paragraphs) ? paragraphs.map((item) => String(item || '').trim()).filter(Boolean) : [];
+  if (!lines.length) return [];
+
+  const sections = [];
+  let current = { heading: 'Overview', paragraphs: [] };
+
+  lines.forEach((line) => {
+    if (isLikelyHeading(line)) {
+      const nextHeading = cleanHeading(line);
+      if (!nextHeading) return;
+
+      if (current.heading !== 'Overview' && current.paragraphs.length === 0) {
+        current.heading = nextHeading;
+        return;
+      }
+
+      if (current.heading !== 'Overview' || current.paragraphs.length > 0) {
+        sections.push(current);
+      }
+      current = { heading: nextHeading, paragraphs: [] };
+      return;
+    }
+
+    current.paragraphs.push(line);
+  });
+
+  if (current.heading !== 'Overview' || current.paragraphs.length > 0) {
+    sections.push(current);
+  }
+
+  return sections.filter((section) => section.paragraphs.length > 0);
+};
 
 function AboutUs() {
+  const title = ABOUT_US_DOCUMENT?.title || 'About Us';
+  const effectiveDate = ABOUT_US_DOCUMENT?.effectiveDate || '';
+  const paragraphs = Array.isArray(ABOUT_US_DOCUMENT?.paragraphs) ? ABOUT_US_DOCUMENT.paragraphs : [];
+
+  const sections = useMemo(() => buildSectionsFromParagraphs(paragraphs), [paragraphs]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
+
   return (
     <>
-      <main className="container py-5">
-        <div className="row align-items-center mb-5">
-          <div className="col-lg-7">
-            <h1 className="display-5 fw-bold">About HDPiks</h1>
-            <p className="lead text-muted">
-              Welcome to HDPiks – your ultimate destination for high‑quality digital visuals
-              designed to inspire creativity and empower ideas.
-            </p>
-            <p className="text-muted">
-              At HDPiks, we believe that great design starts with great resources. Our mission
-              is to make premium‑quality visual content easily accessible to everyone, whether you
-              are a designer, developer, marketer, content creator, student, or business owner.
-              We aim to simplify the creative process by providing a growing library of visually
-              stunning and professionally crafted digital assets.
-            </p>
-          </div>
-
-          <div className="col-lg-5">
-            <div
-              className="rounded overflow-hidden"
-              style={{
-                minHeight: 220,
-                background: 'linear-gradient(180deg,#eef1f6,#f7f7fb)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#444',
-                textAlign: 'center',
-                padding: 20,
+      <TopNavOnly />
+      <main className="about-us-page top-nav-content">
+        <div className="container py-4 py-md-5">
+          <div className="about-us-page__mobile-select">
+            <label className="form-label mb-2 fw-semibold">Jump to section</label>
+            <select
+              defaultValue=""
+              onChange={(event) => {
+                const anchorId = event.target.value;
+                if (!anchorId) return;
+                const element = document.getElementById(anchorId);
+                if (element) {
+                  element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
               }}
             >
-              <div>
-                <h5 className="mb-2">Professional Visuals</h5>
-                <p className="small text-muted mb-0">
-                  High-resolution images, wallpapers, graphics and more — curated for creators.
-                </p>
-              </div>
-            </div>
+              <option value="" disabled>
+                Select section
+              </option>
+              {sections.map((section, index) => (
+                <option key={`about-us-select-${index}`} value={toAnchorId(section.heading, index)}>
+                  {section.heading}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="about-us-page__layout">
+            <aside className="about-us-page__sidebar">
+              <div className="about-us-page__side-title">About Us</div>
+              <nav className="about-us-page__section-list" aria-label="About page sections">
+                {sections.map((section, index) => (
+                  <a
+                    key={`about-us-link-${index}`}
+                    className="about-us-page__section-link"
+                    href={`#${toAnchorId(section.heading, index)}`}
+                  >
+                    {section.heading}
+                  </a>
+                ))}
+              </nav>
+            </aside>
+
+            <article className="about-us-page__content">
+              <header className="about-us-page__heading">
+                <h1>{title}</h1>
+                {effectiveDate ? (
+                  <div className="about-us-page__meta">Effective date: {effectiveDate}</div>
+                ) : null}
+              </header>
+
+              {sections.length ? (
+                sections.map((section, index) => (
+                  <section
+                    key={`about-us-section-${index}`}
+                    id={toAnchorId(section.heading, index)}
+                    className="about-us-page__section"
+                  >
+                    <h2>{section.heading}</h2>
+                    {section.paragraphs.map((paragraph, paragraphIndex) => (
+                      <p key={`about-us-p-${index}-${paragraphIndex}`}>{paragraph}</p>
+                    ))}
+                  </section>
+                ))
+              ) : (
+                <p className="text-muted mb-0">About content is not available right now.</p>
+              )}
+            </article>
           </div>
         </div>
-
-        <section className="mb-5">
-          <h2 className="h4">Who We Are</h2>
-          <p className="text-muted">
-            HDPiks is an online platform dedicated to offering a wide range of high‑resolution images,
-            wallpapers, graphics, and other creative assets that help bring projects to life. We are
-            passionate about creativity, innovation, and digital freedom. Our platform is built to serve
-            both beginners and professionals who need reliable, visually appealing resources without
-            unnecessary complexity.
-          </p>
-          <p className="text-muted">
-            We understand how challenging it can be to find the right visual content that matches your
-            creative vision. That’s why HDPiks focuses on quality, usability, and simplicity, so you can
-            spend less time searching and more time creating.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">Our Mission</h2>
-          <p className="text-muted">
-            Our mission is simple:
-          </p>
-          <ul className="text-muted">
-            <li>To provide high‑quality digital assets that are easy to access and use</li>
-            <li>To support creators, designers, and businesses worldwide</li>
-            <li>To build a trusted platform where creativity thrives</li>
-            <li>To continuously improve and expand our content library</li>
-          </ul>
-          <p className="text-muted">
-            We are committed to making HDPiks a reliable resource for anyone looking to enhance their
-            digital projects with professional visuals.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">What We Offer</h2>
-          <p className="text-muted">
-            HDPiks offers a diverse collection of digital content, including but not limited to:
-          </p>
-          <ul className="text-muted">
-            <li>High‑resolution stock images</li>
-            <li>Wallpapers and backgrounds</li>
-            <li>Creative graphics and design assets</li>
-            <li>Visual resources for websites, apps, and marketing</li>
-          </ul>
-          <p className="text-muted">
-            Our content is carefully curated and regularly updated to ensure freshness, relevance, and
-            quality. We aim to meet the evolving needs of modern digital creators across various industries.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">Our Community</h2>
-          <p className="text-muted">
-            HDPiks is more than just a content platform — it’s a growing creative community. We value
-            collaboration and creativity, and we welcome contributors who want to share their work with
-            a global audience.
-          </p>
-          <p className="text-muted">
-            By connecting creators and users, we create an ecosystem where talent is recognized and
-            creativity is rewarded. Every asset on HDPiks plays a role in helping someone else build,
-            design, or communicate better.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">Why Choose HDPiks</h2>
-          <div className="row">
-            <div className="col-md-6">
-              <ul className="text-muted">
-                <li><strong>Quality First:</strong> We focus on high‑resolution, visually appealing content.</li>
-                <li><strong>User‑Friendly Platform:</strong> Simple navigation and easy downloads.</li>
-              </ul>
-            </div>
-            <div className="col-md-6">
-              <ul className="text-muted">
-                <li><strong>Creative Freedom:</strong> Resources designed to support creative expression.</li>
-                <li><strong>Continuous Growth:</strong> Regular updates and expanding collections.</li>
-              </ul>
-            </div>
-          </div>
-          <p className="text-muted mt-3">
-            Our goal is to provide a smooth and enjoyable experience from the moment you land on our website.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">Our Vision</h2>
-          <p className="text-muted">
-            We envision HDPiks as a globally recognized platform for digital visual resources — one that
-            empowers creativity without limits. As technology and design trends evolve, we aim to grow
-            alongside them, introducing new features, tools, and content categories to better serve our users.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">Commitment to Users</h2>
-          <p className="text-muted">
-            User satisfaction is at the core of everything we do. We are dedicated to maintaining transparency,
-            respecting user privacy, and continuously improving our services based on feedback and innovation.
-          </p>
-          <p className="text-muted">
-            Whether you are working on a personal project or a professional campaign, HDPiks is here to support your creative journey.
-          </p>
-        </section>
-
-        <section className="mb-5">
-          <h2 className="h4">Get in Touch</h2>
-          <p className="text-muted">
-            We love hearing from our users. If you have questions, suggestions, or feedback, feel free to reach out
-            through our <a href="/company/contact-us">Contact Us</a> page. Your input helps us grow and improve.
-          </p>
-          <p className="text-muted">
-            Thank you for choosing HDPiks. Create freely. Design boldly. Inspire endlessly.
-          </p>
-        </section>
       </main>
-
       <AppFooter />
     </>
   );
 }
 
 export default AboutUs;
+

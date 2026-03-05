@@ -15,6 +15,10 @@ const NavbarProfileCompo = lazy(() => import('../NavbarProfileCompo/NavbarProfil
 const SidebarCompo = lazy(() => import('../SidebarCompo/SidebarCompo'));
 
 function AppNavbar() {
+    const handleLogoClick = () => {
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    };
+
     return (
         <>
             <section className="py-0 my-0 main-div-custmoe-css">
@@ -23,7 +27,7 @@ function AppNavbar() {
                         <div className="d-flex align-items-center justify-content-between">
                             <div className="d-flex align-items-center">
                                 <AppNavbarOffcanvas />
-                                <Link to="/">
+                                <Link to="/" onClick={handleLogoClick}>
                                     <span className='fs-3 text-white fw-bold'>HDpiks</span>
                                 </Link>
                             </div>
