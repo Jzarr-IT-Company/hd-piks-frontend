@@ -11,9 +11,12 @@ export default function CategoriesPage() {
     { label: '100 MB', value: 104857600 },
     { label: '500 MB', value: 524288000 },
   ];
+  const DEFAULT_ALLOWED_MIME_TYPES = 'image/jpeg, image/png, image/webp, image/gif';
+  const DEFAULT_ZIP_ALLOWED_MIME_TYPES = 'application/zip, application/x-zip-compressed, multipart/x-zip';
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [confirmExitOpen, setConfirmExitOpen] = useState(false);
   const [editCategory, setEditCategory] = useState(null);
   const [name, setName] = useState('');
   const [error, setError] = useState('');
@@ -33,6 +36,8 @@ export default function CategoriesPage() {
         .map((item) => item.trim().toLowerCase())
         .filter(Boolean)
     )];
+  const normalizeCategoryName = (value = '') =>
+    String(value).trim().replace(/\s+/g, ' ').toLowerCase();
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -52,7 +57,9 @@ export default function CategoriesPage() {
     setName(cat ? cat.name : '');
     setParent(cat && cat.parent ? cat.parent : '');
     setAllowedMimeTypesInput(
-      Array.isArray(cat?.allowedMimeTypes) ? cat.allowedMimeTypes.join(', ') : ''
+      cat
+        ? (Array.isArray(cat.allowedMimeTypes) ? cat.allowedMimeTypes.join(', ') : '')
+        : DEFAULT_ALLOWED_MIME_TYPES
     );
     setMinFileSizeBytes(
       cat?.minFileSizeBytes !== null && cat?.minFileSizeBytes !== undefined
@@ -66,7 +73,9 @@ export default function CategoriesPage() {
     );
     setZipMode(cat?.zipMode || '');
     setZipAllowedMimeTypesInput(
-      Array.isArray(cat?.zipAllowedMimeTypes) ? cat.zipAllowedMimeTypes.join(', ') : ''
+      cat
+        ? (Array.isArray(cat.zipAllowedMimeTypes) ? cat.zipAllowedMimeTypes.join(', ') : '')
+        : DEFAULT_ZIP_ALLOWED_MIME_TYPES
     );
     setZipMinFileSizeBytes(
       cat?.zipMinFileSizeBytes !== null && cat?.zipMinFileSizeBytes !== undefined
@@ -78,10 +87,12 @@ export default function CategoriesPage() {
         ? String(cat.zipMaxFileSizeBytes)
         : ''
     );
+    setConfirmExitOpen(false);
     setOpen(true);
     setError('');
   };
   const handleClose = () => {
+    setConfirmExitOpen(false);
     setOpen(false);
     setEditCategory(null);
     setName('');
@@ -95,9 +106,33 @@ export default function CategoriesPage() {
     setZipMaxFileSizeBytes('');
     setError('');
   };
+  const handleModalAttemptClose = (_event, reason) => {
+    if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+      setConfirmExitOpen(true);
+      return;
+    }
+    handleClose();
+  };
+  const handleCancelExitConfirmation = () => {
+    setConfirmExitOpen(false);
+  };
+  const handleConfirmExit = () => {
+    handleClose();
+  };
 
   const handleSave = async (quickAdd = false) => {
     if (!name.trim()) { setError('Name required'); return; }
+    const normalizedTargetName = normalizeCategoryName(name);
+    const duplicateInSameParent = categories.some((categoryItem) => {
+      const sameParent = String(categoryItem?.parent || '') === String(parent || '');
+      const sameName = normalizeCategoryName(categoryItem?.name || '') === normalizedTargetName;
+      const isDifferentCategory = !editCategory || String(categoryItem?._id || '') !== String(editCategory?._id || '');
+      return sameParent && sameName && isDifferentCategory;
+    });
+    if (duplicateInSameParent) {
+      setError('A category with this name already exists under the selected parent');
+      return;
+    }
     const parsedMin = minFileSizeBytes === '' ? null : Number(minFileSizeBytes);
     const parsedMax = maxFileSizeBytes === '' ? null : Number(maxFileSizeBytes);
     const parsedZipMin = zipMinFileSizeBytes === '' ? null : Number(zipMinFileSizeBytes);
@@ -126,7 +161,7 @@ export default function CategoriesPage() {
     }
 
     const payload = {
-      name,
+      name: name.trim(),
       parent: parent || null,
       allowedMimeTypes: parseMimeTypesInput(allowedMimeTypesInput),
       minFileSizeBytes: parsedMin,
@@ -160,7 +195,17 @@ export default function CategoriesPage() {
           handleClose();
         }
       }
-    } catch {
+    } catch (err) {
+      const apiMessage = String(err?.response?.data?.message || '').trim();
+      const apiErrors = Array.isArray(err?.response?.data?.errors) ? err.response.data.errors : [];
+      if (apiMessage === 'validation_failed' && apiErrors.length > 0) {
+        setError(apiErrors[0]);
+        return;
+      }
+      if (apiMessage) {
+        setError(apiMessage);
+        return;
+      }
       setError('Save failed');
     }
   };
@@ -260,7 +305,7 @@ export default function CategoriesPage() {
           </Table>
         </TableContainer>
       )}
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleModalAttemptClose}>
         <DialogTitle>{editCategory ? 'Edit Category' : 'Add Category'}</DialogTitle>
         <DialogContent>
           <TextField
@@ -379,6 +424,26 @@ export default function CategoriesPage() {
           <Button onClick={handleClose}>Cancel</Button>
           <Button onClick={() => handleSave(false)} variant="contained">Save & Close</Button>
           <Button onClick={() => handleSave(true)} variant="outlined">Save & Add Subcategory</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={confirmExitOpen}
+        onClose={(_event, reason) => {
+          if (reason === 'backdropClick' || reason === 'escapeKeyDown') {
+            return;
+          }
+          handleCancelExitConfirmation();
+        }}
+      >
+        <DialogTitle>Exit without saving?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            Are you sure you want to exit? Unsaved changes will be lost.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelExitConfirmation}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleConfirmExit}>Exit</Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -1,12 +1,11 @@
 // import React, { useState, useRef } from 'react';
-import React, { useEffect, useMemo, useState , useRef } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import './DashboardShell.css';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { useProfile } from '../../Context/ProfileContext';
-import { LayoutDashboard, Layers, BarChart3, Sparkles, BookOpenCheck, ShieldCheck, FileText, Inbox, MessageSquare, CreditCard, RefreshCw, Users, ArrowUpToLine, User, Mail, MapPin, Globe2, Link2, Sparkles as SparkleIcon, AlignLeft, Briefcase, Calendar, Instagram, Facebook } from 'lucide-react';
+import { LayoutDashboard, Layers, BarChart3, Sparkles, BookOpenCheck, ShieldCheck, FileText, Inbox, MessageSquare, CreditCard, RefreshCw, Users, ArrowUpToLine, User, Sparkles as SparkleIcon, House } from 'lucide-react';
 import bydefault from './bydefault';
-import axios from 'axios';
 import EditableCreatorProfile from '../ProfileBanner1UploadImages/EditableCreatorProfile';
 import { getContributorState } from '../../utils/contributorStatus';
 
@@ -131,7 +130,6 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
     setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
   };
 
-  const isCreator = userData?.role === 'creator';
   const isPending = contributor.isPending;
   const statusPillStorageKey = 'dash-status-pill-hidden';
   const [showStatusPill, setShowStatusPill] = useState(() => {
@@ -159,6 +157,9 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
     }
     navigate('/profile');
   };
+  const handleViewSite = () => {
+    window.location.assign('/');
+  };
 
   const renderContributorButton = () => {
     let label = isInPersonalArea ? 'Go to contributor panel' : 'Switch to user panel';
@@ -173,12 +174,14 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
     return (
       <div className="dash-switch">
         <button
-          className="dash-shell__upload-btn"
+          className="dash-shell__upload-btn dash-shell__upload-btn--switch"
           onClick={handleSwitchContributor}
           disabled={disabled}
         >
-          <RefreshCw size={16} className="me-2" />
-          {label}
+          <span className="dash-shell__action-btn-icon" aria-hidden="true">
+            <RefreshCw size={14} />
+          </span>
+          <span>{label}</span>
         </button>
         {showStatusPill && (
           <span className={`dash-status dash-status--${contributorStatus}`}>
@@ -189,7 +192,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
               onClick={() => setShowStatusPill(false)}
               aria-label="Dismiss status"
             >
-              ×
+              &times;
             </button>
           </span>
         )}
@@ -274,10 +277,19 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
             </div>
           </div>
           <div className="dash-top-actions">
+            <button className="dash-shell__upload-btn dash-shell__upload-btn--site" onClick={handleViewSite}>
+              <span className="dash-shell__action-btn-icon" aria-hidden="true">
+                <House size={14} />
+              </span>
+              <span>View site</span>
+            </button>
             {renderContributorButton()}
             {isContributorApproved && ( 
-              <button className="dash-shell__upload-btn" onClick={() => window.location.assign('/upload')}> 
-                Upload files 
+              <button className="dash-shell__upload-btn dash-shell__upload-btn--upload" onClick={() => window.location.assign('/upload')}> 
+                <span className="dash-shell__action-btn-icon" aria-hidden="true">
+                  <ArrowUpToLine size={14} />
+                </span>
+                <span>Upload files</span>
               </button> 
             )} 
           </div>
@@ -309,3 +321,4 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
 }
 
 export default DashboardShell;
+

@@ -20,6 +20,26 @@
   top: 96px;
   align-self: start;
   padding: 8px 0;
+  max-height: calc(100vh - 116px);
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+.legal-page__sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.legal-page__sidebar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+.legal-page__side-group + .legal-page__side-group {
+  margin-top: 20px;
+}
+
+.legal-page__side-group--nested {
+  padding-top: 2px;
 }
 
 .legal-page__side-title {
@@ -70,10 +90,16 @@
   text-decoration: none;
   font-size: 0.97rem;
   line-height: 1.45;
+  transition: color 0.16s ease;
 }
 
 .legal-page__toc-link:hover {
   color: #1d4ed8;
+}
+
+.legal-page__toc-link.is-active {
+  color: #1d4ed8;
+  font-weight: 700;
 }
 
 .legal-page__content {

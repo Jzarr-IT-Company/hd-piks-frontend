@@ -156,6 +156,15 @@ import { Link } from 'react-router-dom';
 import './Footer.css';
 
 function AppFooter() {
+  const scrollToTopOnNavigate = () => {
+    if (typeof window === "undefined") return;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    // Run one more tick to cover route transitions where layout updates after click.
+    window.setTimeout(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }, 0);
+  };
+
   return (
     <>
       <div className="container-fluid px-0">
@@ -210,11 +219,6 @@ function AppFooter() {
                         Contact Us
                       </Link>
                     </li>
-                    <li>
-                      <Link to="/company/faq" className="text-white">
-                        FAQ'S
-                      </Link>
-                    </li>
                   </ul>
                 </div>
 
@@ -224,6 +228,15 @@ function AppFooter() {
                     <li>
                       <Link to="/company/legal" className="text-white">
                         Legal
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/company/help-center"
+                        className="text-white"
+                        onClick={scrollToTopOnNavigate}
+                      >
+                        Help Center
                       </Link>
                     </li>
                   </ul>

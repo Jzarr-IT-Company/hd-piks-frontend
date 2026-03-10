@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import TopNavOnly from "../../Components/AppNavbar/TopNavOnly";
 import AppFooter from "../../Components/AppFooter/AppFooter";
@@ -34,6 +34,47 @@ function Legal() {
   }, [docSlug, activeDoc, navigate]);
 
   const doc = activeDoc || LEGAL_DOCUMENTS[0];
+  const sectionAnchorIds = useMemo(
+    () =>
+      doc.sections.map((section, index) =>
+        toAnchorId(doc.slug, section.heading, index)
+      ),
+    [doc]
+  );
+  const [activeSectionId, setActiveSectionId] = useState(
+    sectionAnchorIds[0] || ""
+  );
+
+  useEffect(() => {
+    setActiveSectionId(sectionAnchorIds[0] || "");
+  }, [sectionAnchorIds]);
+
+  useEffect(() => {
+    if (!sectionAnchorIds.length) return undefined;
+
+    const sectionElements = sectionAnchorIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean);
+    if (!sectionElements.length) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (!visibleEntries.length) return;
+        setActiveSectionId(String(visibleEntries[0].target.id || ""));
+      },
+      {
+        root: null,
+        rootMargin: "-22% 0px -62% 0px",
+        threshold: [0.2, 0.4, 0.6],
+      }
+    );
+
+    sectionElements.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
+  }, [sectionAnchorIds]);
 
   return (
     <>
@@ -58,34 +99,43 @@ function Legal() {
 
           <div className="legal-page__layout">
             <aside className="legal-page__sidebar">
-              <div className="legal-page__side-title">Legal</div>
-              <nav className="legal-page__doc-list" aria-label="Legal documents">
-                {LEGAL_DOCUMENTS.map((item) => {
-                  const isActive = item.slug === doc.slug;
-                  return (
-                    <Link
-                      key={item.slug}
-                      to={`/company/legal/${item.slug}`}
-                      className={`legal-page__doc-link${isActive ? " is-active" : ""}`}
-                    >
-                      {item.title}
-                    </Link>
-                  );
-                })}
-              </nav>
+              <section className="legal-page__side-group">
+                <div className="legal-page__side-title">Legal</div>
+                <nav className="legal-page__doc-list" aria-label="Legal documents">
+                  {LEGAL_DOCUMENTS.map((item) => {
+                    const isActive = item.slug === doc.slug;
+                    return (
+                      <Link
+                        key={item.slug}
+                        to={`/company/legal/${item.slug}`}
+                        className={`legal-page__doc-link${isActive ? " is-active" : ""}`}
+                      >
+                        {item.title}
+                      </Link>
+                    );
+                  })}
+                </nav>
+              </section>
 
-              <div className="legal-page__side-title mb-2">On this page</div>
-              <nav className="legal-page__toc" aria-label="Document sections">
-                {doc.sections.map((section, index) => (
-                  <a
-                    key={`${doc.slug}-toc-${index}`}
-                    className="legal-page__toc-link"
-                    href={`#${toAnchorId(doc.slug, section.heading, index)}`}
-                  >
-                    {cleanSectionHeading(section.heading)}
-                  </a>
-                ))}
-              </nav>
+              <section className="legal-page__side-group legal-page__side-group--nested">
+                <div className="legal-page__side-title mb-2">On this page</div>
+                <nav className="legal-page__toc" aria-label="Document sections">
+                  {doc.sections.map((section, index) => {
+                    const sectionId = toAnchorId(doc.slug, section.heading, index);
+                    const isActive = sectionId === activeSectionId;
+                    return (
+                      <a
+                        key={`${doc.slug}-toc-${index}`}
+                        className={`legal-page__toc-link${isActive ? " is-active" : ""}`}
+                        href={`#${sectionId}`}
+                        aria-current={isActive ? "location" : undefined}
+                      >
+                        {cleanSectionHeading(section.heading)}
+                      </a>
+                    );
+                  })}
+                </nav>
+              </section>
             </aside>
 
             <article className="legal-page__content">

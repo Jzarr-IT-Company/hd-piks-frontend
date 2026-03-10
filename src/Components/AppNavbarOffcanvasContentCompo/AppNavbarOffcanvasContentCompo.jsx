@@ -28,32 +28,6 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
                         id="panel1-header"
                         className='border-bottom'
                         style={{ boxShadow: "none" }}
-
-                    >
-                        Explore
-                    </AccordionSummary>
-                    <AccordionDetails>
-                        <div className="d-flex flex-column" style={{ gap: "3px 0px" }}>
-                            <div className="text-start w-100" >
-                                <Link className='btn btn-light w-100 fw-semibold py-4 text-start' style={{ textAlign: "start" }} onClick={handleCLoseBtn} to={`/collection/${"Artificial Chirstmas Trees"}`}>Collection</Link>
-                            </div>
-                            <div className="text-start w-100" >
-                                <Link className='btn btn-light w-100 fw-semibold py-4 text-start' style={{ textAlign: "start" }} onClick={handleCLoseBtn} to={`/collection/${"Premium"}`}>Premium</Link>
-                            </div>
-                        </div>
-                    </AccordionDetails>
-                </Accordion>
-                <Accordion
-                    expanded={expanded === 'panel2'}
-                    onChange={handleChange('panel2')}
-                    disableGutters
-                >
-                    <AccordionSummary
-                        expandIcon={<ExpandMoreIcon />}
-                        aria-controls="panel2-content"
-                        id="panel2-header"
-                        className='border-bottom'
-                        style={{ boxShadow: "none" }}
                     >
                         Images
                     </AccordionSummary>
@@ -72,14 +46,14 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
                     </AccordionDetails>
                 </Accordion>
                 <Accordion
-                    expanded={expanded === 'panel3'}
-                    onChange={handleChange('panel3')}
+                    expanded={expanded === 'panel2'}
+                    onChange={handleChange('panel2')}
                     disableGutters
                 >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        aria-controls="panel3-content"
-                        id="panel3-header"
+                        aria-controls="panel2-content"
+                        id="panel2-header"
                         className='border-bottom'
                         style={{ boxShadow: "none" }}
                     >
@@ -115,16 +89,16 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
                     </AccordionDetails>
                 </Accordion>
                 <Accordion
-                    expanded={expanded === 'panel4'}
-                    onChange={handleChange('panel4')}
+                    expanded={expanded === 'panel3'}
+                    onChange={handleChange('panel3')}
                     disableGutters
                     className='border-bottom border-end border-start'
                     style={{ boxShadow: "none" }}
                 >
                     <AccordionSummary
                         expandIcon={<ExpandMoreIcon />}
-                        aria-controls="panel4-content"
-                        id="panel4-header"
+                        aria-controls="panel3-content"
+                        id="panel3-header"
                     >
                         PSD
                     </AccordionSummary>

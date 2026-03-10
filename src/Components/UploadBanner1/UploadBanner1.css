@@ -13,6 +13,75 @@
 .upload-label{font-weight:700;font-size:13px;color:#0f172a;}
 .upload-control{border-radius:10px;border:1px solid #e2e8f0;padding:12px 14px;box-shadow:none;}
 .upload-control:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,0.12);}
+.upload-searchable-select{position:relative;}
+.upload-searchable-select__trigger{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  text-align:left;
+  background:#fff;
+  cursor:pointer;
+}
+.upload-searchable-select__trigger::after{display:none !important;}
+.upload-searchable-select__placeholder{color:#6b7280;}
+.upload-searchable-select__arrow{
+  margin-left:10px;
+  font-size:11px;
+  color:#475569;
+  line-height:1;
+  transition:transform .15s ease;
+  flex-shrink:0;
+}
+.upload-searchable-select.is-open .upload-searchable-select__arrow{transform:rotate(180deg);}
+.upload-searchable-select.is-open .upload-searchable-select__trigger{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.12);
+}
+.upload-searchable-select__menu{
+  position:absolute;
+  top:calc(100% + 4px);
+  left:0;
+  right:0;
+  z-index:25;
+  background:#fff;
+  border:1px solid #cbd5e1;
+  border-radius:10px;
+  box-shadow:0 12px 24px rgba(15,23,42,0.14);
+  padding:8px;
+}
+.upload-searchable-select__search{
+  border-radius:8px;
+  border:1px solid #d1d5db;
+  padding:8px 10px;
+}
+.upload-searchable-select__list{
+  margin-top:8px;
+  max-height:210px;
+  overflow-y:auto;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.upload-searchable-select__option{
+  border:none;
+  background:transparent;
+  text-align:left;
+  padding:8px 10px;
+  border-radius:8px;
+  color:#0f172a;
+  cursor:pointer;
+}
+.upload-searchable-select__option:hover{background:#f1f5f9;}
+.upload-searchable-select__option.is-selected{
+  background:#e2e8f0;
+  font-weight:600;
+}
+.upload-searchable-select__empty{
+  padding:8px 10px;
+  color:#64748b;
+  font-size:13px;
+}
 .upload-keyword-row{display:flex;gap:10px;align-items:center;}
 .upload-btn-minimal{white-space:nowrap;padding:10px 14px;border-radius:10px;font-weight:700;}
 .upload-chips{display:flex;flex-wrap:wrap;gap:8px;}

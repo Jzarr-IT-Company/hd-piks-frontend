@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './UploadBanner1.css';
 import { fetchCategories } from '../../Services/category';
 import { multipartUploadToS3 } from '../../Services/S3Service';
@@ -71,6 +71,14 @@ function UploadBanner1() {
     const [loading, setLoading] = useState(false);
     const [keywordInput, setKeywordInput] = useState('');
     const [categoryTree, setCategoryTree] = useState([]);
+    const [isSubCategoryOpen, setIsSubCategoryOpen] = useState(false);
+    const [isSubSubCategoryOpen, setIsSubSubCategoryOpen] = useState(false);
+    const [subCategorySearchQuery, setSubCategorySearchQuery] = useState('');
+    const [subSubCategorySearchQuery, setSubSubCategorySearchQuery] = useState('');
+    const subCategoryDropdownRef = useRef(null);
+    const subSubCategoryDropdownRef = useRef(null);
+    const subCategorySearchInputRef = useRef(null);
+    const subSubCategorySearchInputRef = useRef(null);
     const location = useLocation();
     const searchParams = new URLSearchParams(location.search);
     const editId = searchParams.get('edit');
@@ -89,6 +97,16 @@ function UploadBanner1() {
         () => selectedSubCategoryNode?.children?.find((c) => c._id === selectedSubSubCategory),
         [selectedSubCategoryNode, selectedSubSubCategory]
     );
+    const filteredSubCategories = useMemo(() => {
+        const needle = String(subCategorySearchQuery || '').trim().toLowerCase();
+        if (!needle) return subCategories;
+        return subCategories.filter((item) => String(item?.name || '').toLowerCase().includes(needle));
+    }, [subCategories, subCategorySearchQuery]);
+    const filteredSubSubCategories = useMemo(() => {
+        const needle = String(subSubCategorySearchQuery || '').trim().toLowerCase();
+        if (!needle) return subSubCategories;
+        return subSubCategories.filter((item) => String(item?.name || '').toLowerCase().includes(needle));
+    }, [subSubCategories, subSubCategorySearchQuery]);
 
     const selectedNames = useMemo(() => {
         return [
@@ -239,6 +257,60 @@ function UploadBanner1() {
             setZipFolderUrl('');
         }
     }, [isZipVisible, setZipFolder, setZipFolderUrl]);
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (
+                subCategoryDropdownRef.current &&
+                !subCategoryDropdownRef.current.contains(event.target)
+            ) {
+                setIsSubCategoryOpen(false);
+            }
+            if (
+                subSubCategoryDropdownRef.current &&
+                !subSubCategoryDropdownRef.current.contains(event.target)
+            ) {
+                setIsSubSubCategoryOpen(false);
+            }
+        };
+        const handleEscape = (event) => {
+            if (event.key === 'Escape') {
+                setIsSubCategoryOpen(false);
+                setIsSubSubCategoryOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleOutsideClick);
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+            document.removeEventListener('mousedown', handleOutsideClick);
+            document.removeEventListener('keydown', handleEscape);
+        };
+    }, []);
+    useEffect(() => {
+        if (!subCategories.length) {
+            setIsSubCategoryOpen(false);
+            setSubCategorySearchQuery('');
+        }
+    }, [subCategories]);
+    useEffect(() => {
+        if (!subSubCategories.length) {
+            setIsSubSubCategoryOpen(false);
+            setSubSubCategorySearchQuery('');
+        }
+    }, [subSubCategories]);
+    useEffect(() => {
+        if (isSubCategoryOpen) {
+            requestAnimationFrame(() => {
+                subCategorySearchInputRef.current?.focus();
+            });
+        }
+    }, [isSubCategoryOpen]);
+    useEffect(() => {
+        if (isSubSubCategoryOpen) {
+            requestAnimationFrame(() => {
+                subSubCategorySearchInputRef.current?.focus();
+            });
+        }
+    }, [isSubSubCategoryOpen]);
 
     // Prefill for edit mode using API (GET /images/:id)
     useEffect(() => {
@@ -292,18 +364,27 @@ function UploadBanner1() {
         setSelectedSubCategory('');
         setSubSubCategories([]);
         setSelectedSubSubCategory('');
+        setIsSubCategoryOpen(false);
+        setIsSubSubCategoryOpen(false);
+        setSubCategorySearchQuery('');
+        setSubSubCategorySearchQuery('');
     };
-    const handleSubCategoryChange = (event) => {
-        const selectedId = event.target.value;
+    const handleSubCategoryChange = (selectedId) => {
         setSelectedSubCategory(selectedId);
         const parentCat = categoryTree.find(c => c._id === category);
         const selectedSubCat = parentCat?.children?.find(c => c._id === selectedId);
         const subSubCats = selectedSubCat?.children || [];
         setSubSubCategories(subSubCats);
         setSelectedSubSubCategory('');
+        setIsSubCategoryOpen(false);
+        setIsSubSubCategoryOpen(false);
+        setSubCategorySearchQuery('');
+        setSubSubCategorySearchQuery('');
     };
-    const handleSubSubCategoryChange = (event) => {
-        setSelectedSubSubCategory(event.target.value);
+    const handleSubSubCategoryChange = (selectedId) => {
+        setSelectedSubSubCategory(selectedId);
+        setIsSubSubCategoryOpen(false);
+        setSubSubCategorySearchQuery('');
     };
 
     const handleTermsChange = () => {
@@ -423,34 +504,112 @@ function UploadBanner1() {
                     {subCategories.length > 0 && (
                         <div className="upload-field">
                             <label className="upload-label">Select Sub-Category</label>
-                            <select
-                                className="form-select upload-control"
-                                id="subCategorySelect"
-                                onChange={handleSubCategoryChange}
-                                value={selectedSubCategory}
+                            <div
+                                className={`upload-searchable-select ${isSubCategoryOpen ? 'is-open' : ''}`}
+                                ref={subCategoryDropdownRef}
                             >
-                                <option value="" disabled>Select Sub-Category</option>
-                                {subCategories.map((subCat) => (
-                                    <option key={subCat._id} value={subCat._id}>{subCat.name}</option>
-                                ))}
-                            </select>
+                                <button
+                                    type="button"
+                                    id="subCategorySelect"
+                                    className="form-select upload-control upload-searchable-select__trigger"
+                                    onClick={() => {
+                                        setIsSubCategoryOpen((prev) => !prev);
+                                        setIsSubSubCategoryOpen(false);
+                                        setSubCategorySearchQuery('');
+                                    }}
+                                >
+                                    <span className={selectedSubCategory ? '' : 'upload-searchable-select__placeholder'}>
+                                        {selectedSubCategoryNode?.name || 'Select Sub-Category'}
+                                    </span>
+                                    <span className="upload-searchable-select__arrow" aria-hidden="true">
+                                        ▼
+                                    </span>
+                                </button>
+                                {isSubCategoryOpen ? (
+                                    <div className="upload-searchable-select__menu">
+                                        <input
+                                            ref={subCategorySearchInputRef}
+                                            type="text"
+                                            className="form-control upload-searchable-select__search"
+                                            placeholder="Type to filter..."
+                                            value={subCategorySearchQuery}
+                                            onChange={(event) => setSubCategorySearchQuery(event.target.value)}
+                                        />
+                                        <div className="upload-searchable-select__list" role="listbox">
+                                            {filteredSubCategories.length ? (
+                                                filteredSubCategories.map((subCat) => (
+                                                    <button
+                                                        type="button"
+                                                        key={subCat._id}
+                                                        className={`upload-searchable-select__option ${selectedSubCategory === subCat._id ? 'is-selected' : ''}`}
+                                                        onClick={() => handleSubCategoryChange(subCat._id)}
+                                                    >
+                                                        {subCat.name}
+                                                    </button>
+                                                ))
+                                            ) : (
+                                                <div className="upload-searchable-select__empty">No sub-categories found</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
                         </div>
                     )}
 
                     {subSubCategories.length > 0 && (
                         <div className="upload-field">
                             <label className="upload-label">Select Sub-Sub-Category</label>
-                            <select
-                                className="form-select upload-control"
-                                id="subSubCategorySelect"
-                                onChange={handleSubSubCategoryChange}
-                                value={selectedSubSubCategory}
+                            <div
+                                className={`upload-searchable-select ${isSubSubCategoryOpen ? 'is-open' : ''}`}
+                                ref={subSubCategoryDropdownRef}
                             >
-                                <option value="" disabled>Select Sub-Sub-Category</option>
-                                {subSubCategories.map((subSubCat) => (
-                                    <option key={subSubCat._id} value={subSubCat._id}>{subSubCat.name}</option>
-                                ))}
-                            </select>
+                                <button
+                                    type="button"
+                                    id="subSubCategorySelect"
+                                    className="form-select upload-control upload-searchable-select__trigger"
+                                    onClick={() => {
+                                        setIsSubSubCategoryOpen((prev) => !prev);
+                                        setIsSubCategoryOpen(false);
+                                        setSubSubCategorySearchQuery('');
+                                    }}
+                                >
+                                    <span className={selectedSubSubCategory ? '' : 'upload-searchable-select__placeholder'}>
+                                        {selectedSubSubCategoryNode?.name || 'Select Sub-Sub-Category'}
+                                    </span>
+                                    <span className="upload-searchable-select__arrow" aria-hidden="true">
+                                        ▼
+                                    </span>
+                                </button>
+                                {isSubSubCategoryOpen ? (
+                                    <div className="upload-searchable-select__menu">
+                                        <input
+                                            ref={subSubCategorySearchInputRef}
+                                            type="text"
+                                            className="form-control upload-searchable-select__search"
+                                            placeholder="Type to filter..."
+                                            value={subSubCategorySearchQuery}
+                                            onChange={(event) => setSubSubCategorySearchQuery(event.target.value)}
+                                        />
+                                        <div className="upload-searchable-select__list" role="listbox">
+                                            {filteredSubSubCategories.length ? (
+                                                filteredSubSubCategories.map((subSubCat) => (
+                                                    <button
+                                                        type="button"
+                                                        key={subSubCat._id}
+                                                        className={`upload-searchable-select__option ${selectedSubSubCategory === subSubCat._id ? 'is-selected' : ''}`}
+                                                        onClick={() => handleSubSubCategoryChange(subSubCat._id)}
+                                                    >
+                                                        {subSubCat.name}
+                                                    </button>
+                                                ))
+                                            ) : (
+                                                <div className="upload-searchable-select__empty">No sub-sub-categories found</div>
+                                            )}
+                                        </div>
+                                    </div>
+                                ) : null}
+                            </div>
                         </div>
                     )}
 

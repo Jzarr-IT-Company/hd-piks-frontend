@@ -23,46 +23,6 @@ function SidebarCompo() {
             aria-expanded="false"
             style={{ fontSize: "14px" }}
           >
-            Explore
-          </a>
-          <ul className="dropdown-menu" style={{ width: "16vw" }}>
-            <div className="row py-3">
-              <div className="col-12">
-                <div className="row">
-                  <div className="col-12">
-                    <div className="">
-                      <Link
-                        style={{ fontSize: "13px" }}
-                        className="btn text-decoration-none text-dark fw-semibold py-2 text-start hover_link w-100"
-                        to={`/collection/${"Artificial Chirstmas Trees"}`}
-                      >
-                        collections
-                      </Link>
-                    </div>
-                    <div className="">
-                      <Link
-                        style={{ fontSize: "13px" }}
-                        className="btn text-decoration-none text-dark fw-semibold py-2 text-start hover_link w-100"
-                        to={`/collection/${"Premium"}`}
-                      >
-                        Premium
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ul>
-        </li>
-        <li className="nav-item dropdown">
-          <a
-            className="nav-link fw-semibold text-white dropdown-toggle"
-            href="#"
-            role="button"
-            data-bs-toggle="dropdown"
-            aria-expanded="false"
-            style={{ fontSize: "14px" }}
-          >
             Images
           </a>
           <ul className="dropdown-menu" style={{ width: "70vw" }}>

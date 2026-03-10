@@ -1,7 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
+﻿import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../Services/api";
 import { API_ENDPOINTS } from "../config/api.config.js";
+import {
+	sendTextAiChatStream,
+	uploadPdfForAiChat,
+	sendPdfAiChat,
+	listAiPdfDocuments,
+	deleteAiPdfDocument,
+	listAiConversations,
+	getAiConversationMessages,
+	deleteAiConversation,
+} from "../Services/aiChat.js";
+import { generateAiVoiceover, listAiVoiceoverVoices } from "../Services/aiVoiceover.js";
 import TopNavOnly from "../Components/AppNavbar/TopNavOnly";
 import "./AiToolPage.css";
 
@@ -76,23 +87,15 @@ const AI_PROMPT_PRESETS = [
 	},
 ];
 
-const TEXT_AI_QUICK_PROMPTS = [
-	"Write an Instagram caption for a product launch.",
-	"Give me 5 ad headline ideas for my brand.",
-	"Rewrite my text in a professional tone.",
-	"Create SEO-friendly product description copy.",
-];
+const getTextAiWelcomeMessage = (mode = "text") =>
+	mode === "pdf"
+		? "PDF mode is active. Upload a PDF, select it, then ask grounded questions from that document."
+		: "Hi, I am Text AI. Share your prompt and I can help with captions, ads, rewrite, and long-form content.";
 
-const buildTextAiReply = (input) => {
-	const normalized = String(input || "").trim();
-	if (!normalized) return "Please share a prompt and I will help you write it better.";
-	return [
-		"Here is a refined draft:",
-		normalized,
-		"",
-		"Improved version:",
-		"Clear, engaging, and conversion-focused copy that keeps your original intent while improving structure, tone, and readability.",
-	].join("\n");
+const formatBytesToMbLabel = (bytes) => {
+	const size = Number(bytes || 0);
+	if (!Number.isFinite(size) || size <= 0) return "-";
+	return `${(size / (1024 * 1024)).toFixed(2)} MB`;
 };
 
 const extensionFromMime = (mimeType) => {
@@ -116,6 +119,27 @@ const BG_REMOVE_PREPROCESS_SIZE_BYTES = 8 * 1024 * 1024;
 const BG_REMOVE_MIN_PROCESSING_VISUAL_MS = 2000;
 const BG_REMOVE_REVEAL_MS = 1350;
 const AI_GENERATE_MIN_VISUAL_MS = 1600;
+const VOICEOVER_TEXT_MAX_LENGTH = 2500;
+const VOICEOVER_DEFAULT_MODEL = "eleven_multilingual_v2";
+
+const extensionFromAudioMime = (mimeType) => {
+	const mime = String(mimeType || "").toLowerCase();
+	if (mime.includes("wav")) return "wav";
+	if (mime.includes("ogg")) return "ogg";
+	if (mime.includes("webm")) return "webm";
+	return "mp3";
+};
+
+const blobFromBase64Audio = (base64Audio, mimeType = "audio/mpeg") => {
+	const normalized = String(base64Audio || "").trim();
+	if (!normalized) return null;
+	const binaryString = window.atob(normalized);
+	const bytes = new Uint8Array(binaryString.length);
+	for (let i = 0; i < binaryString.length; i += 1) {
+		bytes[i] = binaryString.charCodeAt(i);
+	}
+	return new Blob([bytes], { type: String(mimeType || "audio/mpeg") });
+};
 
 const loadImageElement = (src) =>
 	new Promise((resolve, reject) => {
@@ -195,6 +219,7 @@ function AiToolPage() {
 	const bgRemoveInputRef = useRef(null);
 	const aiGenerateStageTimersRef = useRef([]);
 	const textAiListRef = useRef(null);
+	const textAiPdfInputRef = useRef(null);
 	const [aiPrompt, setAiPrompt] = useState("");
 	const [aiStyle, setAiStyle] = useState("photorealistic");
 	const [aiAspectRatio, setAiAspectRatio] = useState("1:1");
@@ -220,16 +245,41 @@ function AiToolPage() {
 	const [bgRemovePreviewPhase, setBgRemovePreviewPhase] = useState("idle");
 	const [textAiInput, setTextAiInput] = useState("");
 	const [textAiSending, setTextAiSending] = useState(false);
+	const [textAiError, setTextAiError] = useState("");
+	const [textAiMode, setTextAiMode] = useState("text");
+	const [textAiConversationId, setTextAiConversationId] = useState(null);
+	const [textAiPdfConversationId, setTextAiPdfConversationId] = useState(null);
+	const [textAiPdfDocs, setTextAiPdfDocs] = useState([]);
+	const [textAiSelectedPdfDocId, setTextAiSelectedPdfDocId] = useState("");
+	const [textAiPdfDocsLoading, setTextAiPdfDocsLoading] = useState(false);
+	const [textAiPdfUploadBusy, setTextAiPdfUploadBusy] = useState(false);
+	const [textAiPdfDeleteBusyId, setTextAiPdfDeleteBusyId] = useState("");
+	const [textAiConversations, setTextAiConversations] = useState([]);
+	const [textAiConversationsLoading, setTextAiConversationsLoading] = useState(false);
+	const [textAiConversationOpeningId, setTextAiConversationOpeningId] = useState("");
+	const [textAiConversationDeleteBusyId, setTextAiConversationDeleteBusyId] = useState("");
 	const [textAiMessages, setTextAiMessages] = useState(() => [
 		{
 			role: "assistant",
-			content:
-				"Hi, I am Text AI. Share your prompt and I can help with captions, ads, rewrite, and long-form content.",
+			content: getTextAiWelcomeMessage("text"),
 		},
 	]);
+	const [voiceoverText, setVoiceoverText] = useState("");
+	const [voiceoverVoices, setVoiceoverVoices] = useState([]);
+	const [voiceoverVoicesLoading, setVoiceoverVoicesLoading] = useState(false);
+	const [voiceoverVoiceId, setVoiceoverVoiceId] = useState("");
+	const [voiceoverModelId, setVoiceoverModelId] = useState(VOICEOVER_DEFAULT_MODEL);
+	const [voiceoverStability, setVoiceoverStability] = useState(0.5);
+	const [voiceoverSimilarityBoost, setVoiceoverSimilarityBoost] = useState(0.75);
+	const [voiceoverStyle, setVoiceoverStyle] = useState(0);
+	const [voiceoverUseSpeakerBoost, setVoiceoverUseSpeakerBoost] = useState(true);
+	const [voiceoverGenerating, setVoiceoverGenerating] = useState(false);
+	const [voiceoverError, setVoiceoverError] = useState("");
+	const [voiceoverAudioUrl, setVoiceoverAudioUrl] = useState("");
+	const [voiceoverAudioMeta, setVoiceoverAudioMeta] = useState(null);
 
 	const titleMap = {
-		"ai-text-voiceover": "AI Image Voiceover",
+		"ai-text-voiceover": "AI Text Voiceover",
 		"ai-bg-remove": "AI Background Remover",
 		"ai-generator": "AI Image Generator",
 		"ai-video-generator": "AI Video Generator",
@@ -315,8 +365,267 @@ function AiToolPage() {
 		setAiEnhanceError("");
 	};
 
-	const handleTextAiQuickPrompt = (prompt) => {
-		setTextAiInput(String(prompt || ""));
+	const mapTextAiErrorMessage = (error, fallback) => {
+		const statusCode = Number(error?.response?.status || 0);
+		const serverMessage = String(error?.response?.data?.message || "").trim();
+		const providerMessage = String(error?.response?.data?.providerMessage || "").trim();
+		const message = String(
+			(serverMessage && serverMessage.toLowerCase() !== "bad request"
+				? serverMessage
+				: providerMessage || serverMessage) ||
+				error?.message ||
+				fallback ||
+				"Request failed."
+		).trim();
+		if (statusCode === 401) return "Please login to use AI chat.";
+		if (statusCode === 413) return "File is too large. Please upload a smaller PDF.";
+		if (statusCode === 429) return "Too many requests. Please wait and retry.";
+		if (statusCode >= 500) return "AI service is temporarily unavailable. Please try again.";
+		return message || fallback || "Request failed.";
+	};
+
+	const mapVoiceoverErrorMessage = (error, fallback) => {
+		const statusCode = Number(error?.response?.status || 0);
+		const errorCode = String(error?.response?.data?.errorCode || "").trim().toLowerCase();
+		const message = String(
+			error?.response?.data?.message || error?.message || fallback || "Voiceover request failed."
+		).trim();
+
+		if (statusCode === 401) return "Please login to use voiceover generation.";
+		if (errorCode === "provider_auth_error") return "Voice provider authentication failed on server.";
+		if (errorCode === "quota_exceeded" || statusCode === 429) {
+			return "Voice generation quota reached. Please retry later.";
+		}
+		if (errorCode === "provider_timeout" || statusCode === 504) {
+			return "Voice generation timed out. Try shorter text and retry.";
+		}
+		if (statusCode >= 500) return "Voice service is temporarily unavailable. Please try again.";
+		return message || fallback || "Voiceover request failed.";
+	};
+
+	const isConversationResettableError = (error) => {
+		const errorCode = String(error?.response?.data?.errorCode || "").trim().toLowerCase();
+		const message = String(error?.response?.data?.message || "").trim().toLowerCase();
+		return (
+			errorCode === "conversation_not_found" ||
+			message === "conversation_not_found" ||
+			errorCode === "conversation_kind_mismatch" ||
+			message === "conversation_kind_mismatch" ||
+			errorCode === "conversation_document_mismatch" ||
+			message === "conversation_document_mismatch"
+		);
+	};
+
+	const getSelectedPdfDoc = () =>
+		textAiPdfDocs.find((item) => String(item?.id || "") === String(textAiSelectedPdfDocId || ""));
+
+	const getActiveTextAiConversationId = () =>
+		textAiMode === "pdf" ? String(textAiPdfConversationId || "") : String(textAiConversationId || "");
+
+	const toUiChatMessages = (messages, mode = textAiMode) => {
+		const mapped = Array.isArray(messages)
+			? messages
+					.map((item) => {
+						const role = String(item?.role || "").toLowerCase() === "user" ? "user" : "assistant";
+						const content = String(item?.content || "");
+						if (!content.trim()) return null;
+						return {
+							id: String(item?.id || ""),
+							role,
+							content,
+							citations: Array.isArray(item?.citations) ? item.citations : [],
+						};
+					})
+					.filter(Boolean)
+			: [];
+		if (mapped.length) return mapped;
+		return [
+			{
+				role: "assistant",
+				content: getTextAiWelcomeMessage(mode),
+			},
+		];
+	};
+
+	const loadTextAiPdfDocs = async ({ keepCurrentSelection = true } = {}) => {
+		try {
+			setTextAiPdfDocsLoading(true);
+			const docs = await listAiPdfDocuments();
+			setTextAiPdfDocs(Array.isArray(docs) ? docs : []);
+			if (!keepCurrentSelection) {
+				setTextAiSelectedPdfDocId(String(docs?.[0]?.id || ""));
+				return;
+			}
+			const hasCurrent = docs.some(
+				(item) => String(item?.id || "") === String(textAiSelectedPdfDocId || "")
+			);
+			if (!hasCurrent) {
+				setTextAiSelectedPdfDocId(String(docs?.[0]?.id || ""));
+			}
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to load PDF documents."));
+		} finally {
+			setTextAiPdfDocsLoading(false);
+		}
+	};
+
+	const loadTextAiConversations = async ({ keepCurrentSelection = true } = {}) => {
+		try {
+			setTextAiConversationsLoading(true);
+			const docsFilter = textAiMode === "pdf" ? textAiSelectedPdfDocId || null : null;
+			const conversations = await listAiConversations({
+				kind: textAiMode,
+				documentId: docsFilter,
+				limit: 60,
+			});
+			setTextAiConversations(Array.isArray(conversations) ? conversations : []);
+
+			if (!keepCurrentSelection) return;
+			const activeId = getActiveTextAiConversationId();
+			if (!activeId) return;
+			const exists = conversations.some(
+				(item) => String(item?.id || "") === String(activeId || "")
+			);
+			if (exists) return;
+			if (textAiMode === "pdf") {
+				setTextAiPdfConversationId(null);
+			} else {
+				setTextAiConversationId(null);
+			}
+			setTextAiMessages([
+				{
+					role: "assistant",
+					content: getTextAiWelcomeMessage(textAiMode),
+				},
+			]);
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to load chat history."));
+		} finally {
+			setTextAiConversationsLoading(false);
+		}
+	};
+
+	const handleOpenTextAiConversation = async (conversation) => {
+		const conversationId = String(conversation?.id || "").trim();
+		if (!conversationId || textAiSending) return;
+
+		try {
+			setTextAiConversationOpeningId(conversationId);
+			setTextAiError("");
+			const payload = await getAiConversationMessages(conversationId, { limit: 220 });
+			const conversationMeta = payload?.conversation || {};
+			const conversationKind =
+				String(conversationMeta?.kind || conversation?.kind || textAiMode).toLowerCase() ===
+				"pdf"
+					? "pdf"
+					: "text";
+
+			if (conversationKind === "pdf") {
+				setTextAiMode("pdf");
+				setTextAiPdfConversationId(conversationId);
+				setTextAiConversationId(null);
+				const nextDocId = String(conversationMeta?.documentId || "").trim();
+				if (nextDocId) {
+					setTextAiSelectedPdfDocId(nextDocId);
+				}
+			} else {
+				setTextAiMode("text");
+				setTextAiConversationId(conversationId);
+				setTextAiPdfConversationId(null);
+			}
+
+			setTextAiMessages(toUiChatMessages(payload?.messages, conversationKind));
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to open conversation."));
+		} finally {
+			setTextAiConversationOpeningId("");
+		}
+	};
+
+	const handleDeleteTextAiConversation = async (conversation, event) => {
+		event?.preventDefault?.();
+		event?.stopPropagation?.();
+		const conversationId = String(conversation?.id || "").trim();
+		if (!conversationId || textAiConversationDeleteBusyId || textAiSending) return;
+
+		try {
+			setTextAiError("");
+			setTextAiConversationDeleteBusyId(conversationId);
+			await deleteAiConversation(conversationId);
+
+			const activeConversationId = getActiveTextAiConversationId();
+			if (conversationId === String(activeConversationId || "")) {
+				if (textAiMode === "pdf") {
+					setTextAiPdfConversationId(null);
+				} else {
+					setTextAiConversationId(null);
+				}
+				setTextAiMessages([
+					{
+						role: "assistant",
+						content: getTextAiWelcomeMessage(textAiMode),
+					},
+				]);
+				setTextAiInput("");
+			}
+
+			await loadTextAiConversations({ keepCurrentSelection: true });
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to delete conversation."));
+		} finally {
+			setTextAiConversationDeleteBusyId("");
+		}
+	};
+
+	const handleOpenPdfPicker = () => {
+		if (textAiPdfUploadBusy || textAiSending) return;
+		textAiPdfInputRef.current?.click();
+	};
+
+	const handleUploadPdfForChat = async (event) => {
+		const file = event.target.files?.[0];
+		event.target.value = "";
+		if (!file) return;
+
+		const mime = String(file.type || "").toLowerCase();
+		if (mime !== "application/pdf") {
+			setTextAiError("Only PDF files are supported.");
+			return;
+		}
+
+		try {
+			setTextAiError("");
+			setTextAiPdfUploadBusy(true);
+			const response = await uploadPdfForAiChat(file);
+			const uploadedDocId = String(response?.document?.id || "");
+			await loadTextAiPdfDocs({ keepCurrentSelection: false });
+			if (uploadedDocId) {
+				setTextAiSelectedPdfDocId(uploadedDocId);
+			}
+			setTextAiMode("pdf");
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to upload PDF for chat."));
+		} finally {
+			setTextAiPdfUploadBusy(false);
+		}
+	};
+
+	const handleDeletePdfDoc = async (documentId) => {
+		const normalizedId = String(documentId || "").trim();
+		if (!normalizedId || textAiPdfDeleteBusyId) return;
+		try {
+			setTextAiError("");
+			setTextAiPdfDeleteBusyId(normalizedId);
+			await deleteAiPdfDocument(normalizedId);
+			if (normalizedId === textAiSelectedPdfDocId) {
+				setTextAiSelectedPdfDocId("");
+			}
+			await loadTextAiPdfDocs({ keepCurrentSelection: true });
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to delete PDF document."));
+		} finally {
+			setTextAiPdfDeleteBusyId("");
+		}
 	};
 
 	const handleSendTextAiMessage = async () => {
@@ -325,12 +634,157 @@ function AiToolPage() {
 
 		setTextAiInput("");
 		setTextAiSending(true);
-		setTextAiMessages((prev) => [...prev, { role: "user", content: userText }]);
+		setTextAiError("");
+		setTextAiMessages((prev) => [
+			...prev,
+			{
+				id: `user-${Date.now()}`,
+				role: "user",
+				content: userText,
+			},
+		]);
 
-		await sleep(650);
-		const aiReply = buildTextAiReply(userText);
-		setTextAiMessages((prev) => [...prev, { role: "assistant", content: aiReply }]);
-		setTextAiSending(false);
+		try {
+			if (textAiMode === "pdf") {
+				const selectedDoc = getSelectedPdfDoc();
+				if (!selectedDoc?.id) {
+					throw new Error("Please select a PDF document first.");
+				}
+				if (String(selectedDoc?.status || "").toLowerCase() !== "ready") {
+					throw new Error("Selected PDF is still processing. Please wait.");
+				}
+
+				const currentConversationId = textAiPdfConversationId || null;
+				let data = null;
+				try {
+					data = await sendPdfAiChat({
+						documentId: selectedDoc.id,
+						question: userText,
+						conversationId: currentConversationId,
+					});
+				} catch (error) {
+					if (currentConversationId && isConversationResettableError(error)) {
+						setTextAiPdfConversationId(null);
+						data = await sendPdfAiChat({
+							documentId: selectedDoc.id,
+							question: userText,
+							conversationId: null,
+						});
+					} else {
+						throw error;
+					}
+				}
+
+				const nextConversationId = String(data?.conversationId || "").trim();
+				if (nextConversationId) {
+					setTextAiPdfConversationId(nextConversationId);
+				}
+
+				const assistantText = String(data?.message?.content || "").trim() || "No answer returned.";
+				const citations = Array.isArray(data?.message?.citations) ? data.message.citations : [];
+
+				setTextAiMessages((prev) => [
+					...prev,
+					{ id: String(data?.message?.id || ""), role: "assistant", content: assistantText, citations },
+				]);
+			} else {
+				const currentConversationId = textAiConversationId || null;
+				const assistantPlaceholderId = `assistant-stream-${Date.now()}`;
+				let streamedContent = "";
+				setTextAiMessages((prev) => [
+					...prev,
+					{
+						id: assistantPlaceholderId,
+						role: "assistant",
+						content: "",
+						isStreaming: true,
+					},
+				]);
+
+				const runTextStream = async (conversationIdForRequest) => {
+					let streamDoneData = null;
+					const streamResult = await sendTextAiChatStream({
+						message: userText,
+						conversationId: conversationIdForRequest,
+						onMeta: (payload) => {
+							const nextConversationId = String(payload?.conversationId || "").trim();
+							if (nextConversationId) {
+								setTextAiConversationId(nextConversationId);
+							}
+						},
+						onChunk: (payload) => {
+							const nextContent = String(payload?.content || "");
+							const delta = String(payload?.delta || "");
+							streamedContent = nextContent || `${streamedContent}${delta}`;
+							setTextAiMessages((prev) =>
+								prev.map((item) =>
+									item?.id === assistantPlaceholderId
+										? { ...item, content: streamedContent, isStreaming: true }
+										: item
+								)
+							);
+						},
+						onDone: (payload) => {
+							streamDoneData = payload?.data || null;
+						},
+					});
+					return streamDoneData || streamResult?.data || null;
+				};
+
+				let data = null;
+				try {
+					data = await runTextStream(currentConversationId);
+				} catch (error) {
+					if (currentConversationId && isConversationResettableError(error)) {
+						setTextAiConversationId(null);
+						setTextAiMessages((prev) =>
+							prev.map((item) =>
+								item?.id === assistantPlaceholderId
+									? { ...item, content: "", isStreaming: true }
+									: item
+							)
+						);
+						streamedContent = "";
+						data = await runTextStream(null);
+					} else {
+						throw error;
+					}
+				}
+
+				const nextConversationId = String(data?.conversationId || "").trim();
+				if (nextConversationId) {
+					setTextAiConversationId(nextConversationId);
+				}
+				const assistantText =
+					String(data?.message?.content || "").trim() ||
+					String(streamedContent || "").trim() ||
+					"No answer returned.";
+				setTextAiMessages((prev) =>
+					prev.map((item) =>
+						item?.id === assistantPlaceholderId
+							? {
+									...item,
+									id: String(data?.message?.id || assistantPlaceholderId),
+									content: assistantText,
+									isStreaming: false,
+							  }
+							: item
+					)
+				);
+			}
+			await loadTextAiConversations({ keepCurrentSelection: true });
+		} catch (error) {
+			setTextAiError(mapTextAiErrorMessage(error, "Failed to generate response."));
+			setTextAiMessages((prev) => [
+				...prev.filter((item) => !item?.isStreaming),
+				{
+					role: "assistant",
+					content: "I could not process that request right now. Please retry.",
+				},
+			]);
+		} finally {
+			setTextAiSending(false);
+		}
 	};
 
 	const handleTextAiInputKeyDown = (event) => {
@@ -340,16 +794,109 @@ function AiToolPage() {
 		}
 	};
 
-	const handleClearTextAiChat = () => {
+	const handleStartNewTextAiChat = () => {
 		setTextAiMessages([
 			{
 				role: "assistant",
-				content:
-					"Hi, I am Text AI. Share your prompt and I can help with captions, ads, rewrite, and long-form content.",
+				content: getTextAiWelcomeMessage(textAiMode),
 			},
 		]);
 		setTextAiInput("");
 		setTextAiSending(false);
+		setTextAiError("");
+		if (textAiMode === "text") {
+			setTextAiConversationId(null);
+		} else {
+			setTextAiPdfConversationId(null);
+		}
+	};
+
+	const loadVoiceoverVoices = async ({ keepSelection = true } = {}) => {
+		try {
+			setVoiceoverVoicesLoading(true);
+			setVoiceoverError("");
+			const voices = await listAiVoiceoverVoices();
+			setVoiceoverVoices(Array.isArray(voices) ? voices : []);
+			if (!keepSelection) {
+				setVoiceoverVoiceId(String(voices?.[0]?.voiceId || ""));
+				return;
+			}
+			const hasCurrentSelection = voices.some(
+				(item) => String(item?.voiceId || "") === String(voiceoverVoiceId || "")
+			);
+			if (!hasCurrentSelection) {
+				setVoiceoverVoiceId(String(voices?.[0]?.voiceId || ""));
+			}
+		} catch (error) {
+			setVoiceoverError(mapVoiceoverErrorMessage(error, "Failed to load voices."));
+		} finally {
+			setVoiceoverVoicesLoading(false);
+		}
+	};
+
+	const handleVoiceoverTextChange = (event) => {
+		const nextText = String(event?.target?.value || "");
+		setVoiceoverText(nextText.slice(0, VOICEOVER_TEXT_MAX_LENGTH));
+	};
+
+	const handleGenerateVoiceover = async () => {
+		const trimmedText = String(voiceoverText || "").trim();
+		if (!trimmedText || voiceoverGenerating) return;
+		if (!voiceoverVoiceId) {
+			setVoiceoverError("Please select a voice.");
+			return;
+		}
+
+		try {
+			setVoiceoverGenerating(true);
+			setVoiceoverError("");
+			const payload = await generateAiVoiceover({
+				text: trimmedText,
+				voiceId: voiceoverVoiceId,
+				modelId: voiceoverModelId || VOICEOVER_DEFAULT_MODEL,
+				stability: voiceoverStability,
+				similarityBoost: voiceoverSimilarityBoost,
+				style: voiceoverStyle,
+				useSpeakerBoost: voiceoverUseSpeakerBoost,
+			});
+			const nextBase64Audio = String(payload?.audioBase64 || "").trim();
+			if (!nextBase64Audio) {
+				throw new Error("Voice provider returned empty audio.");
+			}
+			const mimeType = String(payload?.mimeType || "audio/mpeg");
+			const audioBlob = blobFromBase64Audio(nextBase64Audio, mimeType);
+			if (!audioBlob) {
+				throw new Error("Failed to build audio preview.");
+			}
+			if (voiceoverAudioUrl && voiceoverAudioUrl.startsWith("blob:")) {
+				URL.revokeObjectURL(voiceoverAudioUrl);
+			}
+			const nextAudioUrl = URL.createObjectURL(audioBlob);
+			setVoiceoverAudioUrl(nextAudioUrl);
+			setVoiceoverAudioMeta({
+				mimeType,
+				voiceId: String(payload?.voiceId || voiceoverVoiceId),
+				modelId: String(payload?.modelId || voiceoverModelId || VOICEOVER_DEFAULT_MODEL),
+				textLength: Number(payload?.textLength || trimmedText.length),
+				outputFormat: String(payload?.outputFormat || ""),
+			});
+		} catch (error) {
+			setVoiceoverError(mapVoiceoverErrorMessage(error, "Failed to generate voiceover."));
+		} finally {
+			setVoiceoverGenerating(false);
+		}
+	};
+
+	const handleDownloadVoiceover = () => {
+		const href = String(voiceoverAudioUrl || "").trim();
+		if (!href) return;
+		const ext = extensionFromAudioMime(voiceoverAudioMeta?.mimeType || "audio/mpeg");
+		const link = document.createElement("a");
+		link.href = href;
+		link.download = `hdpiks-voiceover-${Date.now()}.${ext}`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
 	};
 
 	const handleGenerateAiImage = async () => {
@@ -520,6 +1067,52 @@ function AiToolPage() {
 	}, [id, textAiMessages, textAiSending]);
 
 	useEffect(() => {
+		if (id !== "ai-text-voiceover") return;
+		loadVoiceoverVoices({ keepSelection: true });
+	}, [id]);
+
+	useEffect(() => {
+		if (id !== "text-ai") return;
+		loadTextAiPdfDocs({ keepCurrentSelection: true });
+	}, [id]);
+
+	useEffect(() => {
+		if (id !== "text-ai") return;
+		loadTextAiConversations({ keepCurrentSelection: true });
+	}, [id, textAiMode, textAiSelectedPdfDocId]);
+
+	useEffect(() => {
+		if (id !== "text-ai") return undefined;
+		const hasProcessingDoc = textAiPdfDocs.some(
+			(item) => String(item?.status || "").toLowerCase() === "processing"
+		);
+		if (!hasProcessingDoc) return undefined;
+
+		const intervalId = window.setInterval(() => {
+			loadTextAiPdfDocs({ keepCurrentSelection: true });
+		}, 4000);
+
+		return () => window.clearInterval(intervalId);
+	}, [id, textAiPdfDocs]);
+
+	useEffect(() => {
+		if (id !== "text-ai") return;
+		const hasActiveConversation =
+			textAiMode === "pdf"
+				? Boolean(String(textAiPdfConversationId || "").trim())
+				: Boolean(String(textAiConversationId || "").trim());
+		if (hasActiveConversation) return;
+		setTextAiMessages([
+			{
+				role: "assistant",
+				content: getTextAiWelcomeMessage(textAiMode),
+			},
+		]);
+		setTextAiInput("");
+		setTextAiError("");
+	}, [id, textAiMode, textAiConversationId, textAiPdfConversationId]);
+
+	useEffect(() => {
 		if (!bgRemoveResultUrl) return;
 		setBgRemovePreviewPhase("revealing");
 		const timer = window.setTimeout(() => {
@@ -545,6 +1138,15 @@ function AiToolPage() {
 
 		return () => window.clearInterval(timer);
 	}, [bgRemoveProcessing, bgRemoveResultUrl]);
+
+	useEffect(
+		() => () => {
+			if (voiceoverAudioUrl && voiceoverAudioUrl.startsWith("blob:")) {
+				URL.revokeObjectURL(voiceoverAudioUrl);
+			}
+		},
+		[voiceoverAudioUrl]
+	);
 
 	const bgRemoveBusy = bgRemoveUploading || bgRemoveProcessing;
 	const bgRemoveHasPreview = Boolean(bgRemoveOriginalPreviewUrl);
@@ -749,7 +1351,7 @@ function AiToolPage() {
 			link.click();
 			document.body.removeChild(link);
 			URL.revokeObjectURL(blobUrl);
-		} catch (_error) {
+		} catch {
 			const link = document.createElement("a");
 			link.href = bgRemoveResultUrl;
 			link.target = "_blank";
@@ -762,49 +1364,212 @@ function AiToolPage() {
 
 	const renderContent = () => {
 		switch (id) {
-			case "text-ai":
+			case "text-ai": {
+				const selectedPdfDoc = getSelectedPdfDoc();
+				const isSelectedPdfReady = String(selectedPdfDoc?.status || "").toLowerCase() === "ready";
+				const activeConversationId = getActiveTextAiConversationId();
+				const hasStreamingAssistant = textAiMessages.some((item) => Boolean(item?.isStreaming));
 				return (
 					<div className="row g-4">
 						<div className="col-md-4">
 							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 ai-tool-panel">
-								<h5 className="fw-semibold mb-2">Prompt ideas</h5>
+								<h5 className="fw-semibold mb-2">Assistant mode</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
-									Use these quick prompts, then continue like ChatGPT in the chat panel.
+									Switch between normal text chat and PDF-grounded chat.
 								</p>
-								<div className="d-flex flex-column gap-2">
-									{TEXT_AI_QUICK_PROMPTS.map((prompt, index) => (
-										<button
-											key={`text-ai-prompt-${index}`}
-											type="button"
-											className="text-ai-chip-btn"
-											onClick={() => handleTextAiQuickPrompt(prompt)}
-											disabled={textAiSending}
-										>
-											{prompt}
-										</button>
-									))}
+
+								<div className="text-ai-mode-toggle mb-3">
+									<button
+										type="button"
+										className={`text-ai-mode-btn ${textAiMode === "text" ? "is-active" : ""}`}
+										onClick={() => setTextAiMode("text")}
+										disabled={textAiSending || textAiPdfUploadBusy}
+									>
+										Text chat
+									</button>
+									<button
+										type="button"
+										className={`text-ai-mode-btn ${textAiMode === "pdf" ? "is-active" : ""}`}
+										onClick={() => setTextAiMode("pdf")}
+										disabled={textAiSending || textAiPdfUploadBusy}
+									>
+										PDF chat
+									</button>
 								</div>
-								<hr className="my-4" />
+
+								{textAiMode === "pdf" ? (
+									<>
+										<input
+											ref={textAiPdfInputRef}
+											type="file"
+											accept="application/pdf"
+											onChange={handleUploadPdfForChat}
+											style={{ display: "none" }}
+										/>
+										<button
+											type="button"
+											className="btn btn-sm btn-outline-primary mb-3"
+											onClick={handleOpenPdfPicker}
+											disabled={textAiPdfUploadBusy || textAiSending}
+										>
+											{textAiPdfUploadBusy ? "Uploading PDF..." : "Upload PDF"}
+										</button>
+
+										<div className="text-ai-pdf-doc-list">
+											{Array.isArray(textAiPdfDocs) && textAiPdfDocs.length ? (
+												textAiPdfDocs.map((doc) => {
+													const docId = String(doc?.id || "");
+													const isSelected = docId === String(textAiSelectedPdfDocId || "");
+													const status = String(doc?.status || "").toLowerCase();
+													return (
+														<div
+															key={`pdf-doc-${docId}`}
+															className={`text-ai-pdf-doc-item ${
+																isSelected ? "is-selected" : ""
+															}`}
+														>
+															<button
+																type="button"
+																className="text-ai-pdf-doc-select"
+																onClick={() => setTextAiSelectedPdfDocId(docId)}
+																disabled={textAiSending || textAiPdfDeleteBusyId === docId}
+															>
+																<span className="text-ai-pdf-doc-name">
+																	{doc?.originalName || "PDF document"}
+																</span>
+																<span className="text-ai-pdf-doc-meta">
+																	{formatBytesToMbLabel(doc?.sizeBytes)} -{" "}
+																	{status === "ready" ? "Ready" : status || "Processing"}
+																</span>
+															</button>
+															<button
+																type="button"
+																className="text-ai-pdf-doc-remove"
+																onClick={() => handleDeletePdfDoc(docId)}
+																disabled={textAiPdfDeleteBusyId === docId || textAiSending}
+																aria-label="Delete PDF"
+															>
+																{textAiPdfDeleteBusyId === docId ? "..." : "x"}
+															</button>
+														</div>
+													);
+												})
+											) : (
+												<div className="text-muted" style={{ fontSize: 13 }}>
+													{textAiPdfDocsLoading
+														? "Loading PDF documents..."
+														: "No PDF uploaded yet."}
+												</div>
+											)}
+										</div>
+									</>
+								) : null}
+
 								<button
 									type="button"
-									className="btn btn-sm btn-outline-secondary"
-									onClick={handleClearTextAiChat}
-									disabled={textAiSending}
+									className="text-ai-new-chat-top-btn mt-3"
+									onClick={handleStartNewTextAiChat}
+									disabled={textAiSending || textAiPdfUploadBusy}
 								>
-									Clear chat
+									<span className="text-ai-new-chat-icon">+</span>
+									<span>New chat</span>
 								</button>
+
+								<div className="text-ai-history-wrap mt-3">
+									<div className="text-ai-history-head">
+										<span>Chat history</span>
+										{textAiConversationsLoading ? (
+											<span className="text-ai-history-loading">Loading...</span>
+										) : null}
+									</div>
+									<div className="text-ai-history-list">
+										{Array.isArray(textAiConversations) && textAiConversations.length ? (
+											textAiConversations.map((item) => {
+												const conversationId = String(item?.id || "");
+												const isActive =
+													conversationId &&
+													conversationId === String(activeConversationId || "");
+												const isDeleting =
+													String(textAiConversationDeleteBusyId || "") === conversationId;
+												return (
+													<div
+														key={`text-ai-conversation-${conversationId}`}
+														className={`text-ai-history-row ${isActive ? "is-active" : ""}`}
+													>
+														<button
+															type="button"
+															className={`text-ai-history-item ${isActive ? "is-active" : ""}`}
+															onClick={() => handleOpenTextAiConversation(item)}
+															disabled={
+																textAiSending ||
+																textAiPdfUploadBusy ||
+																isDeleting ||
+																textAiConversationOpeningId === conversationId
+															}
+														>
+															<span className="text-ai-history-title">
+																{item?.title || "New chat"}
+															</span>
+															<span className="text-ai-history-preview">
+																{item?.lastMessagePreview ||
+																	(item?.documentName
+																		? `PDF: ${item.documentName}`
+																		: "Open conversation")}
+															</span>
+														</button>
+														<button
+															type="button"
+															className="text-ai-history-delete"
+															onClick={(event) =>
+																handleDeleteTextAiConversation(item, event)
+															}
+															disabled={
+																textAiSending ||
+																textAiPdfUploadBusy ||
+																isDeleting
+															}
+															aria-label="Delete conversation"
+															title="Delete conversation"
+														>
+															{isDeleting ? "..." : "X"}
+														</button>
+													</div>
+												);
+											})
+										) : (
+											<div className="text-muted" style={{ fontSize: 13 }}>
+												No chat history yet.
+											</div>
+										)}
+									</div>
+								</div>
+
+								{textAiError ? (
+									<p className="text-danger mt-3 mb-0" style={{ fontSize: 13 }}>
+										{textAiError}
+									</p>
+								) : null}
 							</div>
 						</div>
 						<div className="col-md-8">
 							<div className="p-3 p-md-4 border rounded-4 bg-white h-100 d-flex flex-column ai-tool-panel">
 								<div className="d-flex justify-content-between align-items-center mb-3">
-									<h5 className="fw-semibold mb-0">Text AI Chat</h5>
+									<h5 className="fw-semibold mb-0">
+										{textAiMode === "pdf" ? "PDF Chat" : "Text AI Chat"}
+									</h5>
 									<small className="text-muted">{textAiMessages.length} messages</small>
 								</div>
+								{textAiMode === "pdf" ? (
+									<div className="text-ai-pdf-selected mb-3">
+										{selectedPdfDoc?.id
+											? `Selected PDF: ${selectedPdfDoc.originalName} (${isSelectedPdfReady ? "ready" : "processing"})`
+											: "Select a ready PDF document to ask grounded questions."}
+									</div>
+								) : null}
 								<div ref={textAiListRef} className="text-ai-chat-list">
 									{textAiMessages.map((message, index) => (
 										<div
-											key={`text-ai-msg-${index}`}
+											key={`text-ai-msg-${String(message?.id || index)}`}
 											className={`text-ai-bubble ${
 												message.role === "user" ? "is-user" : "is-assistant"
 											}`}
@@ -812,10 +1577,33 @@ function AiToolPage() {
 											<div className="text-ai-bubble-role">
 												{message.role === "user" ? "You" : "Text AI"}
 											</div>
-											<div className="text-ai-bubble-content">{message.content}</div>
+											<div
+												className={`text-ai-bubble-content ${
+													message?.isStreaming ? "is-streaming" : ""
+												}`}
+											>
+												{message.content}
+												{message?.isStreaming ? (
+													<span className="text-ai-stream-cursor" />
+												) : null}
+											</div>
+											{Array.isArray(message?.citations) && message.citations.length ? (
+												<div className="text-ai-citations">
+													{message.citations.slice(0, 4).map((citation, citationIndex) => (
+														<div
+															key={`citation-${index}-${citationIndex}`}
+															className="text-ai-citation-item"
+														>
+															{`Chunk ${Number(citation?.chunkIndex ?? 0) + 1} - ${String(
+																citation?.score ?? ""
+															)}`}
+														</div>
+													))}
+												</div>
+											) : null}
 										</div>
 									))}
-									{textAiSending ? (
+									{textAiSending && !hasStreamingAssistant ? (
 										<div className="text-ai-bubble is-assistant">
 											<div className="text-ai-bubble-role">Text AI</div>
 											<div className="text-ai-typing-dots">
@@ -830,18 +1618,31 @@ function AiToolPage() {
 									<textarea
 										className="form-control"
 										rows={3}
-										placeholder="Ask Text AI anything... e.g. write a LinkedIn post for my design launch."
+										placeholder={
+											textAiMode === "pdf"
+												? "Ask question from selected PDF... e.g. summarize section 2."
+												: "Ask Text AI anything... e.g. write a LinkedIn post for my design launch."
+										}
 										value={textAiInput}
 										onChange={(event) => setTextAiInput(event.target.value)}
 										onKeyDown={handleTextAiInputKeyDown}
-										disabled={textAiSending}
+										disabled={
+											textAiSending ||
+											textAiPdfUploadBusy ||
+											(textAiMode === "pdf" && (!selectedPdfDoc?.id || !isSelectedPdfReady))
+										}
 									/>
 									<div className="d-flex justify-content-end mt-2">
 										<button
 											type="button"
 											style={primaryBtnStyle}
 											onClick={handleSendTextAiMessage}
-											disabled={!textAiInput.trim() || textAiSending}
+											disabled={
+												!textAiInput.trim() ||
+												textAiSending ||
+												textAiPdfUploadBusy ||
+												(textAiMode === "pdf" && (!selectedPdfDoc?.id || !isSelectedPdfReady))
+											}
 										>
 											{textAiSending ? "Generating..." : "Send"}
 										</button>
@@ -851,73 +1652,174 @@ function AiToolPage() {
 						</div>
 					</div>
 				);
-			case "ai-text-voiceover":
+			}
+			case "ai-text-voiceover": {
+				const voiceoverCharCount = String(voiceoverText || "").length;
+				const selectedVoice = voiceoverVoices.find(
+					(item) => String(item?.voiceId || "") === String(voiceoverVoiceId || "")
+				);
+				const canGenerateVoiceover =
+					Boolean(String(voiceoverText || "").trim()) &&
+					Boolean(String(voiceoverVoiceId || "").trim()) &&
+					!voiceoverGenerating;
+
 				return (
 					<div className="row g-4">
-						{/* Left: script input */}
 						<div className="col-md-6">
-							<div className="p-3 p-md-4 border rounded-4 h-100 bg-white">
+							<div className="p-3 p-md-4 border rounded-4 h-100 bg-white ai-tool-panel">
 								<h5 className="fw-semibold mb-2">1. Enter your script</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
-									Paste or type the text you want to convert into a natural‑sounding voiceover.
+									Paste or type the text you want to convert into a natural-sounding voiceover.
 									Short, clear sentences work best.
 								</p>
 								<textarea
 									className="form-control mb-2"
 									rows={7}
-									placeholder="e.g. Welcome to our channel! In this video, we’ll explore the most stunning wallpapers for your devices..."
+									placeholder="e.g. Welcome to our channel! In this video, we will explore the most stunning wallpapers for your devices..."
+									value={voiceoverText}
+									onChange={handleVoiceoverTextChange}
+									disabled={voiceoverGenerating}
 								/>
 								<div className="d-flex justify-content-between align-items-center">
 									<small className="text-muted">
-										Tip: Aim for 60–120 seconds of audio for best engagement.
+										Tip: Aim for 60-120 seconds of audio for best engagement.
 									</small>
-									<small className="text-muted">0 / 1,000 characters</small>
+									<small className={voiceoverCharCount >= VOICEOVER_TEXT_MAX_LENGTH ? "text-danger" : "text-muted"}>
+										{voiceoverCharCount} / {VOICEOVER_TEXT_MAX_LENGTH} characters
+									</small>
 								</div>
 							</div>
 						</div>
 
-						{/* Right: voice settings & preview */}
 						<div className="col-md-6">
-							<div className="p-3 p-md-4 border rounded-4 h-100 bg-white">
+							<div className="p-3 p-md-4 border rounded-4 h-100 bg-white ai-tool-panel">
 								<h5 className="fw-semibold mb-2">2. Customize voice & preview</h5>
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
-									Choose the voice style, language and pace. Generate a preview before downloading the
-									final audio file.
+									Choose a voice and tune generation controls. Generate preview, listen, then download.
 								</p>
 
 								<div className="mb-3">
-									<label className="form-label mb-1">Voice style</label>
-									<select className="form-select form-select-sm">
-										<option>Friendly (default)</option>
-										<option>Professional</option>
-										<option>Energetic</option>
-										<option>Calm</option>
+									<label className="form-label mb-1 d-flex justify-content-between align-items-center">
+										<span>Voice</span>
+										<button
+											type="button"
+											className="btn btn-link p-0"
+											style={{ fontSize: 12 }}
+											onClick={() => loadVoiceoverVoices({ keepSelection: true })}
+											disabled={voiceoverVoicesLoading || voiceoverGenerating}
+										>
+											{voiceoverVoicesLoading ? "Loading..." : "Refresh"}
+										</button>
+									</label>
+									<select
+										className="form-select form-select-sm"
+										value={voiceoverVoiceId}
+										onChange={(event) => setVoiceoverVoiceId(String(event.target.value || ""))}
+										disabled={voiceoverVoicesLoading || voiceoverGenerating}
+									>
+										{voiceoverVoicesLoading ? <option value="">Loading voices...</option> : null}
+										{!voiceoverVoicesLoading && !voiceoverVoices.length ? <option value="">No voices found</option> : null}
+										{voiceoverVoices.map((voice) => (
+											<option key={voice.voiceId} value={voice.voiceId}>
+												{voice.name}
+												{voice.category ? ` - ${voice.category}` : ""}
+											</option>
+										))}
 									</select>
 								</div>
 
 								<div className="mb-3">
-									<label className="form-label mb-1">Language</label>
-									<select className="form-select form-select-sm">
-										<option>English (US)</option>
-										<option>English (UK)</option>
-										<option>Spanish</option>
-										<option>French</option>
+									<label className="form-label mb-1">Model</label>
+									<select
+										className="form-select form-select-sm"
+										value={voiceoverModelId}
+										onChange={(event) => setVoiceoverModelId(String(event.target.value || ""))}
+										disabled={voiceoverGenerating}
+									>
+										<option value="eleven_multilingual_v2">Eleven Multilingual V2</option>
+										<option value="eleven_turbo_v2_5">Eleven Turbo V2.5</option>
 									</select>
 								</div>
 
 								<div className="mb-3">
 									<label className="form-label mb-1 d-flex justify-content-between">
-										<span>Speech speed</span>
+										<span>Stability</span>
 										<span className="text-muted" style={{ fontSize: 12 }}>
-											Normal
+											{voiceoverStability.toFixed(2)}
 										</span>
 									</label>
-									<input type="range" className="form-range" min="0.5" max="1.5" step="0.1" defaultValue="1" />
+									<input
+										type="range"
+										className="form-range"
+										min="0"
+										max="1"
+										step="0.01"
+										value={voiceoverStability}
+										onChange={(event) => setVoiceoverStability(Number(event.target.value || 0.5))}
+										disabled={voiceoverGenerating}
+									/>
+								</div>
+
+								<div className="mb-3">
+									<label className="form-label mb-1 d-flex justify-content-between">
+										<span>Similarity boost</span>
+										<span className="text-muted" style={{ fontSize: 12 }}>
+											{voiceoverSimilarityBoost.toFixed(2)}
+										</span>
+									</label>
+									<input
+										type="range"
+										className="form-range"
+										min="0"
+										max="1"
+										step="0.01"
+										value={voiceoverSimilarityBoost}
+										onChange={(event) => setVoiceoverSimilarityBoost(Number(event.target.value || 0.75))}
+										disabled={voiceoverGenerating}
+									/>
+								</div>
+
+								<div className="mb-3">
+									<label className="form-label mb-1 d-flex justify-content-between">
+										<span>Style</span>
+										<span className="text-muted" style={{ fontSize: 12 }}>
+											{voiceoverStyle.toFixed(2)}
+										</span>
+									</label>
+									<input
+										type="range"
+										className="form-range"
+										min="0"
+										max="1"
+										step="0.01"
+										value={voiceoverStyle}
+										onChange={(event) => setVoiceoverStyle(Number(event.target.value || 0))}
+										disabled={voiceoverGenerating}
+									/>
+								</div>
+
+								<div className="form-check mb-3">
+									<input
+										id="voiceover-speaker-boost"
+										className="form-check-input"
+										type="checkbox"
+										checked={voiceoverUseSpeakerBoost}
+										onChange={(event) => setVoiceoverUseSpeakerBoost(Boolean(event.target.checked))}
+										disabled={voiceoverGenerating}
+									/>
+									<label className="form-check-label" htmlFor="voiceover-speaker-boost">
+										Use speaker boost
+									</label>
 								</div>
 
 								<div className="d-flex gap-2 mt-3">
-									<button type="button" style={primaryBtnStyle}>
-										Generate Preview
+									<button
+										type="button"
+										style={primaryBtnStyle}
+										onClick={handleGenerateVoiceover}
+										disabled={!canGenerateVoiceover}
+									>
+										{voiceoverGenerating ? "Generating..." : "Generate Preview"}
 									</button>
 									<button
 										type="button"
@@ -927,14 +1829,47 @@ function AiToolPage() {
 											borderColor: "#020617",
 											boxShadow: "none",
 										}}
+										onClick={handleDownloadVoiceover}
+										disabled={!voiceoverAudioUrl || voiceoverGenerating}
 									>
 										Download Voiceover
 									</button>
 								</div>
+
+								{selectedVoice?.previewUrl ? (
+									<div className="mt-3">
+										<div className="fw-semibold mb-1" style={{ fontSize: 13 }}>
+											Selected voice sample
+										</div>
+										<audio controls preload="none" src={selectedVoice.previewUrl} style={{ width: "100%" }} />
+									</div>
+								) : null}
+
+								{voiceoverAudioUrl ? (
+									<div className="mt-3">
+										<div className="fw-semibold mb-1" style={{ fontSize: 13 }}>
+											Generated preview
+										</div>
+										<audio controls src={voiceoverAudioUrl} style={{ width: "100%" }} />
+										{voiceoverAudioMeta ? (
+											<div className="text-muted mt-2" style={{ fontSize: 12 }}>
+												Voice: {voiceoverAudioMeta.voiceId} | Model: {voiceoverAudioMeta.modelId} | Text length: {" "}
+												{voiceoverAudioMeta.textLength}
+											</div>
+										) : null}
+									</div>
+								) : null}
+
+								{voiceoverError ? (
+									<p className="text-danger mt-3 mb-0" style={{ fontSize: 13 }}>
+										{voiceoverError}
+									</p>
+								) : null}
 							</div>
 						</div>
 					</div>
 				);
+			}
 			case "ai-bg-remove":
 				return (
 					<div className="row g-4">
@@ -1379,7 +2314,7 @@ function AiToolPage() {
 											Upload Image
 										</button>
 										<p className="text-muted mt-2 mb-0" style={{ fontSize: 12 }}>
-											Optional · JPG, PNG · max 30MB
+											Optional Â· JPG, PNG Â· max 30MB
 										</p>
 									</div>
 								</div>

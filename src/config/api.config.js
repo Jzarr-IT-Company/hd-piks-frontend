@@ -148,6 +148,17 @@ export const API_ENDPOINTS = {
     AI_ENHANCE_PROMPT: '/ai/enhance-prompt',
     AI_BG_REMOVE: '/ai/bg-remove',
     AI_BG_REMOVE_PREVIEW: '/ai/bg-remove-preview',
+    AI_TEXT_CHAT: '/ai/text/chat',
+    AI_TEXT_CHAT_STREAM: '/ai/text/chat/stream',
+    AI_PDF_UPLOAD: '/ai/pdf/upload',
+    AI_PDF_CHAT: '/ai/pdf/chat',
+    AI_PDF_DOCS: '/ai/pdf/docs',
+    AI_PDF_DOC: id => `/ai/pdf/docs/${id}`,
+    AI_CONVERSATIONS: '/ai/conversations',
+    AI_CONVERSATION: id => `/ai/conversations/${id}`,
+    AI_CONVERSATION_MESSAGES: id => `/ai/conversations/${id}/messages`,
+    AI_VOICEOVER_VOICES: '/ai/voiceover/voices',
+    AI_VOICEOVER_GENERATE: '/ai/voiceover/generate',
 };
 
 export default API_BASE_URL;

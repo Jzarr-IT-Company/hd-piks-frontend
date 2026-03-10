@@ -427,8 +427,9 @@ import { getContributorState } from "../utils/contributorStatus.js";
 
 import  AboutUs  from '../Pages/Company/AboutUs';
 import  ContactUs  from '../Pages/Company/ContactUs';
-import  Faq  from '../Pages/Company/Faq';
 import Legal from "../Pages/Company/Legal";
+import HelpCenter from "../Pages/Company/HelpCenter";
+import HelpCenterTopic from "../Pages/Company/HelpCenterTopic";
 import DesignHdpiks from "../Pages/DesignHdpiks";
 
 function ProtectedRoute({ children }) {
@@ -747,7 +748,7 @@ function Routing() {
     },
     {
       path: "/company/faq",
-      element: <Faq />,
+      element: <Navigate to="/company/help-center" replace />,
     },
     {
       path: "/company/legal",
@@ -756,6 +757,14 @@ function Routing() {
     {
       path: "/company/legal/:docSlug",
       element: <Legal />,
+    },
+    {
+      path: "/company/help-center",
+      element: <HelpCenter />,
+    },
+    {
+      path: "/company/help-center/:topicSlug",
+      element: <HelpCenterTopic />,
     },
     {
       path: "/company/terms",
