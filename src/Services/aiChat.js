@@ -46,6 +46,13 @@ export const sendTextAiChat = async ({ message, conversationId = null }) => {
     return response?.data?.data || null;
 };
 
+export const generateCareerAdvisorReport = async ({ profile }) => {
+    const response = await api.post(API_ENDPOINTS.AI_CAREER_ADVISOR, {
+        profile: profile || {},
+    });
+    return response?.data?.data || null;
+};
+
 export const sendTextAiChatStream = async ({
     message,
     conversationId = null,

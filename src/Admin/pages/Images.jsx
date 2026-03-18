@@ -50,21 +50,35 @@ export default function ImagesPage() {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Fetch images and creators
+  // Fetch images first, then load creators/categories if permitted.
   const fetchData = async () => {
     setLoading(true);
+    setError('');
     try {
-      const [imgRes, creatorRes, categoryRes] = await Promise.all([
-        api.get('/admin/images'),
-        api.get('/admin/creators'),
-        api.get('/admin/categories'),
-      ]);
+      const imgRes = await api.get('/admin/images');
       setImages(imgRes.data.data || []);
-      setCreators(creatorRes.data.data || []);
-      setCategories(categoryRes.data.data || []);
     } catch {
-      setError('Failed to fetch images or creators');
+      setError('Failed to fetch images');
+      setLoading(false);
+      return;
     }
+
+    const [creatorRes, categoryRes] = await Promise.allSettled([
+      api.get('/admin/creators'),
+      api.get('/admin/categories'),
+    ]);
+
+    setCreators(
+      creatorRes.status === 'fulfilled'
+        ? (creatorRes.value?.data?.data || [])
+        : []
+    );
+    setCategories(
+      categoryRes.status === 'fulfilled'
+        ? (categoryRes.value?.data?.data || [])
+        : []
+    );
+
     setLoading(false);
   };
 
@@ -200,11 +214,26 @@ export default function ImagesPage() {
 
   const getCreatorName = (creatorId) => {
     if (!creatorId) return '-';
-    const normalizedId = typeof creatorId === 'object'
-      ? String(creatorId._id || creatorId.$oid || '')
-      : String(creatorId);
+
+    if (typeof creatorId === 'object') {
+      const profileName = creatorId?.profile?.displayName || creatorId?.profile?.name;
+      const userName = creatorId?.userId?.name;
+      const directName = creatorId?.name;
+      const name = profileName || directName || userName;
+      if (name) return name;
+      const fallbackId = creatorId?._id || creatorId?.$oid;
+      return fallbackId ? String(fallbackId) : '-';
+    }
+
+    const normalizedId = String(creatorId);
     const creator = creatorMap[normalizedId] || creators.find((c) => String(c._id) === normalizedId);
-    return creator?.profile?.displayName || creator?.name || normalizedId || '-';
+    return (
+      creator?.profile?.displayName
+      || creator?.name
+      || creator?.userId?.name
+      || normalizedId
+      || '-'
+    );
   };
 
   const getFileQuality = (img) => {

@@ -5,6 +5,7 @@ import api from '../Services/api.js';
 import { API_ENDPOINTS } from '../config/api.config.js';
 import { message, Spin } from 'antd';
 import Cookies from 'js-cookie';
+import { Home } from 'lucide-react';
 
 
 function Login() {
@@ -43,6 +44,21 @@ function Login() {
     }
   };
 
+  const homeLinkStyle = {
+    position: 'absolute',
+    top: '16px',
+    right: '16px',
+    width: '36px',
+    height: '36px',
+    borderRadius: '999px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f3f4f6',
+    color: '#4c1d95',
+    textDecoration: 'none',
+  };
+
   return (
     <section className='py-5' style={{ background: "linear-gradient(135deg, rgba(208, 194, 224, 0.7), rgba(255, 236, 235, 0.7), rgba(212, 239, 223, 0.7))", height: "130vh" }}>
       <div className="container">
@@ -50,7 +66,10 @@ function Login() {
           <div className="col-lg-6 col-md-6 col-sm-12 d-none d-md-block">
             <img src={img} className="img-fluid" alt="" />
           </div>
-          <div className="col-lg-6 col-md-6 col-sm-12 bg-white py-5 px-4 rounded-3">
+          <div className="col-lg-6 col-md-6 col-sm-12 bg-white py-5 px-4 rounded-3" style={{ position: 'relative' }}>
+            <Link to="/" style={homeLinkStyle} aria-label="Go to homepage">
+              <Home size={18} />
+            </Link>
             <h4 className='mb-5'>Login</h4>
             <form onSubmit={handleSubmit}>
               <div className="row">

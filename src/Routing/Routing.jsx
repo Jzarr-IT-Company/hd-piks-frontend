@@ -1,4 +1,4 @@
-// import "bootstrap/dist/css/bootstrap.min.css";
+﻿// import "bootstrap/dist/css/bootstrap.min.css";
 // import React from "react";
 // import Cookies from "js-cookie";
 // import {
@@ -11,6 +11,7 @@
 // import CircularProgress from "@mui/material/CircularProgress";
 // import AdminLogin from "../Admin/pages/Login";
 // import AdminDashboard from "../Admin/pages/Dashboard";
+// import AdminStaffPage from "../Admin/pages/AdminStaff";
 // import CategoriesPage from "../Admin/pages/Categories";
 // import UsersPage from "../Admin/pages/Users";
 // import CreatorsPage from "../Admin/pages/Creators";
@@ -18,13 +19,14 @@
 // import AnalyticsPage from "../Admin/pages/Analytics";
 // import AdminSidebar from "../Admin/components/Sidebar";
 // import AdminTopbar from "../Admin/components/Topbar";
+// import PermissionRoute from "../Admin/components/PermissionRoute";
 // import NotFound from "../Pages/NotFound"; // Adjust the path if needed
 // // import CategoryDetail from '../Pages/CategoryDetail';
 // import WordpressBlogRedirect from "../Pages/WordpressBlogRedirect";
 // import AiToolPage from "../Pages/AiToolPage"; // NEW
 // // Admin Protected Route
 // function AdminProtectedRoute({ children }) {
-//   const isAdmin = !!Cookies.get("token");
+//   const isAdmin = !!Cookies.get("adminToken");
 //   return isAdmin ? children : <Navigate to="/admin/login" />;
 // }
 
@@ -154,15 +156,16 @@
 //         </AdminProtectedRoute>
 //       ),
 //       children: [
-//         { path: "", element: <AdminDashboard /> },
-//         { path: "categories", element: <CategoriesPage /> },
-//         { path: "users", element: <UsersPage /> },
-//         { path: "creators", element: <CreatorsPage /> },
-//         { path: "images", element: <ImagesPage /> },
-//         { path: "blogs", element: <AdminBlogs /> },
+//         { path: "", element: (<PermissionRoute permission="dashboard.view"><AdminDashboard /></PermissionRoute>) },
+//         { path: "staff", element: (<PermissionRoute permission="staff.manage"><AdminStaffPage /></PermissionRoute>) },
+//         { path: "categories", element: (<PermissionRoute permission="categories.manage"><CategoriesPage /></PermissionRoute>) },
+//         { path: "users", element: (<PermissionRoute permission="users.manage"><UsersPage /></PermissionRoute>) },
+//         { path: "creators", element: (<PermissionRoute permission="creators.manage"><CreatorsPage /></PermissionRoute>) },
+//         { path: "images", element: (<PermissionRoute permission="images.manage"><ImagesPage /></PermissionRoute>) },
+//         { path: "blogs", element: (<PermissionRoute permission="blogs.manage"><AdminBlogs /></PermissionRoute>) },
 //         // { path: 'blog-categories', element: <BlogCategories /> },
-//         { path: "analytics", element: <AnalyticsPage /> },
-//         { path: "collections", element: <AdminCollectionsPageWrapper /> },
+//         { path: "analytics", element: (<PermissionRoute permission="analytics.view"><AnalyticsPage /></PermissionRoute>) },
+//         { path: "collections", element: (<PermissionRoute permission="collections.manage"><AdminCollectionsPageWrapper /></PermissionRoute>) },
 
 //       ],
 //     },
@@ -353,6 +356,7 @@ import {
 import CircularProgress from "@mui/material/CircularProgress";
 import AdminLogin from "../Admin/pages/Login";
 import AdminDashboard from "../Admin/pages/Dashboard";
+import AdminStaffPage from "../Admin/pages/AdminStaff";
 import CategoriesPage from "../Admin/pages/Categories";
 import UsersPage from "../Admin/pages/Users";
 import CreatorsPage from "../Admin/pages/Creators";
@@ -363,24 +367,25 @@ import PricingRulesPage from "../Admin/pages/PricingRules";
 import SubscriptionPlansPage from "../Admin/pages/SubscriptionPlans";
 import AdminSidebar from "../Admin/components/Sidebar";
 import AdminTopbar from "../Admin/components/Topbar";
+import PermissionRoute from "../Admin/components/PermissionRoute";
 import NotFound from "../Pages/NotFound"; // Adjust the path if needed
 // import CategoryDetail from '../Pages/CategoryDetail';
 import WordpressBlogRedirect from "../Pages/WordpressBlogRedirect";
 import AiToolPage from "../Pages/AiToolPage"; // NEW
 // Admin Protected Route
 function AdminProtectedRoute({ children }) {
-  const isAdmin = !!Cookies.get("token");
+  const isAdmin = !!Cookies.get("adminToken");
   return isAdmin ? children : <Navigate to="/admin/login" />;
 }
 
 // Admin Layout
 function AdminLayout() {
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
+    <div style={{ display: "flex", minHeight: "100vh", width: "100%", overflowX: "hidden" }}>
       <AdminSidebar />
-      <div style={{ flex: 1 }}>
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column" }}>
         <AdminTopbar />
-        <div style={{ padding: 24 }}>
+        <div style={{ padding: 24, flex: 1, minWidth: 0 }}>
           <Outlet />
         </div>
       </div>
@@ -507,18 +512,19 @@ function Routing() {
         </AdminProtectedRoute>
       ),
       children: [
-        { path: "", element: <AdminDashboard /> },
-        { path: "categories", element: <CategoriesPage /> },
-        { path: "users", element: <UsersPage /> },
-        { path: "creators", element: <CreatorsPage /> },
-        { path: "images", element: <ImagesPage /> },
-        { path: "pricing-rules", element: <PricingRulesPage /> },
-        { path: "subscription-plans", element: <SubscriptionPlansPage /> },
-        { path: "templates", element: <TemplatesPage /> },
-        { path: "blogs", element: <AdminBlogs /> },
+        { path: "", element: (<PermissionRoute permission="dashboard.view"><AdminDashboard /></PermissionRoute>) },
+        { path: "staff", element: (<PermissionRoute permission="staff.manage"><AdminStaffPage /></PermissionRoute>) },
+        { path: "categories", element: (<PermissionRoute permission="categories.manage"><CategoriesPage /></PermissionRoute>) },
+        { path: "users", element: (<PermissionRoute permission="users.manage"><UsersPage /></PermissionRoute>) },
+        { path: "creators", element: (<PermissionRoute permission="creators.manage"><CreatorsPage /></PermissionRoute>) },
+        { path: "images", element: (<PermissionRoute permission="images.manage"><ImagesPage /></PermissionRoute>) },
+        { path: "pricing-rules", element: (<PermissionRoute permission="pricing.manage"><PricingRulesPage /></PermissionRoute>) },
+        { path: "subscription-plans", element: (<PermissionRoute permission="plans.manage"><SubscriptionPlansPage /></PermissionRoute>) },
+        { path: "templates", element: (<PermissionRoute permission="templates.manage"><TemplatesPage /></PermissionRoute>) },
+        { path: "blogs", element: (<PermissionRoute permission="blogs.manage"><AdminBlogs /></PermissionRoute>) },
         // { path: 'blog-categories', element: <BlogCategories /> },
-        { path: "analytics", element: <AnalyticsPage /> },
-        { path: "collections", element: <AdminCollectionsPageWrapper /> },
+        { path: "analytics", element: (<PermissionRoute permission="analytics.view"><AnalyticsPage /></PermissionRoute>) },
+        { path: "collections", element: (<PermissionRoute permission="collections.manage"><AdminCollectionsPageWrapper /></PermissionRoute>) },
 
       ],
     },
@@ -785,3 +791,7 @@ function Routing() {
 }
 
 export default Routing;
+
+
+
+

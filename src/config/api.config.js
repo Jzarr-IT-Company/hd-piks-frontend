@@ -1,4 +1,4 @@
-// (GET_USER_IMAGES is defined below inside API_ENDPOINTS)
+﻿// (GET_USER_IMAGES is defined below inside API_ENDPOINTS)
 // API Configuration for Development and Production
 const API_CONFIG = {
     development: 'http://localhost:4000',
@@ -58,12 +58,12 @@ export const API_ENDPOINTS = {
     COLLECTIONS: '/collections',
     COLLECTION_ADD_ASSET: '/collections/addAsset',
 
-    // NEW: public sub‑category collections (for HomeBanner, etc.)
+    // NEW: public subâ€‘category collections (for HomeBanner, etc.)
     SUBCATEGORY_COLLECTIONS: '/subcategory-collections',
     SUBCATEGORY_COLLECTION_TOP: '/subcategory-collections-top',
     SUBCATEGORY_COLLECTION_BY_SLUG: slug => `/subcategory-collections/${slug}`,
 
-    // NEW: admin sub‑category collections CRUD
+    // NEW: admin subâ€‘category collections CRUD
     ADMIN_SUBCATEGORY_COLLECTIONS: '/admin/sub-category-collections',
     ADMIN_SUBCATEGORY_COLLECTION: id => `/admin/sub-category-collections/${id}`,
 
@@ -124,6 +124,9 @@ export const API_ENDPOINTS = {
 
     // Admin
     ADMIN_LOGIN: '/admin/login',
+    ADMIN_ME: '/admin/me',
+    ADMIN_STAFF: '/admin/staff',
+    ADMIN_STAFF_MEMBER: id => `/admin/staff/${id}`,
     // Admin Categories CRUD
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_CATEGORY: id => `/admin/categories/${id}`,
@@ -150,6 +153,7 @@ export const API_ENDPOINTS = {
     AI_BG_REMOVE_PREVIEW: '/ai/bg-remove-preview',
     AI_TEXT_CHAT: '/ai/text/chat',
     AI_TEXT_CHAT_STREAM: '/ai/text/chat/stream',
+    AI_CAREER_ADVISOR: '/ai/career-advisor',
     AI_PDF_UPLOAD: '/ai/pdf/upload',
     AI_PDF_CHAT: '/ai/pdf/chat',
     AI_PDF_DOCS: '/ai/pdf/docs',
@@ -162,3 +166,5 @@ export const API_ENDPOINTS = {
 };
 
 export default API_BASE_URL;
+
+

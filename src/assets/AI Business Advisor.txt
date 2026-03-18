@@ -1,0 +1,153 @@
+AI Business Advisor
+
+1. Basic Information
+Full Name (optional)
+Email
+Phone (optional)
+City / Country
+
+2. Personal & Financial Background
+Age
+Education Level
+Current Profession (Student / Job / Freelancer / Business)
+Monthly Income
+Available Investment Budget 💰
+(e.g. 50k / 100k / 500k / 1M+)
+Risk Tolerance
+(Low / Medium / High)
+
+3. Skills & Experience (IMPORTANT 🔥)
+Skills
+(Sales, Marketing, Coding, Designing, Management, etc.)
+Previous Business Experience
+(Yes / No)
+Industry Experience
+(IT, Food, Retail, etc.)
+
+4. Interests & Business Preferences
+Interested Industries
+(E-commerce, Food, Tech, Services, Real Estate, etc.)
+Business Type Preference
+Online
+Offline
+Hybrid
+Work Style
+Solo
+Team
+Partnership
+
+5. Time Commitment
+Available Time per Day
+Full-time or Part-time
+
+6. Market & Location Factors
+Target Market
+(Local / National / International)
+Location Advantage
+(Big city / Small city / Rural)
+
+7. Goals & Expectations
+Goal of Business
+(Side income / Full business / Scale startup)
+Expected Monthly Income
+Growth Expectation
+(Fast / Moderate / Slow)
+
+8. Constraints (Reality Check)
+Budget Limitations
+Time Constraints
+Skill Limitations
+
+9. AI Tool Output (Core Feature)
+Jab user form fill kare, tumhara tool yeh generate kare 👇
+
+1. Best Business Ideas (Top 3–5)
+Example:
+E-commerce Store (Niche products)
+Digital Marketing Agency
+Food Delivery / Cloud Kitchen
+
+2. Business Model Suggestion
+B2C / B2B
+Subscription
+Dropshipping
+Service-based
+Product-based
+
+3. Investment Breakdown 💰
+
+Example:
+
+Item	Cost
+Website	20,000
+Marketing	30,000
+Inventory	50,000
+Total	100,000
+
+4. Marketing Strategy 📣
+Facebook & Instagram Ads
+SEO / Blogging
+TikTok Content
+Influencer Marketing
+WhatsApp Marketing
+
+5. Growth Timeline 📈
+0–3 Months → Setup & Testing
+3–6 Months → First profit
+6–12 Months → Scaling
+
+6. Profitability Estimate 💵
+Break-even: 3–6 months
+Expected profit: 50k–200k/month
+
+7. Step-by-Step Action Plan 🛠️
+Niche select karo
+Product research karo
+Website launch karo
+Ads run karo
+Optimize & scale
+
+8. Risk Analysis ⚠️
+High competition
+Low demand risk
+Marketing cost high
+
+🚀 Example Output
+User:
+👉 Budget: 100k
+👉 Skill: Marketing
+👉 Interest: Online business
+Tool Output:
+👉 “Best for you: Dropshipping Store”
+👉 “Investment: 80k–120k”
+👉 “Marketing: Facebook Ads + TikTok”
+👉 “Profit start: 2–4 months”
+
+BONUS Features
+🔘 Business Idea Generator Button
+📄 PDF Business Plan Download
+🧠 AI Chat Assistant (follow-up questions)
+
+You are a professional Business Advisor AI.
+
+Your job is to analyze user data and suggest the best business ideas, models, and growth strategy.
+
+You must:
+- Give practical, realistic, and actionable advice
+- Focus on increasing income and profitability
+- Consider user's budget, skills, time, and risk tolerance
+- Avoid generic answers
+- Be clear and structured
+
+Always respond in the following structured format:
+
+1. Best Business Ideas (Top 3–5)
+2. Recommended Business Model
+3. Investment Breakdown
+4. Marketing Strategy
+5. Growth Timeline
+6. Profitability Estimate
+7. Step-by-Step Action Plan
+8. Risk Analysis
+
+Keep the tone professional but simple.

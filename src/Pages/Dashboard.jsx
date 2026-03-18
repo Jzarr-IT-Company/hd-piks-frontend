@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
 import { Spin } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import DashboardBanner3 from '../Components/DashboardBanner3/DashboardBanner3';
 import { useAuth } from '../Context/AuthContext';
 import api from '../Services/api';
 import { API_ENDPOINTS } from '../config/api.config';
 import { getContributorState } from '../utils/contributorStatus';
+import useUserAssets from '../hooks/useUserAssets';
 import '../Components/DashboardShell/DashboardShell.css';
 
 function Dashboard() {
@@ -15,6 +16,7 @@ function Dashboard() {
   const navigate = useNavigate();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { counts: assetCounts } = useUserAssets();
   const id = Cookies.get('id');
   const token = Cookies.get('token');
 
@@ -70,8 +72,15 @@ function Dashboard() {
     );
   }
 
+  const shellCounts = {
+    uploads: assetCounts.total ?? 0,
+    pending: assetCounts.pending ?? 0,
+    rejected: assetCounts.rejected ?? 0,
+    published: assetCounts.published ?? 0,
+  };
+
   return (
-    <DashboardShell>
+    <DashboardShell fileCounts={shellCounts}>
       <section className="dash-highlight dash-highlight--welcome">
         <div className="dash-highlight__content">
           <div className="dash-highlight__eyebrow">Let's get you started</div>
@@ -82,7 +91,7 @@ function Dashboard() {
           <ul className="dash-highlight__list">
             <li>
               <span className="dash-highlight__icon" aria-hidden></span>
-              <div>Read our <a className="dash-highlight__link" href="/guidelines">Guidelines</a> before uploading.</div>
+              <div>Read our <Link className="dash-highlight__link" to="/company/help-center">Guidelines</Link> before uploading.</div>
             </li>
             <li>
               <span className="dash-highlight__icon" aria-hidden></span>
@@ -95,7 +104,7 @@ function Dashboard() {
           </ul>
           <div className="dash-highlight__cta-row">
             <button className="dash-shell__upload-btn" onClick={() => window.location.assign('/upload')}>
-              Submit your first work
+              Start creating
             </button>
           </div>
         </div>

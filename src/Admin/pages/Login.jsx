@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Box, Button, Container, TextField, Typography, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
-import Cookies from 'js-cookie';
+import { setAdminAuth, setAdminSession } from '../utils/adminAuth';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -20,7 +20,8 @@ export default function AdminLogin() {
         { email, password }
       );
       if (response.data && response.data.token) {
-        Cookies.set('token', response.data.token, { expires: 7 });
+        setAdminAuth(response.data.token, response.data?.admin?.id);
+        setAdminSession(response.data?.admin || null);
         navigate('/admin');
       } else {
         setError('Invalid credentials');

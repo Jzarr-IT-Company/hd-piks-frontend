@@ -10,6 +10,8 @@ import Testmonials from '../Components/Testmonials/Testmonials';
 import AppFooter from '../Components/AppFooter/AppFooter';
 import HomeBanner5 from '../Components/HomeBanner5/HomeBanner5';
 import HomeBanner6 from '../Components/HomeBanner6/HomeBanner6';
+import HomeFaqBeforeDownload from '../Components/HomeFaqBeforeDownload';
+import HomeBlogHighlights from '../Components/HomeBlogHighlights';
 // import HomeBanner7 from '../Components/HomeBanner7/HomeBanner7';
 import Homebanner1Compo from '../Components/HomeBanner1Compo/HomeBanner1Compo';
 import HomeGallery from '../Components/HomeGallery/HomeGallery';
@@ -38,12 +40,14 @@ function HomePage() {
    {/* ------------------------------------- */}
       {/* <CollectionBanner1 /> */}
       <HomeBanner5/>
+      <HomeFaqBeforeDownload />
       <HomeBanner6/>
       <HomeBanner4 />
       {/* <HomeBanner7 />  this was deprecated  */}
 
       {/* ------------------------------- */}
 
+      <HomeBlogHighlights />
       <Testmonials />
       <AppFooter />
     </>

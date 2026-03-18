@@ -1,6 +1,9 @@
-import axios from 'axios';
+﻿import axios from 'axios';
 import API_BASE_URL from '../config/api.config.js';
 import Cookies from 'js-cookie';
+
+// Match admin routes like /admin/* so we can send the admin bearer token.
+const isAdminUrl = (url = '') => /^\/admin(\/|$)/i.test(String(url || ''));
 
 const publicExactPaths = new Set([
     '/',
@@ -76,20 +79,23 @@ const shouldSkipRefresh = (url = '') => {
 api.interceptors.request.use(
     (config) => {
         // Get token from cookies if available
-        const token = Cookies.get('token');
+        const isAdminContext =
+            isAdminUrl(config?.url) ||
+            normalizePathname(window.location.pathname).startsWith('/admin');
+        const token = Cookies.get(isAdminContext ? 'adminToken' : 'token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
         
         // Log request in development
         if (import.meta.env.MODE === 'development') {
-            console.log(`🚀 API Request: ${config.method.toUpperCase()} ${config.url}`);
+            console.log(`ðŸš€ API Request: ${config.method.toUpperCase()} ${config.url}`);
         }
         
         return config;
     },
     (error) => {
-        console.error('❌ Request Error:', error);
+        console.error('âŒ Request Error:', error);
         return Promise.reject(error);
     }
 );
@@ -99,7 +105,7 @@ api.interceptors.response.use(
     (response) => {
         // Log response in development
         if (import.meta.env.MODE === 'development') {
-            console.log(`✅ API Response: ${response.config.url}`, response.data);
+            console.log(`âœ… API Response: ${response.config.url}`, response.data);
         }
         return response;
     },
@@ -109,13 +115,27 @@ api.interceptors.response.use(
             // Server responded with error status
             const { status, data } = error.response;
             
-            console.error(`❌ API Error [${status}]:`, data.message || error.message);
+            console.error(`âŒ API Error [${status}]:`, data.message || error.message);
             
             // Handle specific status codes
             switch (status) {
                 case 401:
                     // Try one refresh cycle for protected API calls before redirecting.
                     const originalRequest = error.config || {};
+
+                    // Admin sessions do not use the user refresh token flow.
+                    const isAdminContext =
+                        isAdminUrl(originalRequest.url || '') ||
+                        normalizePathname(window.location.pathname).startsWith('/admin');
+
+                    if (isAdminContext) {
+                        Cookies.remove('adminToken');
+                        Cookies.remove('adminId');
+                        if (normalizePathname(window.location.pathname) !== '/admin/login') {
+                            window.location.href = '/admin/login';
+                        }
+                        break;
+                    }
                     if (!originalRequest._retry && !shouldSkipRefresh(originalRequest.url || '')) {
                         originalRequest._retry = true;
 
@@ -181,10 +201,10 @@ api.interceptors.response.use(
             }
         } else if (error.request) {
             // Request made but no response
-            console.error('❌ No response from server:', error.message);
+            console.error('âŒ No response from server:', error.message);
         } else {
             // Something else happened
-            console.error('❌ Request setup error:', error.message);
+            console.error('âŒ Request setup error:', error.message);
         }
         
         return Promise.reject(error);
@@ -192,3 +212,7 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+
+
+

@@ -38,7 +38,7 @@ export default function useCreatorAssetMetrics(creatorId, userData) {
         const downloads = items.reduce((acc, item) => acc + (item.downloads || item.download || 0), 0);
         const likes = items.reduce((acc, item) => acc + (item.likes || 0), 0);
         const files = items.length;
-        const earnings = "-- EUR";
+        const earnings = "-- USD";
         const accountDownloads = userData?.download || 0;
         return { downloads, likes, files, earnings, accountDownloads };
     }, [items, userData]);

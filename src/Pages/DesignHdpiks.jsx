@@ -18,6 +18,7 @@ import {
 import api from "../Services/api";
 import { buildCategoryTree, fetchCategories } from "../Services/category";
 import { useTemplatesQuery } from "../query/templateQueries";
+import AppFooter from "../Components/AppFooter/AppFooter";
 import "./DesignHdpiks.css";
 
 const FILTER_PRESETS = [
@@ -2346,74 +2347,75 @@ function DesignHdpiks() {
   };
 
   return (
-    <div className="design-studio">
-      <header className="design-studio__topbar">
-        <Link className="design-studio__brand design-studio__brand-link" to="/" aria-label="Go to HDPiks homepage">
-          <span className="design-studio__logo" title="Go to homepage">
-            <FiHome size={20} aria-hidden="true" />
-          </span>
-          <div>
-            <h1>HDPiks Design Studio</h1>
-            <p>Edit images with professional controls</p>
+    <>
+      <div className="design-studio">
+        <header className="design-studio__topbar">
+          <Link className="design-studio__brand design-studio__brand-link" to="/" aria-label="Go to HDPiks homepage">
+            <span className="design-studio__logo" title="Go to homepage">
+              <FiHome size={20} aria-hidden="true" />
+            </span>
+            <div>
+              <h1>HDPiks Design Studio</h1>
+              <p>Edit images with professional controls</p>
+            </div>
+          </Link>
+          <div className="design-studio__top-actions">
+            <button className="ghost-btn" onClick={undoEditorChange} disabled={!canUndo}>
+              Undo
+            </button>
+            <button className="ghost-btn" onClick={redoEditorChange} disabled={!canRedo}>
+              Redo
+            </button>
+            <button className="ghost-btn" onClick={resetAll}>
+              Reset
+            </button>
+            <button className="ghost-btn" onMouseDown={() => setShowOriginal(true)} onMouseUp={() => setShowOriginal(false)} onMouseLeave={() => setShowOriginal(false)}>
+              Compare
+            </button>
+            <button className="ghost-btn" onClick={saveEditedToHdpiks} disabled={uploading || saving}>
+              {uploading ? "Saving..." : "Save to HDPiks"}
+            </button>
+            <button className="primary-btn" onClick={exportImage} disabled={saving || uploading}>
+              {saving ? "Exporting..." : "Export"}
+            </button>
           </div>
-        </Link>
-        <div className="design-studio__top-actions">
-          <button className="ghost-btn" onClick={undoEditorChange} disabled={!canUndo}>
-            Undo
-          </button>
-          <button className="ghost-btn" onClick={redoEditorChange} disabled={!canRedo}>
-            Redo
-          </button>
-          <button className="ghost-btn" onClick={resetAll}>
-            Reset
-          </button>
-          <button className="ghost-btn" onMouseDown={() => setShowOriginal(true)} onMouseUp={() => setShowOriginal(false)} onMouseLeave={() => setShowOriginal(false)}>
-            Compare
-          </button>
-          <button className="ghost-btn" onClick={saveEditedToHdpiks} disabled={uploading || saving}>
-            {uploading ? "Saving..." : "Save to HDPiks"}
-          </button>
-          <button className="primary-btn" onClick={exportImage} disabled={saving || uploading}>
-            {saving ? "Exporting..." : "Export"}
-          </button>
-        </div>
-      </header>
+        </header>
 
-      <main className="design-studio__layout">
-        <aside className="design-studio__sidebar">
-          <h2>Tools</h2>
-          {TOOL_ITEMS.map((tool) => (
-            <button
-              key={tool.id}
-              className={`${activeTool === tool.id ? "tool-btn active" : "tool-btn"}${!tool.implemented ? " tool-btn--locked" : ""}`}
-              onClick={() => handleToolSelect(tool)}
-              title={tool.implemented ? tool.label : `${tool.label} - planned for Phase ${tool.phase}`}
-            >
-              <span>{tool.label}</span>
-              {!tool.implemented ? <span className="tool-phase-badge">P{tool.phase}</span> : null}
-            </button>
-          ))}
-          <p className="studio-hint">Phase 2 alpha live: Text, Elements, Templates, and layer history foundation.</p>
-          <div className="source-panel">
-            <h3>Source</h3>
-            <label>Asset URL</label>
-            <input
-              type="text"
-              value={sourceInput}
-              onChange={(e) => setSourceInput(e.target.value)}
-              placeholder="Paste image URL"
-            />
-            <button className="ghost-btn" onClick={loadFromInputUrl}>
-              Load URL
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={onSelectFile}
-              style={{ display: "none" }}
-            />
-            <button className="ghost-btn" onClick={() => fileInputRef.current?.click()}>
+        <main className="design-studio__layout">
+          <aside className="design-studio__sidebar">
+            <h2>Tools</h2>
+            {TOOL_ITEMS.map((tool) => (
+              <button
+                key={tool.id}
+                className={`${activeTool === tool.id ? "tool-btn active" : "tool-btn"}${!tool.implemented ? " tool-btn--locked" : ""}`}
+                onClick={() => handleToolSelect(tool)}
+                title={tool.implemented ? tool.label : `${tool.label} - planned for Phase ${tool.phase}`}
+              >
+                <span>{tool.label}</span>
+                {!tool.implemented ? <span className="tool-phase-badge">P{tool.phase}</span> : null}
+              </button>
+            ))}
+            <p className="studio-hint">Phase 2 alpha live: Text, Elements, Templates, and layer history foundation.</p>
+            <div className="source-panel">
+              <h3>Source</h3>
+              <label>Asset URL</label>
+              <input
+                type="text"
+                value={sourceInput}
+                onChange={(e) => setSourceInput(e.target.value)}
+                placeholder="Paste image URL"
+              />
+              <button className="ghost-btn" onClick={loadFromInputUrl}>
+                Load URL
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={onSelectFile}
+                style={{ display: "none" }}
+              />
+              <button className="ghost-btn" onClick={() => fileInputRef.current?.click()}>
               Upload from Device
             </button>
             <div className="taxonomy-panel">
@@ -3830,9 +3832,11 @@ function DesignHdpiks() {
               onChange={(e) => setExportQuality(Number(e.target.value))}
             />
           </div>
-        </aside>
-      </main>
-    </div>
+          </aside>
+        </main>
+      </div>
+      <AppFooter />
+    </>
   );
 }
 

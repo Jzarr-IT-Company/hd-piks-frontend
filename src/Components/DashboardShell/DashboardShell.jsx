@@ -4,15 +4,17 @@ import './DashboardShell.css';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../Context/AuthContext';
 import { useProfile } from '../../Context/ProfileContext';
-import { LayoutDashboard, Layers, BarChart3, Sparkles, BookOpenCheck, ShieldCheck, FileText, Inbox, MessageSquare, CreditCard, RefreshCw, Users, ArrowUpToLine, User, Sparkles as SparkleIcon, House } from 'lucide-react';
+import { LayoutDashboard, Layers, BarChart3, ShieldCheck, FileText, Inbox, CreditCard, RefreshCw, Users, ArrowUpToLine, User, Sparkles as SparkleIcon, House } from 'lucide-react';
 import bydefault from './bydefault';
 import EditableCreatorProfile from '../ProfileBanner1UploadImages/EditableCreatorProfile';
 import { getContributorState } from '../../utils/contributorStatus';
+import useUserAssets from '../../hooks/useUserAssets';
 
 
 function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   const { userData, creatorData } = useAuth();
   const { setShowContributorForm } = useProfile();
+  const { counts: globalAssetCounts } = useUserAssets();
   // Loading fallback if userData or creatorData are not loaded yet
   if (userData === undefined || creatorData === undefined) {
     return (
@@ -53,7 +55,7 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
     { label: 'My Purchases', to: '/my-purchases', count: '', Icon: Inbox },
     { label: 'My Orders', to: '/my-orders', count: '', Icon: CreditCard },
     { label: 'Profile', to: '/profile', count: '', Icon: Users },
-    { label: 'Settings', to: '/setting', count: statusLabel, Icon: Sparkles },
+    { label: 'Settings', to: '/setting', count: statusLabel, Icon: SparkleIcon },
   ]), [statusLabel]);
 
   const personalOnlyRoutes = useMemo(
@@ -65,12 +67,29 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
     [flatActive, personalOnlyRoutes]
   );
 
+  const resolvedFileCounts = useMemo(() => ({
+    uploads: fileCounts.uploads ?? fileCounts.total ?? globalAssetCounts.total ?? 0,
+    pending: fileCounts.pending ?? globalAssetCounts.pending ?? 0,
+    rejected: fileCounts.rejected ?? globalAssetCounts.rejected ?? 0,
+    published: fileCounts.published ?? globalAssetCounts.published ?? 0,
+  }), [
+    fileCounts.pending,
+    fileCounts.published,
+    fileCounts.rejected,
+    fileCounts.total,
+    fileCounts.uploads,
+    globalAssetCounts.pending,
+    globalAssetCounts.published,
+    globalAssetCounts.rejected,
+    globalAssetCounts.total,
+  ]);
+
   const navItems = useMemo(() => {
     const counts = {
-      pending: fileCounts.pending ?? 0,
-      rejected: fileCounts.rejected ?? 0,
-      published: fileCounts.published ?? 0,
-      uploads: fileCounts.uploads ?? 0,
+      pending: resolvedFileCounts.pending ?? 0,
+      rejected: resolvedFileCounts.rejected ?? 0,
+      published: resolvedFileCounts.published ?? 0,
+      uploads: resolvedFileCounts.uploads ?? 0,
     };
 
     if (!isContributorApproved || isInPersonalArea) {
@@ -96,12 +115,8 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
         ],
       },
       { label: 'Stats', to: '/stats', Icon: BarChart3 },
-      { label: 'Search Trends', to: '/dashboard', Icon: Sparkles },
-      { label: 'Guidelines', to: '/dashboard', Icon: BookOpenCheck },
-      { label: 'Contact', to: '/dashboard', Icon: MessageSquare },
-      { label: 'Billing and invoices', to: '/dashboard', Icon: CreditCard },
     ];
-  }, [fileCounts.pending, fileCounts.published, fileCounts.rejected, fileCounts.uploads, isContributorApproved, isInPersonalArea, personalMenu]);
+  }, [isContributorApproved, isInPersonalArea, personalMenu, resolvedFileCounts.pending, resolvedFileCounts.published, resolvedFileCounts.rejected, resolvedFileCounts.uploads]);
 
   const brandText = useMemo(
     () => (isInPersonalArea ? 'HDPiks User' : isContributorApproved ? 'HDPiks Contributor' : 'HDPiks User'),

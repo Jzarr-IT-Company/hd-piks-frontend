@@ -1,0 +1,84 @@
+AI Career Advisor
+1. Basic Information
+Full Name
+Father Name (optional rakhna better hai)
+Email
+Phone Number
+Age
+Gender (optional)
+City / Country
+
+2. Education Details
+Highest Education Level
+(Matric / Intermediate / Bachelor / Master / PhD)
+School Name
+College Name
+University Name
+Degree Title (e.g. BS Computer Science)
+Field of Study
+Current Status
+(Studying / Completed / Dropout)
+GPA / Percentage (optional)
+
+3. Certifications & Skills
+Certifications
+Technical Skills (e.g. React, Excel, Python)
+Soft Skills (Communication, Leadership, etc.)
+Languages Known
+
+4. Career / Job Info
+Current Employment Status
+(Student / Job / Unemployed / Freelancer)
+Current Job Title
+Company Name
+Industry (IT, Banking, Marketing, etc.)
+Experience (Years)
+Current Salary
+Previous Jobs (optional)
+
+5. Interests & Preferences
+Interest Areas
+(IT, Business, Design, Medical, etc.)
+Work Style
+(Office / Remote / Freelance / Business)
+Preferred Work Type
+(Technical / Creative / Management)
+Personality Type (optional advanced)
+(Introvert / Extrovert / Analytical / Creative)
+
+6. Goals & Expectations
+Short-term Goal (1–2 years)
+Long-term Goal (5–10 years)
+Expected Salary
+Dream Job / Career
+Willing to Study Further? (Yes / No)
+Budget for Education
+
+7. Growth Constraints
+Available Time for Study
+(Daily / Weekly hours)
+Financial Constraints
+Family Responsibilities (optional)
+
+8. AI Output
+🔹 Career Suggestions
+Top 3–5 career paths
+🔹 Recommended Courses
+Online courses (Coursera, Udemy, etc.)
+Degrees / diplomas
+🔹 Skill Gap Analysis
+Konsi skills missing hain
+🔹 Income Growth Plan
+6 months plan
+1 year roadmap
+🔹 Salary Prediction
+Current vs Future potential
+
+🚀 Example Flow (Simple samajh lo)
+User:
+👉 "Inter student, interest IT, salary low"
+Tool Output:
+👉 "You should go into Web Development"
+👉 "Learn React + Node.js"
+👉 "Start freelancing on Fiverr"
+👉 "Expected salary: 50k → 150k in 1 year"

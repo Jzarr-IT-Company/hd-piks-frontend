@@ -14,6 +14,10 @@ import {
 } from "../Services/aiChat.js";
 import { generateAiVoiceover, listAiVoiceoverVoices } from "../Services/aiVoiceover.js";
 import TopNavOnly from "../Components/AppNavbar/TopNavOnly";
+import AppFooter from "../Components/AppFooter/AppFooter";
+import AiToolArticleSection from "../Components/AiToolArticleSection";
+import AiCareerAdvisorTool from "../Components/AiCareerAdvisor/AiCareerAdvisorTool";
+import { AI_TOOL_ARTICLES } from "../content/aiToolArticles";
 import "./AiToolPage.css";
 
 const primaryBtnStyle = {
@@ -279,6 +283,7 @@ function AiToolPage() {
 	const [voiceoverAudioMeta, setVoiceoverAudioMeta] = useState(null);
 
 	const titleMap = {
+		"ai-advisor": "AI Career Advisor",
 		"ai-text-voiceover": "AI Text Voiceover",
 		"ai-bg-remove": "AI Background Remover",
 		"ai-generator": "AI Image Generator",
@@ -287,6 +292,8 @@ function AiToolPage() {
 	};
 
 	const descMap = {
+		"ai-advisor":
+			"Get realistic career direction, income growth strategy, skill-gap analysis, and a step-by-step roadmap based on your profile.",
 		"ai-text-voiceover":
 			"Turn any image or script into an engaging voiceover for reels, explainers, and social content.",
 		"ai-bg-remove":
@@ -303,6 +310,7 @@ function AiToolPage() {
 	const pageDesc =
 		descMap[id] ||
 		"Use AI-powered tools to enhance and generate creative assets for your projects.";
+	const pageArticle = AI_TOOL_ARTICLES[id] || null;
 
 	const clearAiGenerateStageTimers = () => {
 		aiGenerateStageTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
@@ -1364,6 +1372,8 @@ function AiToolPage() {
 
 	const renderContent = () => {
 		switch (id) {
+			case "ai-advisor":
+				return <AiCareerAdvisorTool primaryBtnStyle={primaryBtnStyle} />;
 			case "text-ai": {
 				const selectedPdfDoc = getSelectedPdfDoc();
 				const isSelectedPdfReady = String(selectedPdfDoc?.status || "").toLowerCase() === "ready";
@@ -2423,6 +2433,7 @@ function AiToolPage() {
 						<p className="text-muted mb-0 ai-tool-subtitle">{pageDesc}</p>
 					</header>
 					{renderContent()}
+					{pageArticle ? <AiToolArticleSection article={pageArticle} /> : null}
 				</div>
 				{aiSelectedImagePreview ? (
 					<div
@@ -2452,6 +2463,7 @@ function AiToolPage() {
 					</div>
 				) : null}
 			</div>
+			<AppFooter />
 		</>
 	);
 }

@@ -100,7 +100,7 @@ function NavbarProfileCompo() {
                         </Menu>
                     </Box> : (
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Link className='btn text-white' to={'/signup'}>Signup</Link>
+                            <Link className='btn text-white' to={'/login'}>Signin</Link>
                             <Link className='btn start-creating-btn' to={'/design-hdpiks'}>Start Creating</Link>
                         </Box>
                     )

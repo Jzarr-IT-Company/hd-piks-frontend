@@ -1,65 +1,118 @@
-.video-banner {
-    position: relative;
-    height: 70vh;
-    overflow: hidden;
-}
-
-.video-banner video {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    min-width: 100%;
-    min-height: 100%;
-    width: auto;
-    height: auto;
-    transform: translate(-50%, -50%);
-    z-index: 1;
-}
-
-.banner-content {
-    position: relative;
-    z-index: 2;
-    color: white;
-    text-align: center;
-    top: 20%;
-}
-
-.navbar {
-    z-index: 3;
-}
-
-.dropdown-menu {
-    display: none;
-    opacity: 0;
-    transition: all 0.3s ease-in-out;
-}
-
-.dropdown:hover .dropdown-menu {
-    display: block;
-    opacity: 1;
-}
-
-.dropdown-menu a {
-    padding: 10px;
-}
-
-.home-banner-coutmoe-css {
-    gap: 20px 0px !important;
-}
-
 .home-banner1-section {
     position: relative;
     z-index: 2;
     background: #fff;
 }
 
-.home-banner1-section .card {
-    overflow: hidden;
+.exclusive-tools-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 22px;
+    border-radius: 18px;
+    border: 1px solid rgba(90, 102, 120, 0.2);
+    background: linear-gradient(145deg, #f7f9ff 0%, #eef3ff 100%);
+    box-shadow: 0 12px 28px rgba(27, 44, 86, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.home-banner1-section .card-img-overlay {
+.exclusive-tools-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 18px 34px rgba(27, 44, 86, 0.16);
+}
+
+.exclusive-tools-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    background: linear-gradient(90deg, #5f58ff 0%, #8f57ff 100%);
+}
+
+.exclusive-tools-card h4 {
+    margin: 0;
+    color: #101828;
+    font-weight: 700;
+    font-size: 1.35rem;
+}
+
+.exclusive-tools-card p {
+    margin: 0;
+    color: #334155;
+    line-height: 1.55;
+    min-height: 72px;
+}
+
+.exclusive-tools-action {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    margin-top: auto;
+    width: fit-content;
+    border-radius: 999px;
+    padding: 8px 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    background: linear-gradient(90deg, rgb(143, 92, 255), rgb(184, 69, 146));
+    background-size: 130% 130%;
+    background-position: 0% 50%;
+    color: #fff;
+    border: 1px solid rgb(143, 92, 255);
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.2;
+    min-height: 42px;
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease,
+        background-position 0.35s ease,
+        border-color 0.2s ease;
+}
+
+.exclusive-tools-action::before {
+    content: "";
     position: absolute;
-    inset: 0;
+    top: -160%;
+    left: -45%;
+    width: 34%;
+    height: 320%;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.35) 50%,
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(24deg) translateX(-120%);
+    transition: transform 0.65s ease;
+    pointer-events: none;
+    z-index: 1;
+}
+
+.exclusive-tools-action:hover,
+.exclusive-tools-action:focus-visible {
+    color: #fff;
+    transform: translateY(-2px);
+    filter: saturate(1.06);
+    background-position: 100% 50%;
+    border-color: rgba(198, 147, 255, 0.95);
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.3), 0 4px 12px rgba(143, 92, 255, 0.28);
+}
+
+.exclusive-tools-action:hover::before,
+.exclusive-tools-action:focus-visible::before {
+    transform: rotate(24deg) translateX(320%);
+}
+
+.exclusive-tools-action:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.28);
 }
 
 @media (max-width: 576px) {
@@ -67,33 +120,16 @@
         margin-bottom: 18px;
     }
 
-    .home-banner1-section .row.g-3 {
-        row-gap: 12px !important;
-    }
-
     .home-banner1-section h3 {
         font-size: 2rem !important;
         line-height: 1.15;
     }
 
-    .home-banner1-section .card-img-overlay {
-        padding: 10px;
+    .exclusive-tools-card {
+        padding: 18px;
     }
 
-    .home-banner1-section .card-title {
-        font-size: 1.05rem;
-        line-height: 1.15;
-    }
-
-    .overlay-cards-css {
-        height: 200px !important;
-    }
-
-    .overlay-coffe-cards-css {
-        height: auto !important;
-    }
-
-    .home-banner-coutmoe-css {
-        gap: 4px 0px !important;
+    .exclusive-tools-card p {
+        min-height: auto;
     }
 }

@@ -741,7 +741,7 @@ function UploadBanner1() {
                         <label className="upload-terms__item">
                             <input type="checkbox" checked={termsChecked} onChange={handleTermsChange} />
                             <span>
-                                <Link className="text-primary text-decoration-underline" to={'/termsandcondition'}>
+                                <Link className="text-primary text-decoration-underline" to={'/company/help-center'}>
                                     Terms and Conditions
                                 </Link>
                                 , No copyrighted content allowed
