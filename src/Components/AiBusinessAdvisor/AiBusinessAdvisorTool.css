@@ -1,0 +1,58 @@
+.ai-business-model-card {
+    height: 100%;
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.ai-business-model-primary {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.12), rgba(219, 39, 119, 0.12));
+    color: #6d28d9;
+    margin-bottom: 12px;
+}
+
+.ai-business-model-card p {
+    margin: 0;
+    color: #465569;
+    line-height: 1.6;
+}
+
+.ai-business-table-wrap {
+    overflow-x: auto;
+}
+
+.ai-business-investment-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 640px;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.ai-business-investment-table th,
+.ai-business-investment-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+    text-align: left;
+    vertical-align: top;
+    color: #334155;
+}
+
+.ai-business-investment-table thead th {
+    background: rgba(124, 58, 237, 0.06);
+    color: #1e1b4b;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.ai-business-investment-table tbody tr:last-child td {
+    border-bottom: none;
+}

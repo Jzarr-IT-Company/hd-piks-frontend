@@ -1,0 +1,74 @@
+.ai-ecommerce-feature-card {
+    height: 100%;
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    border-radius: 18px;
+    padding: 18px;
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.ai-ecommerce-feature-card p {
+    margin: 12px 0 0;
+    color: #465569;
+    line-height: 1.6;
+}
+
+.ai-ecommerce-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(124, 58, 237, 0.12), rgba(219, 39, 119, 0.12));
+    color: #6d28d9;
+}
+
+.ai-ecommerce-pill.alt {
+    background: linear-gradient(90deg, rgba(37, 99, 235, 0.12), rgba(14, 165, 233, 0.12));
+    color: #1d4ed8;
+}
+
+.ai-ecommerce-table-wrap {
+    overflow-x: auto;
+}
+
+.ai-ecommerce-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    background: rgba(255, 255, 255, 0.88);
+    border: 1px solid rgba(124, 58, 237, 0.12);
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.ai-ecommerce-table th,
+.ai-ecommerce-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(124, 58, 237, 0.1);
+    text-align: left;
+    vertical-align: top;
+    color: #334155;
+}
+
+.ai-ecommerce-table thead th {
+    background: rgba(124, 58, 237, 0.06);
+    color: #1e1b4b;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.ai-ecommerce-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.ai-ecommerce-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+@media (max-width: 767px) {
+    .ai-ecommerce-metric-grid {
+        grid-template-columns: 1fr;
+    }
+}

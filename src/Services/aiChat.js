@@ -53,6 +53,19 @@ export const generateCareerAdvisorReport = async ({ profile }) => {
     return response?.data?.data || null;
 };
 
+export const generateBusinessAdvisorReport = async ({ profile }) => {
+    const response = await api.post(API_ENDPOINTS.AI_BUSINESS_ADVISOR, {
+        profile: profile || {},
+    });
+    return response?.data?.data || null;
+};
+
+export const generateEcommerceAdvisorReport = async ({ profile }) => {
+    const response = await api.post(API_ENDPOINTS.AI_ECOMMERCE_ADVISOR, {
+        profile: profile || {},
+    });
+    return response?.data?.data || null;
+};
 export const sendTextAiChatStream = async ({
     message,
     conversationId = null,
@@ -219,3 +232,4 @@ export const deleteAiConversation = async (conversationId) => {
     const response = await api.delete(API_ENDPOINTS.AI_CONVERSATION(conversationId));
     return response?.data?.data || null;
 };
+

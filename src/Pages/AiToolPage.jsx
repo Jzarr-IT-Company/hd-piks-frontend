@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import api from "../Services/api";
 import { API_ENDPOINTS } from "../config/api.config.js";
@@ -17,6 +17,8 @@ import TopNavOnly from "../Components/AppNavbar/TopNavOnly";
 import AppFooter from "../Components/AppFooter/AppFooter";
 import AiToolArticleSection from "../Components/AiToolArticleSection";
 import AiCareerAdvisorTool from "../Components/AiCareerAdvisor/AiCareerAdvisorTool";
+import AiBusinessAdvisorTool from "../Components/AiBusinessAdvisor/AiBusinessAdvisorTool";
+import AiEcommerceAdvisorTool from "../Components/AiEcommerceAdvisor/AiEcommerceAdvisorTool";
 import { AI_TOOL_ARTICLES } from "../content/aiToolArticles";
 import "./AiToolPage.css";
 
@@ -288,6 +290,8 @@ function AiToolPage() {
 		"ai-bg-remove": "AI Background Remover",
 		"ai-generator": "AI Image Generator",
 		"ai-video-generator": "AI Video Generator",
+		"ai-business": "Business with AI",
+		"ai-commerce": "AI Ecommerce advisor",
 		"text-ai": "Text AI Assistant",
 	};
 
@@ -302,6 +306,9 @@ function AiToolPage() {
 			"Describe your idea and let AI generate stunning visuals for your projects.",
 		"ai-video-generator":
 			"Generate high-quality videos with a prompt or an image, choosing from multiple generation models.",
+		"ai-business":
+			"Get practical business ideas, budget-aware execution plans, marketing strategy, and profitability estimates based on your background.",
+		"ai-commerce": "Get a realistic ecommerce launch plan with platform selection, product ideas, investment breakdown, marketing blueprint, and growth timeline.",
 		"text-ai":
 			"Chat-style writing assistant for captions, ads, script drafts, and polished brand copy.",
 	};
@@ -2288,7 +2295,11 @@ function AiToolPage() {
 						</div>
 					</div>
 				);
-			case "ai-video-generator":
+			case "ai-business":
+				return <AiBusinessAdvisorTool primaryBtnStyle={primaryBtnStyle} />;
+			case "ai-commerce":
+                return <AiEcommerceAdvisorTool primaryBtnStyle={primaryBtnStyle} />;
+            case "ai-video-generator":
 				return (
 					<div className="row g-4">
 						{/* Left: prompt / image input */}
@@ -2324,7 +2335,7 @@ function AiToolPage() {
 											Upload Image
 										</button>
 										<p className="text-muted mt-2 mb-0" style={{ fontSize: 12 }}>
-											Optional Â· JPG, PNG Â· max 30MB
+											Optional · JPG, PNG · max 30MB
 										</p>
 									</div>
 								</div>
@@ -2469,4 +2480,7 @@ function AiToolPage() {
 }
 
 export default AiToolPage;
+
+
+
 

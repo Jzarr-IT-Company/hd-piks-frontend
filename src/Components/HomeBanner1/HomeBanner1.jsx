@@ -20,15 +20,15 @@ function HomeBanner1() {
             title: 'Business with AI',
             description: 'Generate business-ready visuals and content ideas to speed up campaigns and branding.',
             action: 'Start Now',
-            route: '/ai/ai-generator',
+            route: '/ai/ai-business',
             icon: BriefcaseBusiness,
         },
         {
             id: 'ecommerce',
-            title: 'Ecommerce',
+            title: 'AI Ecommerce advisor',
             description: 'Create and refine product-ready assets for storefronts, ads, and online product listings.',
             action: 'Launch',
-            route: '/design-hdpiks',
+            route: '/ai/ai-commerce',
             icon: ShoppingCart,
         },
     ];
@@ -74,3 +74,4 @@ function HomeBanner1() {
 }
 
 export default HomeBanner1;
+

@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { BriefcaseBusiness, CircleDollarSign, Compass, Download, Laptop2, Sparkles, Target } from "lucide-react";
 import { generateCareerAdvisorReport } from "../../Services/aiChat";
+import { downloadSimplePdf } from "../../utils/pdfDownload";
+import AiAdvisorLoading from "../AiAdvisorLoading/AiAdvisorLoading";
 import "./AiCareerAdvisorTool.css";
 
 const EDUCATION_LEVELS = ["Matric", "Intermediate", "Bachelor", "Master", "PhD"];
@@ -129,6 +131,7 @@ function AiCareerAdvisorTool({ primaryBtnStyle }) {
         event.preventDefault();
         setLoading(true);
         setError("");
+        setResult(null);
 
         try {
             const response = await generateCareerAdvisorReport({
@@ -152,7 +155,6 @@ function AiCareerAdvisorTool({ primaryBtnStyle }) {
 
     const handleDownloadPdf = () => {
         if (!report) return;
-
         const createdAt = result?.generatedAt ? new Date(result.generatedAt) : new Date();
         const reportDate = Number.isNaN(createdAt.getTime()) ? new Date().toLocaleString() : createdAt.toLocaleString();
         const candidateName =
@@ -160,97 +162,55 @@ function AiCareerAdvisorTool({ primaryBtnStyle }) {
             form?.basicInformation?.fullName ||
             "Career Advisor Report";
 
-        const renderList = (items) => {
-            const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
-            if (!safeItems.length) return '<p class="pdf-empty">-</p>';
-            return '<ul>' + safeItems.map((item) => '<li>' + escapeHtml(item) + '</li>').join('') + '</ul>';
-        };
+        const sections = [
+            { heading: "1. Career Summary", lines: [report.careerSummary || "-"] },
+            {
+                heading: "2. Best Career Paths",
+                lines: (report.bestCareerPaths || []).flatMap((item) => [
+                    item.title + (item.explanation ? ": " + item.explanation : ""),
+                    item.platforms?.length ? "- Platforms: " + item.platforms.join(", ") : "",
+                    item.tools?.length ? "- Tools: " + item.tools.join(", ") : "",
+                    item.estimatedTimeToFirstIncome ? "- Time to first income: " + item.estimatedTimeToFirstIncome : "",
+                ].filter(Boolean)),
+            },
+            { heading: "3. Why These Careers Fit You", lines: report.whyTheseCareersFitYou || ["-"] },
+            { heading: "4. Skill Gap Analysis", lines: report.skillGapAnalysis || ["-"] },
+            {
+                heading: "5. Recommended Skills to Learn",
+                lines: (report.recommendedSkillsToLearn || []).map((item) => item.skill + (item.reason ? ": " + item.reason : "")),
+            },
+            {
+                heading: "6. Recommended Courses / Degrees",
+                lines: (report.recommendedCoursesOrDegrees || []).map((item) => {
+                    const meta = [item.provider, item.type].filter(Boolean).join(" | ");
+                    return item.name + (meta ? " (" + meta + ")" : "") + (item.reason ? ": " + item.reason : "");
+                }),
+            },
+            { heading: "7. Career Roadmap: 0-3 months", lines: report.careerRoadmap?.phase0To3Months || ["-"] },
+            { heading: "7. Career Roadmap: 3-6 months", lines: report.careerRoadmap?.phase3To6Months || ["-"] },
+            { heading: "7. Career Roadmap: 6-12 months", lines: report.careerRoadmap?.phase6To12Months || ["-"] },
+            { heading: "8. Income Growth Plan", lines: report.incomeGrowthPlan || ["-"] },
+            {
+                heading: "9. Salary Estimate",
+                lines: [
+                    "Current: " + (report.salaryEstimate?.current || "-"),
+                    "Projected: " + (report.salaryEstimate?.projected || "-"),
+                    "Timeline: " + (report.salaryEstimate?.timeline || "-"),
+                ],
+            },
+            {
+                heading: "10. Alternative Career Options",
+                lines: (report.alternativeCareerOptions || []).map((item) => item.title + (item.reason ? ": " + item.reason : "")),
+            },
+            { heading: "11. Final Advice", lines: [report.finalAdvice || "-"] },
+        ];
 
-        const renderObjectList = (items, titleKey, bodyKey) => {
-            const safeItems = Array.isArray(items) ? items.filter((item) => item?.[titleKey]) : [];
-            if (!safeItems.length) return '<p class="pdf-empty">-</p>';
-            return '<ul>' + safeItems.map((item) => {
-                const title = escapeHtml(item?.[titleKey]);
-                const body = escapeHtml(item?.[bodyKey] || '');
-                return '<li><strong>' + title + '</strong>' + (body ? ': ' + body : '') + '</li>';
-            }).join('') + '</ul>';
-        };
-
-        const renderCareerPaths = () => {
-            if (!Array.isArray(report.bestCareerPaths) || !report.bestCareerPaths.length) {
-                return '<p class="pdf-empty">-</p>';
-            }
-            return report.bestCareerPaths.map((item) => {
-                const platforms = Array.isArray(item.platforms) && item.platforms.length
-                    ? '<div><strong>Platforms:</strong> ' + escapeHtml(item.platforms.join(', ')) + '</div>'
-                    : '';
-                const tools = Array.isArray(item.tools) && item.tools.length
-                    ? '<div><strong>Tools:</strong> ' + escapeHtml(item.tools.join(', ')) + '</div>'
-                    : '';
-                const eta = item.estimatedTimeToFirstIncome
-                    ? '<div><strong>Estimated time to first income:</strong> ' + escapeHtml(item.estimatedTimeToFirstIncome) + '</div>'
-                    : '';
-                return '<div class="pdf-card">' +
-                    '<h3>' + escapeHtml(item.title) + '</h3>' +
-                    (item.explanation ? '<p>' + escapeHtml(item.explanation) + '</p>' : '') +
-                    platforms + tools + eta +
-                '</div>';
-            }).join('');
-        };
-
-        const popup = window.open('', '_blank', 'width=960,height=1200');
-        if (!popup) return;
-
-        const html = '<!doctype html>' +
-            '<html><head><meta charset="utf-8" />' +
-            '<title>' + escapeHtml(candidateName) + ' - Career Advisor Report</title>' +
-            '<style>' +
-            'body{font-family:Arial,sans-serif;color:#0f172a;margin:32px;}' +
-            '.pdf-head{margin-bottom:28px;border-bottom:2px solid #e2e8f0;padding-bottom:16px;}' +
-            '.pdf-badge{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.08em;color:#7c3aed;text-transform:uppercase;margin-bottom:8px;}' +
-            'h1{margin:0 0 8px;font-size:30px;}' +
-            '.pdf-meta{color:#475569;font-size:14px;}' +
-            '.pdf-section{margin:0 0 24px;page-break-inside:avoid;}' +
-            '.pdf-section h2{margin:0 0 10px;font-size:20px;color:#1e1b4b;}' +
-            '.pdf-section p,.pdf-section li,.pdf-section div{font-size:14px;line-height:1.7;}' +
-            '.pdf-section ul{margin:0;padding-left:20px;}' +
-            '.pdf-card{border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin-bottom:12px;}' +
-            '.pdf-card h3{margin:0 0 8px;font-size:16px;}' +
-            '.pdf-salary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}' +
-            '.pdf-salary-card{border:1px solid #e2e8f0;border-radius:12px;padding:14px;}' +
-            '.pdf-salary-card strong{display:block;margin-top:6px;font-size:18px;}' +
-            '.pdf-empty{color:#64748b;}' +
-            '@media print{body{margin:18px;}.pdf-section{break-inside:avoid;}}' +
-            '</style></head><body>' +
-            '<div class="pdf-head"><div class="pdf-badge">HDPiks Career Advisor</div><h1>' + escapeHtml(candidateName) + '</h1><div class="pdf-meta">Generated on ' + escapeHtml(reportDate) + '</div></div>' +
-            '<section class="pdf-section"><h2>1. Career Summary</h2><p>' + escapeHtml(report.careerSummary || '-') + '</p></section>' +
-            '<section class="pdf-section"><h2>2. Best Career Paths</h2>' + renderCareerPaths() + '</section>' +
-            '<section class="pdf-section"><h2>3. Why These Careers Fit You</h2>' + renderList(report.whyTheseCareersFitYou) + '</section>' +
-            '<section class="pdf-section"><h2>4. Skill Gap Analysis</h2>' + renderList(report.skillGapAnalysis) + '</section>' +
-            '<section class="pdf-section"><h2>5. Recommended Skills to Learn</h2>' + renderObjectList(report.recommendedSkillsToLearn, 'skill', 'reason') + '</section>' +
-            '<section class="pdf-section"><h2>6. Recommended Courses / Degrees</h2>' + renderObjectList((report.recommendedCoursesOrDegrees || []).map((item) => ({ name: item.name, reason: [item.provider, item.type, item.reason].filter(Boolean).join(' | ') })), 'name', 'reason') + '</section>' +
-            '<section class="pdf-section"><h2>7. Career Roadmap</h2>' +
-                '<div class="pdf-card"><h3>0-3 months</h3>' + renderList(report.careerRoadmap?.phase0To3Months) + '</div>' +
-                '<div class="pdf-card"><h3>3-6 months</h3>' + renderList(report.careerRoadmap?.phase3To6Months) + '</div>' +
-                '<div class="pdf-card"><h3>6-12 months</h3>' + renderList(report.careerRoadmap?.phase6To12Months) + '</div>' +
-            '</section>' +
-            '<section class="pdf-section"><h2>8. Income Growth Plan</h2>' + renderList(report.incomeGrowthPlan) + '</section>' +
-            '<section class="pdf-section"><h2>9. Salary Estimate</h2><div class="pdf-salary">' +
-                '<div class="pdf-salary-card"><span>Current</span><strong>' + escapeHtml(report.salaryEstimate?.current || '-') + '</strong></div>' +
-                '<div class="pdf-salary-card"><span>Projected</span><strong>' + escapeHtml(report.salaryEstimate?.projected || '-') + '</strong></div>' +
-                '<div class="pdf-salary-card"><span>Timeline</span><strong>' + escapeHtml(report.salaryEstimate?.timeline || '-') + '</strong></div>' +
-            '</div></section>' +
-            '<section class="pdf-section"><h2>10. Alternative Career Options</h2>' + renderObjectList(report.alternativeCareerOptions, 'title', 'reason') + '</section>' +
-            '<section class="pdf-section"><h2>11. Final Advice</h2><p>' + escapeHtml(report.finalAdvice || '-') + '</p></section>' +
-            '</body></html>';
-
-        popup.document.open();
-        popup.document.write(html);
-        popup.document.close();
-        popup.focus();
-        window.setTimeout(() => {
-            popup.print();
-        }, 350);
+        downloadSimplePdf({
+            fileName: candidateName + "-career-advisor-report",
+            title: "HDPiks Career Advisor",
+            subtitle: "Generated on " + reportDate,
+            sections,
+        });
     };
 
     return (
@@ -552,7 +512,24 @@ function AiCareerAdvisorTool({ primaryBtnStyle }) {
                             </div>
                         </div>
 
-                        {report ? (
+                        {loading ? (
+                <div className="row g-4 mt-1">
+                    <div className="col-12">
+                        <AiAdvisorLoading
+                            title="AI is preparing your career report"
+                            subtitle="We are reviewing your profile, matching realistic roles, and building your roadmap."
+                            steps={[
+                                "Analyzing your background",
+                                "Matching suitable career paths",
+                                "Preparing skills and salary insights",
+                                "Finalizing your report",
+                            ]}
+                        />
+                    </div>
+                </div>
+            ) : null}
+
+            {report ? (
                             <div className="ai-career-side-result mt-4">
                                 <div className="ai-career-side-result-label">Latest summary</div>
                                 <p className="mb-0">{report.careerSummary}</p>
@@ -746,3 +723,5 @@ function AiCareerAdvisorTool({ primaryBtnStyle }) {
 }
 
 export default AiCareerAdvisorTool;
+
+
