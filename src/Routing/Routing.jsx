@@ -69,7 +69,7 @@
 // import BlogsPage2 from "../Pages/BlogsPage2";
 // import BlogsPage3 from "../Pages/BlogsPage3";
 // import BlogsPage4 from "../Pages/BlogsPage4";
-// import AdminCollectionsPageWrapper from "../Admin/Pages/AdminCollectionsPage";
+// import AdminCollectionsPageWrapper from "../Admin/pages/AdminCollectionsPage";
 // // import BlogDetail from '../Pages/BlogDetail';
 // import Setting from "../Pages/Setting";
 // import Search from "../Pages/SearchPage";
