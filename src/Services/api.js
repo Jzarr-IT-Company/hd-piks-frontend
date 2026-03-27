@@ -72,7 +72,14 @@ const flushQueue = (newToken) => {
 };
 
 const shouldSkipRefresh = (url = '') => {
-    return ['/login', '/signup', '/auth/refresh', '/admin/login'].some((x) => url.includes(x));
+    return [
+        '/login',
+        '/signup',
+        '/auth/refresh',
+        '/admin/login',
+        '/ai/voiceover/voices',
+        '/ai/voiceover/generate',
+    ].some((x) => url.includes(x));
 };
 
 // Request interceptor - Add auth token to requests
@@ -89,13 +96,13 @@ api.interceptors.request.use(
         
         // Log request in development
         if (import.meta.env.MODE === 'development') {
-            console.log(`ðŸš€ API Request: ${config.method.toUpperCase()} ${config.url}`);
+            console.log(` API Request: ${config.method.toUpperCase()} ${config.url}`);
         }
         
         return config;
     },
     (error) => {
-        console.error('âŒ Request Error:', error);
+        console.error(' Request Error:', error);
         return Promise.reject(error);
     }
 );
@@ -105,7 +112,7 @@ api.interceptors.response.use(
     (response) => {
         // Log response in development
         if (import.meta.env.MODE === 'development') {
-            console.log(`âœ… API Response: ${response.config.url}`, response.data);
+            console.log(` API Response: ${response.config.url}`, response.data);
         }
         return response;
     },
@@ -115,7 +122,7 @@ api.interceptors.response.use(
             // Server responded with error status
             const { status, data } = error.response;
             
-            console.error(`âŒ API Error [${status}]:`, data.message || error.message);
+            console.error(` API Error [${status}]:`, data.message || error.message);
             
             // Handle specific status codes
             switch (status) {

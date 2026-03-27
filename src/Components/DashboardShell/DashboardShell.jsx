@@ -15,14 +15,6 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   const { userData, creatorData } = useAuth();
   const { setShowContributorForm } = useProfile();
   const { counts: globalAssetCounts } = useUserAssets();
-  // Loading fallback if userData or creatorData are not loaded yet
-  if (userData === undefined || creatorData === undefined) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <div>Loading dashboard...</div>
-      </div>
-    );
-  }
   // Handler for Creator Profile panel
   const [showCreatorProfile, setShowCreatorProfile] = useState(false);
   const handleCreatorProfile = () => {
@@ -175,6 +167,14 @@ function DashboardShell({ children, rightPanel, fileCounts = {} }) {
   const handleViewSite = () => {
     window.location.assign('/');
   };
+
+  if (userData === undefined || creatorData === undefined) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <div>Loading dashboard...</div>
+      </div>
+    );
+  }
 
   const renderContributorButton = () => {
     let label = isInPersonalArea ? 'Go to contributor panel' : 'Switch to user panel';

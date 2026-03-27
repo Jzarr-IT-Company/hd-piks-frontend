@@ -8,7 +8,7 @@ import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 import { getContributorState } from '../../utils/contributorStatus';
 
-function ProfileBanner1Bttn({ creatorProfileImage = '' }) {
+function ProfileBanner1Bttn({ creatorProfileImage = "", cnicDocument = null, passportDocument = null }) {
     const { fullName,email, dob,gender,profession,skills,portfolioLink,country,state,city, zipCode,socialMediaLinks,profileImage,bio } = useProfile();
     const { setCreatorData, creatorData, userData } = useAuth();
     const [loading,setLoading]=useState(false)
@@ -50,6 +50,8 @@ function ProfileBanner1Bttn({ creatorProfileImage = '' }) {
         if (!professionText) errors.push('Profession is required.');
         if (!dob) errors.push('Date of birth is required.');
         if (parsedSkills.length === 0) errors.push('Add at least one skill.');
+        if (!creatorProfileImage) errors.push('Profile photo is required.');
+        if (!cnicDocument?.url && !passportDocument?.url) errors.push('Upload at least one identity document: CNIC or passport.');
         if (portfolioLink && !isValidUrl(portfolioLink)) errors.push('Website/portfolio link must be a valid URL.');
         if (links.some((link) => !isValidUrl(link))) errors.push('All social links must be valid URLs.');
         return errors;
@@ -74,7 +76,10 @@ function ProfileBanner1Bttn({ creatorProfileImage = '' }) {
 
             const skillsArray = Array.isArray(skills)
                 ? skills.filter(Boolean)
-                : (skills ? [skills] : []);
+                : (skills || '')
+                    .split(',')
+                    .map((item) => item.trim())
+                    .filter(Boolean);
 
             const creatorPayload = {
                 displayName: fullName || userData?.name,
@@ -91,6 +96,8 @@ function ProfileBanner1Bttn({ creatorProfileImage = '' }) {
                 portfolioLinks: linkUrls,
                 socialLinks: linkUrls,
                 profileImage: creatorProfileImage ? { url: creatorProfileImage } : undefined,
+                cnicDocument: cnicDocument?.url ? cnicDocument : undefined,
+                passportDocument: passportDocument?.url ? passportDocument : undefined,
             };
 
             if (isContributorRoute) {

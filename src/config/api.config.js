@@ -2,7 +2,7 @@
 // API Configuration for Development and Production
 const API_CONFIG = {
     development: 'http://localhost:4000',
-    production: 'https://hd-piks-backend02.vercel.app', // no trailing slash
+    production: 'https://hd-piks-backend.onrender.com', // no trailing slash
 };
 
 const APP_ENV = import.meta.env.VITE_APP_ENV || import.meta.env.MODE; // 'development' or 'production'

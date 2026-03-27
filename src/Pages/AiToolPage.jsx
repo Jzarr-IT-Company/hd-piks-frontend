@@ -406,7 +406,12 @@ function AiToolPage() {
 			error?.response?.data?.message || error?.message || fallback || "Voiceover request failed."
 		).trim();
 
-		if (statusCode === 401) return "Please login to use voiceover generation.";
+		if (statusCode === 401) {
+			if (errorCode === "provider_auth_error") {
+				return "Voice provider authentication failed on server.";
+			}
+			return "Voiceover request was not authorized. Please verify backend deployment and provider configuration.";
+		}
 		if (errorCode === "provider_auth_error") return "Voice provider authentication failed on server.";
 		if (errorCode === "quota_exceeded" || statusCode === 429) {
 			return "Voice generation quota reached. Please retry later.";

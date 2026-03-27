@@ -8,6 +8,7 @@ import ProfileBanner1Bttn from '../ProfileBanner1Bttn/ProfileBanner1Bttn';
 import ProfileBanner1UploadImages from '../ProfileBanner1UploadImages/ProfileBanner1UploadImages';
 
 import CreatorProfileImageUpload from '../ProfileBanner1UploadImages/CreatorProfileImageUpload';
+import ContributorDocumentUpload from '../ProfileBanner1UploadImages/ContributorDocumentUpload';
 import { getContributorState } from '../../utils/contributorStatus';
 
 function ProfileBanner1() {
@@ -30,6 +31,8 @@ function ProfileBanner1() {
     const { termsChecked, setTermsChecked } = useUpload();
 
     const [creatorProfileImage, setCreatorProfileImage] = React.useState(creatorData?.profile?.profileImage?.url || '');
+    const [cnicDocument, setCnicDocument] = React.useState(creatorData?.profile?.cnicDocument || null);
+    const [passportDocument, setPassportDocument] = React.useState(creatorData?.profile?.passportDocument || null);
 
     const [step, setStep] = React.useState(1);
 
@@ -66,6 +69,9 @@ function ProfileBanner1() {
         if (profile.gender) setGender(profile.gender);
         if (profile.dob) setDob(profile.dob);
         if (profile.profession) setProfession(profile.profession);
+        setCreatorProfileImage(profile.profileImage?.url || '');
+        setCnicDocument(profile.cnicDocument || null);
+        setPassportDocument(profile.passportDocument || null);
 
         if (profile.skills) {
             const skillsValue = Array.isArray(profile.skills) ? profile.skills.join(', ') : profile.skills;
@@ -544,6 +550,28 @@ function ProfileBanner1() {
                     </section>
 
                     <section className="profile-section">
+                        <div className="d-flex align-items-center justify-content-between mb-2">
+                            <h5 className="mb-0">Identity verification</h5>
+                            <small className="text-muted">Visible to admin only</small>
+                        </div>
+                        <p className="text-muted small mb-3">Profile photo is required, and you must upload at least one identity document: CNIC or passport.</p>
+                        <div className="contrib-grid">
+                            <ContributorDocumentUpload
+                                label="CNIC document"
+                                helperText="Upload a clear CNIC image or PDF."
+                                documentValue={cnicDocument}
+                                setDocumentValue={setCnicDocument}
+                            />
+                            <ContributorDocumentUpload
+                                label="Passport document"
+                                helperText="Upload a clear passport image or PDF."
+                                documentValue={passportDocument}
+                                setDocumentValue={setPassportDocument}
+                            />
+                        </div>
+                    </section>
+
+                    <section className="profile-section">
                         <h5 className="mb-3">Additional details</h5>
                         <div className="contrib-grid contrib-grid--four">
                             <div>
@@ -636,7 +664,7 @@ function ProfileBanner1() {
                         </div>
                         <div className="mt-3 d-flex justify-content-between">
                             <button className="btn btn-link" onClick={() => setStep(1)}>Back</button>
-                            <ProfileBanner1Bttn creatorProfileImage={creatorProfileImage} />
+                            <ProfileBanner1Bttn creatorProfileImage={creatorProfileImage} cnicDocument={cnicDocument} passportDocument={passportDocument} />
                         </div>
                     </section>
                 </div>
