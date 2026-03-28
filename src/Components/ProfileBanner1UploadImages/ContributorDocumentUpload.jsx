@@ -46,11 +46,12 @@ function ContributorDocumentUpload({
         fileType: file.type || "application/octet-stream",
       });
 
-      const { presignedUrl, s3Url, s3Key } = presignRes.data.data;
+      const { presignedUrl, s3Url, s3Key, uploadHeaders } = presignRes.data.data;
 
       await axios.put(presignedUrl, file, {
         headers: {
           "Content-Type": file.type || "application/octet-stream",
+          ...(uploadHeaders || {}),
         },
       });
 

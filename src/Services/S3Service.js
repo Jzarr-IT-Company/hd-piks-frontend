@@ -88,13 +88,14 @@ export const getPresignedUploadUrl = async (fileName, fileType, category, subcat
 };
 
 // Upload file directly to S3 using presigned URL (bypasses backend)
-export const uploadFileToS3 = async (presignedUrl, file, onProgress) => {
+export const uploadFileToS3 = async (presignedUrl, file, onProgress, uploadHeaders = {}) => {
     // Direct PUT request to S3 - not using our api instance
     const response = await fetch(presignedUrl, {
         method: 'PUT',
         body: file,
         headers: {
-            'Content-Type': file.type
+            'Content-Type': file.type,
+            ...uploadHeaders
         }
     });
 
@@ -116,7 +117,7 @@ export const deleteFileFromS3 = async (s3Key) => {
 // Composite function: Get presigned URL and upload file to S3
 export const uploadImageToS3 = async (file, onProgress, category, subcategory, subsubcategory) => {
     // Step 1: Get presigned URL from backend
-    const { presignedUrl, s3Key, s3Url } = await getPresignedUploadUrl(
+    const { presignedUrl, s3Key, s3Url, uploadHeaders } = await getPresignedUploadUrl(
         file.name,
         file.type,
         category,
@@ -125,7 +126,7 @@ export const uploadImageToS3 = async (file, onProgress, category, subcategory, s
     );
 
     // Step 2: Upload file directly to S3 using presigned URL
-    await uploadFileToS3(presignedUrl, file, onProgress);
+    await uploadFileToS3(presignedUrl, file, onProgress, uploadHeaders);
 
     // Return S3 details for storage in database
     return {

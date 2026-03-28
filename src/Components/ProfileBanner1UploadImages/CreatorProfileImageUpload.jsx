@@ -21,12 +21,13 @@ function CreatorProfileImageUpload({ profileImage, setProfileImage }) {
                 fileName: file.name,
                 fileType: file.type
             });
-            const { presignedUrl, s3Url, s3Key } = presignRes.data.data;
+            const { presignedUrl, s3Url, s3Key, uploadHeaders } = presignRes.data.data;
 
             // 2. Upload file directly to S3
             await axios.put(presignedUrl, file, {
                 headers: {
-                    'Content-Type': file.type
+                    'Content-Type': file.type,
+                    ...(uploadHeaders || {})
                 }
             });
 

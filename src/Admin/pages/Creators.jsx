@@ -239,11 +239,16 @@ export default function CreatorsPage() {
         payload,
         { headers }
       );
-      const { presignedUrl, s3Url, s3Key } = presignRes.data?.data || {};
+      const { presignedUrl, s3Url, s3Key, uploadHeaders } = presignRes.data?.data || {};
       if (!presignedUrl || !s3Url || !s3Key) {
         throw new Error('Invalid presigned response');
       }
-      await axios.put(presignedUrl, file, { headers: { 'Content-Type': file.type } });
+      await axios.put(presignedUrl, file, {
+        headers: {
+          'Content-Type': file.type,
+          ...(uploadHeaders || {}),
+        },
+      });
       setProfilePreview(s3Url);
       setEditForm((prev) => ({
         ...prev,

@@ -7,13 +7,14 @@ export const uploadMedia = async (file) => {
     fileName: file.name,
     fileType: file.type
   });
-  const { presignedUrl, s3Url } = presignRes.data.data;
+  const { presignedUrl, s3Url, uploadHeaders } = presignRes.data.data;
 
   // 2. Upload file directly to S3
   await fetch(presignedUrl, {
     method: 'PUT',
     headers: {
-      'Content-Type': file.type
+      'Content-Type': file.type,
+      ...(uploadHeaders || {})
     },
     body: file
   });
