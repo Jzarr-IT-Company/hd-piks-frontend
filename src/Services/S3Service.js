@@ -1,10 +1,11 @@
-// S3 Multipart Upload (for large files, e.g. ZIP)
+﻿// S3 Multipart Upload (for large files, e.g. ZIP)
 export const multipartUploadToS3 = async (file, category, onProgress) => {
     // 5MB part size (S3 minimum for all but last part)
     const PART_SIZE = 5 * 1024 * 1024;
     const totalParts = Math.ceil(file.size / PART_SIZE);
     let uploadedBytes = 0;
     let abort = false;
+    let abortReason = '';
 
     // 1. Initiate multipart upload
     const { data: initData } = await api.post(API_ENDPOINTS.S3_MULTIPART_INIT, {
@@ -37,9 +38,16 @@ export const multipartUploadToS3 = async (file, category, onProgress) => {
         });
         if (!response.ok) {
             abort = true;
+            abortReason = `Upload failed while sending ZIP part ${partNumber}.`;
             break;
         }
-        const etag = response.headers.get('ETag')?.replaceAll('"', '');
+        const rawEtag = response.headers.get('etag') || response.headers.get('ETag');
+        const etag = typeof rawEtag === 'string' ? rawEtag.replaceAll('"', '').trim() : '';
+        if (!etag) {
+            abort = true;
+            abortReason = 'ZIP upload completed a part but no ETag header was readable. Add ETag to DigitalOcean Spaces CORS Expose Headers.';
+            break;
+        }
         etags.push({ ETag: etag, PartNumber: partNumber });
         uploadedBytes += blob.size;
         if (onProgress) {
@@ -49,8 +57,12 @@ export const multipartUploadToS3 = async (file, category, onProgress) => {
 
     // 3. Complete or abort
     if (abort) {
-        await api.post(API_ENDPOINTS.S3_MULTIPART_ABORT, { key, uploadId });
-        throw new Error('Upload aborted due to part failure');
+        try {
+            await api.post(API_ENDPOINTS.S3_MULTIPART_ABORT, { key, uploadId });
+        } catch (abortError) {
+            console.warn('Multipart abort failed after ZIP upload error', abortError);
+        }
+        throw new Error(abortReason || 'Upload aborted due to part failure');
     }
     const { data: completeData } = await api.post(API_ENDPOINTS.S3_MULTIPART_COMPLETE, {
         key,

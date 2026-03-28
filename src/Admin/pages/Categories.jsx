@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Typography, Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, TextField, CircularProgress, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { Edit, Delete, Add, ExpandMore, ChevronRight } from '@mui/icons-material';
 import api from '../../Services/api';
@@ -32,6 +32,7 @@ export default function CategoriesPage() {
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [parent, setParent] = useState('');
+  const [parentSearch, setParentSearch] = useState('');
   const [allowedMimeTypesInput, setAllowedMimeTypesInput] = useState('');
   const [minFileSizeBytes, setMinFileSizeBytes] = useState('');
   const [maxFileSizeBytes, setMaxFileSizeBytes] = useState('');
@@ -98,6 +99,7 @@ export default function CategoriesPage() {
         ? String(cat.zipMaxFileSizeBytes)
         : ''
     );
+    setParentSearch('');
     setConfirmExitOpen(false);
     setOpen(true);
     setError('');
@@ -108,6 +110,7 @@ export default function CategoriesPage() {
     setEditCategory(null);
     setName('');
     setParent('');
+    setParentSearch('');
     setAllowedMimeTypesInput('');
     setMinFileSizeBytes('');
     setMaxFileSizeBytes('');
@@ -294,6 +297,24 @@ export default function CategoriesPage() {
   }
 
   const tree = buildTree(categories);
+
+  const filteredParentTree = useMemo(() => {
+    const query = String(parentSearch || '').trim().toLowerCase();
+    if (!query) return tree;
+
+    const filterNodes = (nodes) => nodes.reduce((acc, node) => {
+      const childMatches = filterNodes(node.children || []);
+      const selfMatches = String(node.name || '').toLowerCase().includes(query);
+      if (!selfMatches && childMatches.length === 0) return acc;
+      acc.push({
+        ...node,
+        children: childMatches,
+      });
+      return acc;
+    }, []);
+
+    return filterNodes(tree);
+  }, [parentSearch, tree]);
   const hasCustomMin = minFileSizeBytes !== '' && !FILE_SIZE_OPTIONS.some((opt) => String(opt.value) === String(minFileSizeBytes));
   const hasCustomMax = maxFileSizeBytes !== '' && !FILE_SIZE_OPTIONS.some((opt) => String(opt.value) === String(maxFileSizeBytes));
   const hasCustomZipMin = zipMinFileSizeBytes !== '' && !ZIP_SIZE_OPTIONS.some((opt) => String(opt.value) === String(zipMinFileSizeBytes));
@@ -443,6 +464,14 @@ export default function CategoriesPage() {
               ) : null}
             </Select>
           </FormControl>
+          <TextField
+            margin="dense"
+            label="Search parent category"
+            fullWidth
+            value={parentSearch}
+            onChange={e => setParentSearch(e.target.value)}
+            placeholder="Type a main, sub, or sub-sub category name"
+          />
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="parent-select-label">Parent Category</InputLabel>
             <Select
@@ -452,7 +481,12 @@ export default function CategoriesPage() {
               onChange={e => setParent(e.target.value)}
             >
               <MenuItem value=''>None (Top-level)</MenuItem>
-              {renderOptions(tree, 0, editCategory?._id)}
+              {renderOptions(filteredParentTree, 0, editCategory?._id)}
+              {parentSearch.trim() && filteredParentTree.length === 0 ? (
+                <MenuItem value='' disabled>
+                  No categories found
+                </MenuItem>
+              ) : null}
             </Select>
           </FormControl>
           {error && <Typography color="error" variant="body2">{error}</Typography>}
