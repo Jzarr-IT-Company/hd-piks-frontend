@@ -76,10 +76,11 @@ import api from './api.js';
 import { API_ENDPOINTS } from '../config/api.config.js';
 
 // Get presigned URL for upload from backend
-export const getPresignedUploadUrl = async (fileName, fileType, category, subcategory, subsubcategory) => {
+export const getPresignedUploadUrl = async (fileName, fileType, fileSize, category, subcategory, subsubcategory) => {
     const response = await api.post(API_ENDPOINTS.GET_PRESIGNED_URL, {
         fileName,
         fileType,
+        fileSize,
         category,
         subcategory,
         subsubcategory
@@ -120,6 +121,7 @@ export const uploadImageToS3 = async (file, onProgress, category, subcategory, s
     const { presignedUrl, s3Key, s3Url, uploadHeaders } = await getPresignedUploadUrl(
         file.name,
         file.type,
+        file.size,
         category,
         subcategory,
         subsubcategory

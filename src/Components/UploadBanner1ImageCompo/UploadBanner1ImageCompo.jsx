@@ -24,7 +24,7 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '', uploadPolicy = nul
     const [progress, setProgress] = useState(0);
 
     const allowedFileTypes = ["image/png", "image/jpeg", "image/jpg", "image/gif", "video/mp4", "image/webp"];
-    const MIN_IMAGE_BYTES = Math.ceil(1.5 * 1024 * 1024); // 1.5MB minimum for images
+    const MIN_IMAGE_BYTES = 0; // No minimum image size by default
     const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15MB limit for images
     const MAX_VIDEO_BYTES = 120 * 1024 * 1024; // 120MB limit for videos
 
@@ -120,10 +120,6 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '', uploadPolicy = nul
                     return;
                 }
             } else {
-                if (file.size < MIN_IMAGE_BYTES) {
-                    message.error('Image too small. Minimum 1.5MB required.');
-                    return;
-                }
                 if (file.size > MAX_IMAGE_BYTES) {
                     message.error('Image too large. Max 15MB allowed.');
                     return;
@@ -292,7 +288,7 @@ function UploadBanner1ImageCompo({ selectedCategoryName = '', uploadPolicy = nul
                                     ? `Category size policy: ${policyMinSize !== null ? `min ${formatFileSize(policyMinSize)}` : 'no minimum'}, ${policyMaxSize !== null ? `max ${formatFileSize(policyMaxSize)}` : 'no maximum'}`
                                     : (expectedMediaKind === 'video'
                                         ? 'Video size limit: up to 120MB'
-                                        : 'Image size limits: minimum 1.5MB, maximum 15MB')}
+                                        : 'Image size limits: minimum 0KB, maximum 15MB')}
                             </p>
                         </div>
                     )}

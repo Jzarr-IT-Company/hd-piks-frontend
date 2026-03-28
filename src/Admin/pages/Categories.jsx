@@ -5,6 +5,17 @@ import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 
 export default function CategoriesPage() {
+  const FILE_SIZE_OPTIONS = [
+    { label: '0 KB', value: 0 },
+    { label: '100 KB', value: 102400 },
+    { label: '250 KB', value: 256000 },
+    { label: '500 KB', value: 512000 },
+    { label: '1 MB', value: 1048576 },
+    { label: '2 MB', value: 2097152 },
+    { label: '5 MB', value: 5242880 },
+    { label: '10 MB', value: 10485760 },
+    { label: '15 MB', value: 15728640 },
+  ];
   const ZIP_SIZE_OPTIONS = [
     { label: '1 MB', value: 1048576 },
     { label: '10 MB', value: 10485760 },
@@ -283,6 +294,8 @@ export default function CategoriesPage() {
   }
 
   const tree = buildTree(categories);
+  const hasCustomMin = minFileSizeBytes !== '' && !FILE_SIZE_OPTIONS.some((opt) => String(opt.value) === String(minFileSizeBytes));
+  const hasCustomMax = maxFileSizeBytes !== '' && !FILE_SIZE_OPTIONS.some((opt) => String(opt.value) === String(maxFileSizeBytes));
   const hasCustomZipMin = zipMinFileSizeBytes !== '' && !ZIP_SIZE_OPTIONS.some((opt) => String(opt.value) === String(zipMinFileSizeBytes));
   const hasCustomZipMax = zipMaxFileSizeBytes !== '' && !ZIP_SIZE_OPTIONS.some((opt) => String(opt.value) === String(zipMaxFileSizeBytes));
 
@@ -324,24 +337,48 @@ export default function CategoriesPage() {
             onChange={e => setAllowedMimeTypesInput(e.target.value)}
             placeholder="image/jpeg, image/png, video/mp4"
           />
-          <TextField
-            margin="dense"
-            label="Min file size (bytes)"
-            fullWidth
-            type="number"
-            value={minFileSizeBytes}
-            onChange={e => setMinFileSizeBytes(e.target.value)}
-            placeholder="Optional"
-          />
-          <TextField
-            margin="dense"
-            label="Max file size (bytes)"
-            fullWidth
-            type="number"
-            value={maxFileSizeBytes}
-            onChange={e => setMaxFileSizeBytes(e.target.value)}
-            placeholder="Optional"
-          />
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel id="file-min-size-label">Min file size</InputLabel>
+            <Select
+              labelId="file-min-size-label"
+              value={minFileSizeBytes}
+              label="Min file size"
+              onChange={e => setMinFileSizeBytes(e.target.value)}
+            >
+              <MenuItem value=''>Optional (use backend default)</MenuItem>
+              {FILE_SIZE_OPTIONS.map((option) => (
+                <MenuItem key={`file-min-${option.value}`} value={String(option.value)}>
+                  {option.label}
+                </MenuItem>
+              ))}
+              {hasCustomMin ? (
+                <MenuItem value={String(minFileSizeBytes)}>
+                  Custom ({minFileSizeBytes} bytes)
+                </MenuItem>
+              ) : null}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth sx={{ mt: 2 }}>
+            <InputLabel id="file-max-size-label">Max file size</InputLabel>
+            <Select
+              labelId="file-max-size-label"
+              value={maxFileSizeBytes}
+              label="Max file size"
+              onChange={e => setMaxFileSizeBytes(e.target.value)}
+            >
+              <MenuItem value=''>Optional (use backend default)</MenuItem>
+              {FILE_SIZE_OPTIONS.map((option) => (
+                <MenuItem key={`file-max-${option.value}`} value={String(option.value)}>
+                  {option.label}
+                </MenuItem>
+              ))}
+              {hasCustomMax ? (
+                <MenuItem value={String(maxFileSizeBytes)}>
+                  Custom ({maxFileSizeBytes} bytes)
+                </MenuItem>
+              ) : null}
+            </Select>
+          </FormControl>
           <FormControl fullWidth sx={{ mt: 2 }}>
             <InputLabel id="zip-mode-label">ZIP Mode</InputLabel>
             <Select

@@ -30,7 +30,8 @@ function ContributorDocumentUpload({
     if (!documentValue?.url) return null;
     const mimeType = String(documentValue.mimeType || "").toLowerCase();
     const isImage = mimeType.startsWith("image/");
-    const isPdf = mimeType.includes("pdf") || documentValue.url.toLowerCase().endswith(".pdf");
+    const normalizedUrl = String(documentValue?.url || "").toLowerCase();
+    const isPdf = mimeType.includes("pdf") || normalizedUrl.endsWith(".pdf");
     return { isImage, isPdf };
   }, [documentValue]);
 
