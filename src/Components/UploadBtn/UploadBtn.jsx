@@ -11,17 +11,22 @@ function UploadBtn({ isZipRequired = false, uploadPolicy = null, zipPolicy = nul
     const ZIP_MODE_HIDDEN = 'hidden';
     const ZIP_MODE_OPTIONAL = 'optional';
     const ZIP_MODE_REQUIRED = 'required';
-    const MIN_ZIP_BYTES = 1 * 1024 * 1024; // 1MB
+    const MIN_ZIP_BYTES = 0; // 0 KB
     const MAX_ZIP_BYTES = 500 * 1024 * 1024; // 500MB
     const DEFAULT_ZIP_ALLOWED_MIME_TYPES = ['application/zip', 'application/x-zip-compressed', 'multipart/x-zip'];
-    const formatBytesAsMb = (bytes) => {
+    const formatSizeValue = (bytes) => {
         const numeric = Number(bytes || 0);
-        if (!Number.isFinite(numeric) || numeric <= 0) return '0 MB';
+        if (!Number.isFinite(numeric) || numeric <= 0) return '0 KB';
+        if (numeric < 1024 * 1024) {
+            const kb = numeric / 1024;
+            const roundedKb = kb >= 10 ? kb.toFixed(0) : kb.toFixed(2).replace(/\.00$/, '');
+            return `${roundedKb} KB`;
+        }
         const mb = numeric / (1024 * 1024);
-        const rounded = mb >= 10 ? mb.toFixed(0) : mb.toFixed(2).replace(/\.00$/, '');
-        return `${rounded} MB`;
+        const roundedMb = mb >= 10 ? mb.toFixed(0) : mb.toFixed(2).replace(/\.00$/, '');
+        return `${roundedMb} MB`;
     };
-    const formatSizeHint = (bytes) => `${formatBytesAsMb(bytes)} (${bytes} bytes)`;
+    const formatSizeHint = (bytes) => `${formatSizeValue(bytes)} (${bytes} bytes)`;
     const {
         category,
         setCategory,

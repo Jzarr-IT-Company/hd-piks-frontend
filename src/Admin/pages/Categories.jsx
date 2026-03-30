@@ -17,6 +17,7 @@ export default function CategoriesPage() {
     { label: '15 MB', value: 15728640 },
   ];
   const ZIP_SIZE_OPTIONS = [
+    { label: '0 KB', value: 0 },
     { label: '1 MB', value: 1048576 },
     { label: '10 MB', value: 10485760 },
     { label: '100 MB', value: 104857600 },
@@ -433,7 +434,7 @@ export default function CategoriesPage() {
               <MenuItem value=''>Optional (use backend default)</MenuItem>
               {ZIP_SIZE_OPTIONS.map((option) => (
                 <MenuItem key={`zip-min-${option.value}`} value={String(option.value)}>
-                  {option.label} ({option.value} bytes)
+                  {option.label}
                 </MenuItem>
               ))}
               {hasCustomZipMin ? (
@@ -454,7 +455,7 @@ export default function CategoriesPage() {
               <MenuItem value=''>Optional (use backend default)</MenuItem>
               {ZIP_SIZE_OPTIONS.map((option) => (
                 <MenuItem key={`zip-max-${option.value}`} value={String(option.value)}>
-                  {option.label} ({option.value} bytes)
+                  {option.label}
                 </MenuItem>
               ))}
               {hasCustomZipMax ? (
