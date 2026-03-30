@@ -10,7 +10,7 @@ import Menu from '@mui/material/Menu';
 import Avatar from '@mui/material/Avatar';
 import Tooltip from '@mui/material/Tooltip';
 import MenuItem from '@mui/material/MenuItem';
-import { User, Settings, CreditCard, LayoutDashboard, LogOut } from 'lucide-react';
+import { User, CreditCard, LayoutDashboard, LogOut } from 'lucide-react';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 
@@ -23,7 +23,6 @@ function NavbarProfileCompo() {
 
     const settings = [
         { name: 'Profile', link: '/profile', Icon: User },
-        { name: 'Account', link: '/account', Icon: Settings },
         { name: 'Upgrade Plan', link: '/pricing', Icon: CreditCard },
         ...(isCreator ? [{ name: 'Dashboard', link: '/dashboard', Icon: LayoutDashboard }] : []),
         { name: 'Logout', link: '/', Icon: LogOut, action: 'logout' }

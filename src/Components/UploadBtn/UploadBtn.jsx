@@ -116,7 +116,7 @@ function UploadBtn({ isZipRequired = false, uploadPolicy = null, zipPolicy = nul
         if (!category) errors.push("Please select a category");
         if (!title || title.trim().length < 3) errors.push("Title must be at least 3 characters");
         if (!description || description.trim().length < 20) errors.push("Description must be at least 20 characters");
-        if (!keywords || keywords.length < 5) errors.push("Add at least 5 keywords");
+        if (!keywords || keywords.length < 1) errors.push("Add at least 1 keyword");
         if (!selectPlan) errors.push("Please select a plan");
         // Only require new image in create mode
         if (!imageUrl && !isEditing) errors.push("Please upload an image");

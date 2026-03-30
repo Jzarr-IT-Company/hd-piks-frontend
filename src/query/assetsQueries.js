@@ -1,25 +1,41 @@
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import api from "../Services/api.js";
 import { API_ENDPOINTS } from "../config/api.config.js";
 
-const PAGE_SIZE = 16;
+export const PAGE_SIZE = 16;
 
-const fetchAssetsPage = async ({ pageParam = 1, queryKey }) => {
-    const [, parentCategory] = queryKey;
+const requestAssetsPage = async ({ page = 1, limit = PAGE_SIZE, parentCategory }) => {
     const params = {
-        page: pageParam,
-        limit: PAGE_SIZE,
+        page,
+        limit,
     };
     if (parentCategory && parentCategory !== "all") {
         params.parentCategory = parentCategory;
     }
     const response = await api.get(API_ENDPOINTS.ASSETS, { params });
-    const data = response?.data?.data || [];
+    const payload = response?.data || {};
+    const data = Array.isArray(payload?.data) ? payload.data : [];
+    const currentPage = Number(payload?.page) || page;
+    const pageSize = Number(payload?.limit) || limit;
+    const total = Number(payload?.total) || 0;
+    const totalPages = Math.max(1, Math.ceil(total / Math.max(pageSize, 1)));
+    const hasMore = typeof payload?.hasMore === 'boolean'
+        ? payload.hasMore
+        : currentPage < totalPages;
+
     return {
-        page: pageParam,
-        items: Array.isArray(data) ? data : [],
-        hasMore: Array.isArray(data) && data.length === PAGE_SIZE,
+        items: data,
+        page: currentPage,
+        limit: pageSize,
+        total,
+        totalPages,
+        hasMore,
     };
+};
+
+const fetchAssetsPage = async ({ pageParam = 1, queryKey }) => {
+    const [, parentCategory] = queryKey;
+    return requestAssetsPage({ page: pageParam, parentCategory });
 };
 
 export const useAssetsInfiniteQuery = (parentCategory) => {
@@ -35,3 +51,11 @@ export const useAssetsInfiniteQuery = (parentCategory) => {
     });
 };
 
+export const useAssetsPageQuery = (parentCategory, page = 1, limit = PAGE_SIZE) => {
+    return useQuery({
+        queryKey: ["assets", "page", parentCategory || "all", page, limit],
+        queryFn: () => requestAssetsPage({ page, limit, parentCategory }),
+        staleTime: 60 * 1000,
+        keepPreviousData: true,
+    });
+};

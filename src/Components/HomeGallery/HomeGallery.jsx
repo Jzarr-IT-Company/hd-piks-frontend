@@ -1,15 +1,17 @@
-import React, { useState, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Skeleton } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../../config/api.config.js';
 import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3 } from 'react-icons/fi';
 import CollectionSelectModal from '../CollectionSelectModal';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import { QueryErrorRetry, QueryGridSkeleton } from '../QueryState/QueryState.jsx';
-import { useAssetsInfiniteQuery } from '../../query/assetsQueries.js';
+import { PAGE_SIZE, useAssetsPageQuery } from '../../query/assetsQueries.js';
+import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import { buildHomepageCategoryEntries } from '../../utils/homepageCategories.js';
 import '../LazyLoadImage2/LazyLoadImage.css';
 import './HomeGallery.css';
 
@@ -221,35 +223,81 @@ function GalleryItem({
 
 function HomeGallery() {
     const navigate = useNavigate();
-    // Tabs: all / Image / Video / Mockups
-    const [activeTab, setActiveTab] = useState('all'); // 'all' | 'Image' | 'Video' | 'Mockups'
-
-    const parentFilter =
-        activeTab === 'all'
-            ? undefined
-            : activeTab; // sent as parentCategory name to backend
-
-    const assetsQuery = useAssetsInfiniteQuery(parentFilter);
-    const items = useMemo(
-        () => (assetsQuery.data?.pages || []).flatMap((page) => page.items || []),
-        [assetsQuery.data]
+    const [searchParams, setSearchParams] = useSearchParams();
+    const categoriesQuery = usePublicCategoriesQuery();
+    const homepageCategories = useMemo(
+        () => buildHomepageCategoryEntries(categoriesQuery.data),
+        [categoriesQuery.data]
     );
+    const tabOptions = useMemo(
+        () => ([
+            { value: 'all', label: 'All' },
+            ...homepageCategories.map((category) => ({
+                value: category.filterValue,
+                label: category.tabLabel,
+            })),
+        ]),
+        [homepageCategories]
+    );
+
+    const galleryCategoryParam = searchParams.get('galleryCategory') || 'all';
+    const parsedGalleryPage = Number.parseInt(searchParams.get('galleryPage') || '1', 10);
+    const currentPage = Number.isFinite(parsedGalleryPage) && parsedGalleryPage > 0 ? parsedGalleryPage : 1;
+    const activeTab = tabOptions.some((tab) => tab.value === galleryCategoryParam) ? galleryCategoryParam : 'all';
+    const parentFilter = activeTab === 'all' ? undefined : activeTab;
+
+    const assetsQuery = useAssetsPageQuery(parentFilter, currentPage, PAGE_SIZE);
+    const items = assetsQuery.data?.items || [];
     const loading = assetsQuery.isLoading;
-    const loadingMore = assetsQuery.isFetchingNextPage;
-    const hasMore = Boolean(assetsQuery.hasNextPage);
+    const loadingMore = assetsQuery.isFetching;
+    const totalPages = assetsQuery.data?.totalPages || 1;
     const error = assetsQuery.error?.response?.data?.message || assetsQuery.error?.message || '';
-    const loadMore = useCallback(() => {
-        if (!hasMore || loadingMore) return;
-        assetsQuery.fetchNextPage();
-    }, [hasMore, loadingMore, assetsQuery]);
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showCollectionModal, setShowCollectionModal] = useState(false);
     const [selectedAssetId, setSelectedAssetId] = useState(null);
 
+    const updateGalleryParams = useCallback((nextCategory, nextPage) => {
+        const params = new URLSearchParams(searchParams);
+        if (nextCategory && nextCategory !== 'all') {
+            params.set('galleryCategory', nextCategory);
+        } else {
+            params.delete('galleryCategory');
+        }
+        if (nextPage > 1) {
+            params.set('galleryPage', String(nextPage));
+        } else {
+            params.delete('galleryPage');
+        }
+        setSearchParams(params, { replace: false });
+    }, [searchParams, setSearchParams]);
+
     const handleTabClick = (tab) => {
-        setActiveTab(tab);
+        updateGalleryParams(tab, 1);
     };
+
+    const handlePageChange = useCallback((page) => {
+        if (page < 1 || page > totalPages || page === currentPage) return;
+        updateGalleryParams(activeTab, page);
+        const sectionTop = document.querySelector('.home-gallery-section');
+        if (sectionTop) {
+            sectionTop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [activeTab, currentPage, totalPages, updateGalleryParams]);
+
+    const visiblePages = useMemo(() => {
+        const total = Math.max(1, totalPages);
+        const pages = new Set([1, total, currentPage, currentPage - 1, currentPage + 1]);
+        return Array.from(pages)
+            .filter((page) => page >= 1 && page <= total)
+            .sort((a, b) => a - b);
+    }, [currentPage, totalPages]);
+
+    useEffect(() => {
+        if (currentPage > totalPages && totalPages > 0) {
+            updateGalleryParams(activeTab, totalPages);
+        }
+    }, [activeTab, currentPage, totalPages, updateGalleryParams]);
 
     const normalize = useCallback((val) => {
         if (typeof val === 'string') return val.trim().toLowerCase();
@@ -452,30 +500,30 @@ function HomeGallery() {
 
                 {/* Tabs */}
                 <div className="d-flex flex-wrap gap-2 mb-4 justify-content-center justify-content-md-start">
-                    {['all', 'Image', 'Video', 'Mockups'].map((tab) => (
+                    {tabOptions.map((tab) => (
                         <button
-                            key={tab}
+                            key={tab.value}
                             type="button"
-                            onClick={() => handleTabClick(tab)}
+                            onClick={() => handleTabClick(tab.value)}
                             className="btn btn-sm"
                             style={{
                                 borderRadius: 999,
                                 padding: '6px 18px',
                                 fontSize: 13,
                                 border:
-                                    activeTab === tab
+                                    activeTab === tab.value
                                         ? '1px solid rgb(143, 92, 255)'
                                         : '1px solid rgba(148,163,184,0.6)',
                                 background:
-                                    activeTab === tab
+                                    activeTab === tab.value
                                         ? 'linear-gradient(90deg, rgb(143, 92, 255), rgb(184, 69, 146))'
                                         : '#ffffff',
-                                color: activeTab === tab ? '#ffffff' : '#0f172a',
+                                color: activeTab === tab.value ? '#ffffff' : '#0f172a',
                                 boxShadow:
-                                    activeTab === tab ? '0 1px 3px rgba(15,23,42,0.25)' : 'none',
+                                    activeTab === tab.value ? '0 1px 3px rgba(15,23,42,0.25)' : 'none',
                             }}
                         >
-                            {tab === 'all' ? 'All' : tab}
+                            {tab.label}
                         </button>
                     ))}
                 </div>
@@ -521,16 +569,41 @@ function HomeGallery() {
                     </p>
                 )}
 
-                {/* Load more */}
-                {hasMore && (
-                    <div className="d-flex justify-content-center mt-4">
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="d-flex justify-content-center align-items-center gap-2 flex-wrap mt-4">
                         <button
                             type="button"
-                            className="btn btn-outline-dark px-4"
-                            onClick={loadMore}
-                            disabled={loadingMore}
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage <= 1 || loadingMore}
                         >
-                            {loadingMore ? 'Loading...' : 'Load more'}
+                            Prev
+                        </button>
+                        {visiblePages.map((page, index) => {
+                            const previous = visiblePages[index - 1];
+                            const showGap = index > 0 && previous && page - previous > 1;
+                            return (
+                                <React.Fragment key={page}>
+                                    {showGap && <span className="text-muted px-1">...</span>}
+                                    <button
+                                        type="button"
+                                        className={`btn btn-sm ${currentPage === page ? 'btn-dark' : 'btn-outline-dark'}`}
+                                        onClick={() => handlePageChange(page)}
+                                        disabled={loadingMore}
+                                    >
+                                        {page}
+                                    </button>
+                                </React.Fragment>
+                            );
+                        })}
+                        <button
+                            type="button"
+                            className="btn btn-sm btn-outline-secondary"
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage >= totalPages || loadingMore}
+                        >
+                            Next
                         </button>
                     </div>
                 )}

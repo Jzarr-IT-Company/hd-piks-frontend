@@ -452,11 +452,24 @@ function UploadBanner1() {
     };
 
     const addKeyword = () => {
-        const cleaned = keywordInput.trim();
-        if (cleaned && !keywords.includes(cleaned)) {
-            setKeywords([...keywords, cleaned]);
-            setKeywordInput('');
-        }
+        const rawParts = String(keywordInput || '')
+            .split(',')
+            .map((item) => item.trim())
+            .filter(Boolean);
+        if (!rawParts.length) return;
+
+        const existingLookup = new Set((keywords || []).map((item) => String(item || '').trim().toLowerCase()));
+        const nextKeywords = [...(keywords || [])];
+
+        rawParts.forEach((part) => {
+            const normalized = part.toLowerCase();
+            if (existingLookup.has(normalized)) return;
+            existingLookup.add(normalized);
+            nextKeywords.push(part);
+        });
+
+        setKeywords(nextKeywords);
+        setKeywordInput('');
     };
 
     const deleteKeyword = (index) => {
@@ -642,7 +655,7 @@ function UploadBanner1() {
                     </div>
 
                     <div className="upload-field">
-                        <label className="upload-label">Add Keywords (at least 5 keywords)</label>
+                        <label className="upload-label">Add Keywords (minimum 1 keyword, comma-separated supported)</label>
                         <div className="upload-keyword-row">
                             <input
                                 type="text"
@@ -651,7 +664,7 @@ function UploadBanner1() {
                                 onKeyPress={handleKeyPress}
                                 className="form-control upload-control"
                                 id="keywordInput"
-                                placeholder="Keywords"
+                                placeholder="Keywords, comma-separated"
                             />
                             <button onClick={addKeyword} className="btn btn-primary upload-btn-minimal">
                                 Add
