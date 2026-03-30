@@ -655,7 +655,7 @@ function UploadBanner1() {
                     </div>
 
                     <div className="upload-field">
-                        <label className="upload-label">Add Keywords (minimum 1 keyword, comma-separated supported)</label>
+                        <label className="upload-label">Add Keywords (minimum 5 keywords, comma-separated supported)</label>
                         <div className="upload-keyword-row">
                             <input
                                 type="text"

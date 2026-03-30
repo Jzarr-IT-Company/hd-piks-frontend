@@ -250,7 +250,14 @@ function HomeGallery() {
     const items = assetsQuery.data?.items || [];
     const loading = assetsQuery.isLoading;
     const loadingMore = assetsQuery.isFetching;
-    const totalPages = assetsQuery.data?.totalPages || 1;
+    const lastKnownTotalPagesRef = useRef(1);
+    const resolvedTotalPages = assetsQuery.data?.totalPages;
+    if (Number.isFinite(resolvedTotalPages) && resolvedTotalPages > 0) {
+        lastKnownTotalPagesRef.current = resolvedTotalPages;
+    }
+    const totalPages = Number.isFinite(resolvedTotalPages) && resolvedTotalPages > 0
+        ? resolvedTotalPages
+        : Math.max(lastKnownTotalPagesRef.current || 1, currentPage || 1);
     const error = assetsQuery.error?.response?.data?.message || assetsQuery.error?.message || '';
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
@@ -294,10 +301,12 @@ function HomeGallery() {
     }, [currentPage, totalPages]);
 
     useEffect(() => {
-        if (currentPage > totalPages && totalPages > 0) {
-            updateGalleryParams(activeTab, totalPages);
+        if (loadingMore) return;
+        if (!Number.isFinite(resolvedTotalPages) || resolvedTotalPages <= 0) return;
+        if (currentPage > resolvedTotalPages) {
+            updateGalleryParams(activeTab, resolvedTotalPages);
         }
-    }, [activeTab, currentPage, totalPages, updateGalleryParams]);
+    }, [activeTab, currentPage, loadingMore, resolvedTotalPages, updateGalleryParams]);
 
     const normalize = useCallback((val) => {
         if (typeof val === 'string') return val.trim().toLowerCase();

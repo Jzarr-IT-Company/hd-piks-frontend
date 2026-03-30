@@ -36,6 +36,8 @@ export const API_ENDPOINTS = {
     // Auth
     SIGNUP: '/signup',
     LOGIN: '/login',
+    PASSWORD_RESET_CHECK_IDENTITY: '/auth/password-reset/check-identity',
+    PASSWORD_RESET_CONFIRM: '/auth/password-reset/confirm',
     REFRESH: '/auth/refresh',
     LOGOUT: '/logout',
     
