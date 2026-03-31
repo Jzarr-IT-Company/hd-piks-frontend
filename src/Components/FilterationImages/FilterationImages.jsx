@@ -10,7 +10,7 @@ import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
 import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
-import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
+import { getResponsiveImageProps } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
@@ -20,14 +20,14 @@ const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase(
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
 const COLLECTION_PAGE_SIZE = 16;
 
-function FilterationMedia({ img, src, alt }) {
+function FilterationMedia({ img, imageProps, alt }) {
     const [videoDuration, setVideoDuration] = useState(null);
     const videoRef = useRef(null);
 
     const isVideoAsset = (
         img?.fileMetadata?.mimeType?.startsWith('video/')
         || img?.imagetype?.startsWith('video/')
-        || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
+        || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(imageProps?.src || '')
     );
 
     const formatDuration = useCallback((durationSeconds) => {
@@ -41,7 +41,7 @@ function FilterationMedia({ img, src, alt }) {
         return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }, []);
 
-    const durationLabel = useMemo(() => {   
+    const durationLabel = useMemo(() => {
         const fromMeta = img?.fileMetadata?.duration;
         if (fromMeta != null && fromMeta !== '') return formatDuration(fromMeta);
         if (videoDuration != null) return formatDuration(videoDuration);
@@ -65,7 +65,7 @@ function FilterationMedia({ img, src, alt }) {
             {isVideoAsset ? (
                 <video
                     ref={videoRef}
-                    src={src}
+                    src={imageProps?.src}
                     className="filteration-video-preview"
                     muted
                     loop
@@ -79,7 +79,9 @@ function FilterationMedia({ img, src, alt }) {
                 />
             ) : (
                 <LazyLoadImage2
-                    src={src}
+                    src={imageProps?.src}
+                    srcSet={imageProps?.srcSet || undefined}
+                    sizes={imageProps?.sizes || undefined}
                     alt={alt}
                     loading="lazy"
                 />
@@ -801,7 +803,7 @@ function FilterationImages({
                                                     <div className="card card-container rounded-4">
                                                         <FilterationMedia
                                                             img={img}
-                                                            src={getMediaVariantUrl(img, ['small', 'medium', 'thumbnail', 'large', 'original'])}
+                                                            imageProps={getResponsiveImageProps(img, { preferredOrder: ['thumbnail', 'small', 'medium', 'large', 'original'], sizes: '(max-width: 576px) 50vw, (max-width: 992px) 33vw, 265px' })}
                                                             alt={
                                                                 getSubcategoryName(img.subcategory) ||
                                                                 getCategoryName(img.category) ||
@@ -1031,6 +1033,7 @@ function FilterationImages({
 }
 
 export default React.memo(FilterationImages);
+
 
 
 
