@@ -9,7 +9,7 @@ import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import { QueryErrorRetry, QueryGridSkeleton } from '../QueryState/QueryState.jsx';
 import { PAGE_SIZE, useAssetsPageQuery } from '../../query/assetsQueries.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
-import { getResponsiveImageProps } from '../../utils/mediaVariants.js';
+import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { buildHomepageCategoryEntries } from '../../utils/homepageCategories.js';
 import '../LazyLoadImage2/LazyLoadImage.css';
@@ -21,7 +21,7 @@ const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium'
 // Reusable gallery card
 function GalleryItem({
     asset,
-    imageProps,
+    src,
     alt,
     onOpen,
     onEdit,
@@ -37,7 +37,7 @@ function GalleryItem({
     const isVideoAsset = (
         asset?.fileMetadata?.mimeType?.startsWith('video/')
         || asset?.imagetype?.startsWith('video/')
-        || /\\.mp4$|\\.mov$|\\.m4v$|\\.webm$/i.test(imageProps?.src || '')
+        || /\\.mp4$|\\.mov$|\\.m4v$|\\.webm$/i.test(src || '')
     );
     const isPremiumAsset = isPremiumByLicense(asset?.freePremium);
 
@@ -92,7 +92,7 @@ function GalleryItem({
             {isVideoAsset ? (
                 <video
                     ref={videoRef}
-                    src={imageProps?.src}
+                    src={src}
                     className="lazy-image"
                     style={{
                         position: 'absolute',
@@ -120,9 +120,7 @@ function GalleryItem({
                 />
             ) : (
                 <img
-                    src={imageProps?.src}
-                    srcSet={imageProps?.srcSet || undefined}
-                    sizes={imageProps?.sizes || undefined}
+                    src={src}
                     alt={alt}
                     className="lazy-image"
                     style={{
@@ -566,7 +564,7 @@ function HomeGallery() {
                         <div key={asset._id} className="col-6 col-md-3">
                             <GalleryItem
                                 asset={asset}
-                                imageProps={getResponsiveImageProps(asset, { preferredOrder: ['thumbnail', 'small', 'medium', 'large', 'original'], sizes: '(max-width: 576px) 50vw, (max-width: 992px) 33vw, 265px' })}
+                                src={getMediaVariantUrl(asset, ['thumbnail', 'small', 'medium', 'large', 'original'])}
                                 alt={asset.title || getName(asset.subcategory) || 'Asset'}
                                 onOpen={() => navigate(buildAssetUrl(asset))}
                                 onEdit={handleEdit}
@@ -711,6 +709,7 @@ function HomeGallery() {
 }
 
 export default HomeGallery;
+
 
 
 
