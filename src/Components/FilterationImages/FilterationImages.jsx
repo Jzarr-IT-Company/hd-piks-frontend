@@ -19,7 +19,14 @@ const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase(
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
 const COLLECTION_PAGE_SIZE = 16;
 
- FilterationMedia({ img, src, alt }) {
+const getOriginalMediaUrl = (asset) => (
+    asset?.imageUrl
+    || asset?.s3Url
+    || asset?.imageData?.[0]?.url
+    || ''
+);
+
+function FilterationMedia({ img, src, alt }) {
     const [videoDuration, setVideoDuration] = useState(null);
     const videoRef = useRef(null);
 
@@ -1030,6 +1037,7 @@ function FilterationImages({
 }
 
 export default React.memo(FilterationImages);
+
 
 
 
