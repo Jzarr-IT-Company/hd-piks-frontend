@@ -10,7 +10,6 @@ import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
 import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
-import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
@@ -20,7 +19,7 @@ const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase(
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
 const COLLECTION_PAGE_SIZE = 16;
 
-function FilterationMedia({ img, src, alt }) {
+ FilterationMedia({ img, src, alt }) {
     const [videoDuration, setVideoDuration] = useState(null);
     const videoRef = useRef(null);
 
@@ -801,7 +800,7 @@ function FilterationImages({
                                                     <div className="card card-container rounded-4">
                                                         <FilterationMedia
                                                             img={img}
-                                                            src={getMediaVariantUrl(img, ['small', 'medium', 'thumbnail', 'large', 'original'])}
+                                                            src={getOriginalMediaUrl(img)}
                                                             alt={
                                                                 getSubcategoryName(img.subcategory) ||
                                                                 getCategoryName(img.category) ||
@@ -1031,6 +1030,7 @@ function FilterationImages({
 }
 
 export default React.memo(FilterationImages);
+
 
 
 
