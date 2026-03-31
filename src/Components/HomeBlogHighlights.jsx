@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import './HomeBlogHighlights.css';
-import blogImgOne from '../assets/02_Images_4K.jpg';
-import blogImgTwo from '../assets/01_Videos_4K.jpg';
-import blogImgThree from '../assets/08_Mockups_4K.jpg';
+import blogImgOne from '../assets/02_Images_4K.jpeg';
+import blogImgTwo from '../assets/01_Videos_4K.jpeg';
+import blogImgThree from '../assets/08_Mockups_4K.jpeg';
 
 const BLOGS = [
   {
@@ -83,3 +83,4 @@ export default function HomeBlogHighlights() {
     </section>
   );
 }
+

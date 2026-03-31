@@ -9,6 +9,7 @@ import HomeBannerSearchbarFilterationCompo from '../HomeBannerSearchbarFilterati
 import HomeBannerSearchFilterationCompo2 from '../HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
 import AppNavbarBanner1Compo from '../AppNavbarBanner1Compo/AppNavbarBanner1Compo';
 import AiToolsCards from '../AiToolsCards/AiToolsCards';
+import heroSectionImg from '../../assets/Hero-Section.jpg';
 
 const CreateImagesLikeCanva = lazy(() => import('../CreateImagesLikeCanva/CreateImagesLikeCanva'));
 const NavbarProfileCompo = lazy(() => import('../NavbarProfileCompo/NavbarProfileCompo'));
@@ -54,12 +55,16 @@ function AppNavbar() {
                 <div className="border my-0 custome-css">
                     <div className="card mb-0 custome-css-card" style={{ position: "relative", border: "none" }}>
                         <div className="card custme-css-background-card border">
-                            <img rel="preload"
-                                src={"https://res.cloudinary.com/dhssktx47/image/upload/v1732794661/1732794658871-877602389_ehaycm.webp"}
+                            <img
+                                src={heroSectionImg}
                                 width={'100%'}
                                 height={'100%'}
                                 className='card-img w-100'
-                                id='coustome-img-css' alt="banner-img" />
+                                id='coustome-img-css'
+                                alt="banner-img"
+                                fetchPriority="high"
+                                decoding="async"
+                            />
                             <div className="card-img-overlay card-img-overlay-css d-flex flex-column justify-content-center align-items-center">
                                 <div className="text-container hero-content-stack">
                                     <h1 className="text-white text-center fw-bold">

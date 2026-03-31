@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Skeleton } from 'antd';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../../config/api.config.js';
 import { FiDownload, FiShare2, FiCompass, FiFolderPlus, FiEdit3 } from 'react-icons/fi';
@@ -223,7 +223,7 @@ function GalleryItem({
 
 function HomeGallery() {
     const navigate = useNavigate();
-    const [searchParams, setSearchParams] = useSearchParams();
+    const { galleryCategory: galleryCategoryParamRaw, galleryPage: galleryPageParamRaw } = useParams();
     const categoriesQuery = usePublicCategoriesQuery();
     const homepageCategories = useMemo(
         () => buildHomepageCategoryEntries(categoriesQuery.data),
@@ -240,8 +240,10 @@ function HomeGallery() {
         [homepageCategories]
     );
 
-    const galleryCategoryParam = searchParams.get('galleryCategory') || 'all';
-    const parsedGalleryPage = Number.parseInt(searchParams.get('galleryPage') || '1', 10);
+    const galleryCategoryParam = galleryCategoryParamRaw
+        ? decodeURIComponent(galleryCategoryParamRaw)
+        : 'all';
+    const parsedGalleryPage = Number.parseInt(galleryPageParamRaw || '1', 10);
     const currentPage = Number.isFinite(parsedGalleryPage) && parsedGalleryPage > 0 ? parsedGalleryPage : 1;
     const activeTab = tabOptions.some((tab) => tab.value === galleryCategoryParam) ? galleryCategoryParam : 'all';
     const parentFilter = activeTab === 'all' ? undefined : activeTab;
@@ -264,20 +266,25 @@ function HomeGallery() {
     const [showCollectionModal, setShowCollectionModal] = useState(false);
     const [selectedAssetId, setSelectedAssetId] = useState(null);
 
-    const updateGalleryParams = useCallback((nextCategory, nextPage) => {
-        const params = new URLSearchParams(searchParams);
-        if (nextCategory && nextCategory !== 'all') {
-            params.set('galleryCategory', nextCategory);
-        } else {
-            params.delete('galleryCategory');
+    const buildGalleryPath = useCallback((nextCategory, nextPage) => {
+        const normalizedPage = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1;
+        const hasCategory = nextCategory && nextCategory !== 'all';
+
+        if (hasCategory && normalizedPage > 1) {
+            return `/galleryCategory/${encodeURIComponent(nextCategory)}/Page/${normalizedPage}`;
         }
-        if (nextPage > 1) {
-            params.set('galleryPage', String(nextPage));
-        } else {
-            params.delete('galleryPage');
+        if (hasCategory) {
+            return `/galleryCategory/${encodeURIComponent(nextCategory)}`;
         }
-        setSearchParams(params, { replace: false });
-    }, [searchParams, setSearchParams]);
+        if (normalizedPage > 1) {
+            return `/Page/${normalizedPage}`;
+        }
+        return '/';
+    }, []);
+
+    const updateGalleryParams = useCallback((nextCategory, nextPage, replace = false) => {
+        navigate(buildGalleryPath(nextCategory, nextPage), { replace });
+    }, [buildGalleryPath, navigate]);
 
     const handleTabClick = (tab) => {
         updateGalleryParams(tab, 1);
@@ -304,7 +311,7 @@ function HomeGallery() {
         if (loadingMore) return;
         if (!Number.isFinite(resolvedTotalPages) || resolvedTotalPages <= 0) return;
         if (currentPage > resolvedTotalPages) {
-            updateGalleryParams(activeTab, resolvedTotalPages);
+            updateGalleryParams(activeTab, resolvedTotalPages, true);
         }
     }, [activeTab, currentPage, loadingMore, resolvedTotalPages, updateGalleryParams]);
 

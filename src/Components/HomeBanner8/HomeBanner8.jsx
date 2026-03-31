@@ -6,6 +6,29 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
 import { useNavigate } from 'react-router-dom';
+import videosImg from '../../assets/01_Videos_4K.jpeg';
+import imagesImg from '../../assets/02_Images_4K.jpeg';
+import vectorImg from '../../assets/03_Vector_4K.jpeg';
+import psdImg from '../../assets/04_PSD_4K.jpeg';
+import aiImagesImg from '../../assets/05_AI_Images_4K.jpeg';
+import templatesImg from '../../assets/06_Templates_4K.jpeg';
+import iconsImg from '../../assets/07_Icons_4K.jpeg';
+import mockupsImg from '../../assets/08_Mockups_4K.jpeg';
+import nftsImg from '../../assets/09_NFTs_4K.jpeg';
+import superHerosImg from '../../assets/Super-Heros.jpeg';
+
+const homeBannerItems = [
+    { name: 'Ai images', image: aiImagesImg },
+    { name: 'templates', image: templatesImg },
+    { name: 'icon', image: iconsImg },
+    { name: 'mockups', image: mockupsImg },
+    { name: 'video', image: videosImg },
+    { name: 'vector', image: vectorImg },
+    { name: 'image', image: imagesImg },
+    { name: 'psd', image: psdImg },
+    { name: 'NFTS', image: nftsImg },
+    { name: 'Super Heroes', image: superHerosImg },
+];
 
 function HomeBanner8() {
     const navigate = useNavigate();
@@ -33,35 +56,16 @@ function HomeBanner8() {
                             1201: { slidesPerView: 3 },
                         }}
                     >
-                        {[
-                            { name: 'Ai images', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730803633/file_ku7osu.png" },
-                            { name: 'templates', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730821567/file_slokgc.png" },
-                            { name: 'icon', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730803633/file_sqaf23.png" },
-                            { name: 'mockups', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730801102/file_fthnge.png" },
-                            { name: 'video', image: "https://res.cloudinary.com/ds819uy6o/video/upload/v1730803635/file_puhduq.mp4", isVideo: true },
-                            { name: 'vector', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730803633/file_wzjssh.png" },
-                            { name: 'image', image: 'https://res.cloudinary.com/ds819uy6o/image/upload/v1730803633/file_shfd3c.png' },
-                            { name: 'psd', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730803633/file_usoap6.png" },
-                            { name: 'NFTS', image: "https://res.cloudinary.com/ds819uy6o/image/upload/v1730802124/file_onvr1k.jpg" },
-                        ].map((item, index) => (
+                        {homeBannerItems.map((item, index) => (
                             <SwiperSlide key={index}>
                                 <div className="card text-white" style={{ position: "relative" }} onClick={() => nextPage(item.name)}>
-                                    {item.isVideo ? (
-                                        <video
-                                            rel="preload"
-                                            src={item.image}
-                                            style={{ height: "130px", width: "100%", objectFit: "cover" }}
-                                            loop muted autoPlay
-                                        />
-                                    ) : (
-                                        <img
-                                            rel="preload"
-                                            style={{ height: "130px", width: "100%", objectFit: "cover" }}
-                                            src={item.image}
-                                            className="card-img rounded-3"
-                                            alt={item.name}
-                                        />
-                                    )}
+                                    <img
+                                        style={{ height: "130px", width: "100%", objectFit: "cover" }}
+                                        src={item.image}
+                                        className="card-img rounded-3"
+                                        alt={item.name}
+                                        loading="lazy"
+                                    />
                                     <div
                                         className="card-img-overlay rounded-3"
                                         style={{
@@ -90,3 +94,5 @@ function HomeBanner8() {
 }
 
 export default HomeBanner8;
+
+

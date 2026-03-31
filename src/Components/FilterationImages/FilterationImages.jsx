@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react'
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { FiChevronLeft, FiChevronRight, FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../../config/api.config';
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
@@ -18,6 +18,7 @@ import './FilterationImages.css';
 
 const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
+const COLLECTION_PAGE_SIZE = 16;
 
 function FilterationMedia({ img, src, alt }) {
     const [videoDuration, setVideoDuration] = useState(null);
@@ -109,6 +110,8 @@ function FilterationImages({
     const [activeSubcategory, setActiveSubcategory] = useState('all');
     const [activeSubsubcategory, setActiveSubsubcategory] = useState('all');
     const navigate = useNavigate();
+    const location = useLocation();
+    const { name: routeCollectionName, collectionPage: collectionPageParamRaw } = useParams();
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -117,12 +120,22 @@ function FilterationImages({
     const pillsRowRef = useRef(null);
 
     const isSearchMode = !!searchSubcategory;
+    const parsedCollectionPage = Number.parseInt(collectionPageParamRaw || '1', 10);
+    const currentPage = Number.isFinite(parsedCollectionPage) && parsedCollectionPage > 0 ? parsedCollectionPage : 1;
 
     const normalize = useCallback((val) => {
         if (typeof val === 'string') return val.trim().toLowerCase();
         if (val == null) return '';
         return String(val).trim().toLowerCase();
     }, []);
+
+    const buildCollectionPagePath = useCallback((nextPage) => {
+        const normalizedPage = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1;
+        const routeName = routeCollectionName || name || '';
+        const encodedName = encodeURIComponent(routeName);
+        const suffix = normalizedPage > 1 ? `/Page/${normalizedPage}` : '';
+        return `/collection/${encodedName}${suffix}${location.search || ''}`;
+    }, [location.search, name, routeCollectionName]);
 
     const getCategoryName = useCallback((cat) => {
         if (!cat) return '';
@@ -527,6 +540,53 @@ function FilterationImages({
         return groups;
     }, [subcategoryBuckets, activeSubcategory, activeSubsubcategory, getSubSubcategoryName]);
 
+    const visibleGroups = useMemo(() => {
+        return filteredGroups.map(([subcat, items]) => ({
+            key: subcat,
+            title: isSearchMode && searchSubSubcategory ? searchSubSubcategory : subcat,
+            items,
+        }));
+    }, [filteredGroups, isSearchMode, searchSubSubcategory]);
+
+    const paginatedEntries = useMemo(() => {
+        return visibleGroups.flatMap((group) =>
+            group.items.map((img) => ({
+                groupKey: group.key,
+                sectionTitle: group.title,
+                img,
+            }))
+        );
+    }, [visibleGroups]);
+
+    const totalPaginatedItems = paginatedEntries.length;
+    const totalPages = Math.max(1, Math.ceil(totalPaginatedItems / COLLECTION_PAGE_SIZE));
+
+    const pagedEntries = useMemo(() => {
+        const startIndex = (currentPage - 1) * COLLECTION_PAGE_SIZE;
+        return paginatedEntries.slice(startIndex, startIndex + COLLECTION_PAGE_SIZE);
+    }, [currentPage, paginatedEntries]);
+
+    const paginatedGroups = useMemo(() => {
+        const groups = [];
+        pagedEntries.forEach(({ groupKey, sectionTitle, img }) => {
+            const lastGroup = groups[groups.length - 1];
+            if (!lastGroup || lastGroup.key !== groupKey) {
+                groups.push({ key: groupKey, title: sectionTitle, items: [img] });
+            } else {
+                lastGroup.items.push(img);
+            }
+        });
+        return groups;
+    }, [pagedEntries]);
+
+    const visiblePages = useMemo(() => {
+        const total = Math.max(1, totalPages);
+        const pages = new Set([1, total, currentPage, currentPage - 1, currentPage + 1]);
+        return Array.from(pages)
+            .filter((page) => page >= 1 && page <= total)
+            .sort((a, b) => a - b);
+    }, [currentPage, totalPages]);
+
     useEffect(() => {
         if (!loading) {
             const subcategoryBuckets = {};
@@ -539,6 +599,20 @@ function FilterationImages({
         }
     }, [imagesdata, loading, getSubcategoryName]);
 
+    useEffect(() => {
+        if (currentPage <= totalPages) return;
+        navigate(buildCollectionPagePath(totalPages), { replace: true });
+    }, [buildCollectionPagePath, currentPage, navigate, totalPages]);
+
+    const handlePageChange = useCallback((page) => {
+        if (page < 1 || page > totalPages || page === currentPage) return;
+        navigate(buildCollectionPagePath(page));
+        const sectionTop = document.querySelector('.filteration-page-container');
+        if (sectionTop) {
+            sectionTop.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [buildCollectionPagePath, currentPage, navigate, totalPages]);
+
     // NEW: handle subcategory pill click
     const handleSubcategoryPillClick = useCallback(
         (subcat) => {
@@ -548,9 +622,13 @@ function FilterationImages({
             } else {
                 // In normal category page: local filter by subcategory
                 setActiveSubcategory(subcat);
+                setActiveSubsubcategory('all');
+                if (currentPage !== 1) {
+                    navigate(buildCollectionPagePath(1));
+                }
             }
         },
-        [isSearchMode, navigate]
+        [buildCollectionPagePath, currentPage, isSearchMode, navigate]
     );
 
     const scrollPills = useCallback((direction) => {
@@ -639,7 +717,7 @@ function FilterationImages({
                     <button
                         className="btn btn-sm"
                         style={activeSubcategory === 'all' ? pillActiveStyle : pillBaseStyle}
-                        onClick={() => setActiveSubcategory('all')}
+                        onClick={() => { setActiveSubcategory('all'); setActiveSubsubcategory('all'); if (currentPage !== 1) navigate(buildCollectionPagePath(1)); }}
                     >
                         All
                     </button>
@@ -697,17 +775,11 @@ function FilterationImages({
                         creatorsMapQuery.refetch();
                     }}
                 />
-            ) : imagesdata.length === 0 ? (
+            ) : totalPaginatedItems === 0 ? (
                 <p className="text-capitalize">No data found yet</p>
             ) : (
                 <>
-                    {filteredGroups
-                        .filter(([subcat]) => activeSubcategory === 'all' || subcat === activeSubcategory)
-                        .map(([subcat, items]) => {
-                            // NEW: when a style (sub‑subcategory) filter is active, use it as heading
-                            const sectionTitle =
-                                isSearchMode && searchSubSubcategory ? searchSubSubcategory : subcat;
-                            return (
+                    {paginatedGroups.map(({ key: subcat, title: sectionTitle, items }) => (
                                 <div key={subcat} className="mb-4 w-100">
                                     <h5 className="fw-semibold mb-2 text-capitalize filteration-section-title">{sectionTitle}</h5>
                                     <ImageList
@@ -827,8 +899,45 @@ function FilterationImages({
                                         })}
                                     </ImageList>
                                 </div>
-                            );
-                        })}
+                    ))}
+
+                    {totalPages > 1 && (
+                        <div className="d-flex justify-content-center align-items-center gap-2 flex-wrap mt-4">
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage <= 1 || loading}
+                            >
+                                Prev
+                            </button>
+                            {visiblePages.map((page, index) => {
+                                const previous = visiblePages[index - 1];
+                                const showGap = index > 0 && previous && page - previous > 1;
+                                return (
+                                    <React.Fragment key={page}>
+                                        {showGap && <span className="text-muted px-1">...</span>}
+                                        <button
+                                            type="button"
+                                            className={`btn btn-sm ${currentPage === page ? 'btn-dark' : 'btn-outline-dark'}`}
+                                            onClick={() => handlePageChange(page)}
+                                            disabled={loading}
+                                        >
+                                            {page}
+                                        </button>
+                                    </React.Fragment>
+                                );
+                            })}
+                            <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage >= totalPages || loading}
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
                 </>
             )}
 
@@ -922,5 +1031,7 @@ function FilterationImages({
 }
 
 export default React.memo(FilterationImages);
+
+
 
 

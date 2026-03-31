@@ -1,5 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import imagesImg from "../../assets/02_Images_4K.jpeg";
+import psdImg from "../../assets/04_PSD_4K.jpeg";
 
 function SidebarCompo() {
   return (
@@ -138,11 +140,9 @@ function SidebarCompo() {
                       </div>
                       <div className="col-4">
                         <img
-                          src={
-                            "https://res.cloudinary.com/dhssktx47/image/upload/v1732776227/1732776220302-306176920_hk6qcb.webp"
-                          }
+                          src={imagesImg}
                           className="img-fluid rounded w-100"
-                          alt=""
+                          alt="Images preview"
                         />
                       </div>
                     </div>
@@ -350,11 +350,9 @@ function SidebarCompo() {
                   </div>
                   <div className="col-4">
                     <img
-                      src={
-                        "https://res.cloudinary.com/ds819uy6o/image/upload/v1730803633/file_wzjssh.png"
-                      }
+                      src={psdImg}
                       className="img-fluid w-100 rounded"
-                      alt=""
+                      alt="PSD preview"
                     />
                   </div>
                 </div>
@@ -414,3 +412,4 @@ function SidebarCompo() {
 }
 
 export default SidebarCompo;
+

@@ -47,7 +47,7 @@ export const useAssetsInfiniteQuery = (parentCategory) => {
             if (!lastPage?.hasMore) return undefined;
             return (lastPage.page || 1) + 1;
         },
-        staleTime: 60 * 1000,
+        staleTime: 7 * 24 * 60 * 60 * 1000,
     });
 };
 
@@ -55,7 +55,9 @@ export const useAssetsPageQuery = (parentCategory, page = 1, limit = PAGE_SIZE) 
     return useQuery({
         queryKey: ["assets", "page", parentCategory || "all", page, limit],
         queryFn: () => requestAssetsPage({ page, limit, parentCategory }),
-        staleTime: 60 * 1000,
+        staleTime: 7 * 24 * 60 * 60 * 1000,
         keepPreviousData: true,
     });
 };
+
+

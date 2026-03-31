@@ -1,12 +1,12 @@
-import videosImg from '../assets/01_Videos_4K.jpg';
-import imagesImg from '../assets/02_Images_4K.jpg';
-import vectorImg from '../assets/03_Vector_4K.jpg';
-import psdImg from '../assets/04_PSD_4K.jpg';
-import aiImagesImg from '../assets/05_AI_Images_4K.jpg';
-import templatesImg from '../assets/06_Templates_4K.jpg';
-import iconsImg from '../assets/07_Icons_4K.jpg';
-import mockupsImg from '../assets/08_Mockups_4K.jpg';
-import nftsImg from '../assets/09_NFTs_4K.jpg';
+import videosImg from '../assets/01_Videos_4K.jpeg';
+import imagesImg from '../assets/02_Images_4K.jpeg';
+import vectorImg from '../assets/03_Vector_4K.jpeg';
+import psdImg from '../assets/04_PSD_4K.jpeg';
+import aiImagesImg from '../assets/05_AI_Images_4K.jpeg';
+import templatesImg from '../assets/06_Templates_4K.jpeg';
+import iconsImg from '../assets/07_Icons_4K.jpeg';
+import mockupsImg from '../assets/08_Mockups_4K.jpeg';
+import nftsImg from '../assets/09_NFTs_4K.jpeg';
 
 const CATEGORY_VISUALS = {
     video: { src: videosImg, tabLabel: 'Video', cardLabel: 'Videos', order: 10 },

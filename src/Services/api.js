@@ -1,4 +1,4 @@
-﻿import axios from 'axios';
+import axios from 'axios';
 import API_BASE_URL from '../config/api.config.js';
 import Cookies from 'js-cookie';
 
@@ -29,6 +29,7 @@ const publicExactPaths = new Set([
 const publicRegexPaths = [
     /^\/admin\/login$/i,
     /^\/collection\/[^/]+$/i,
+    /^\/collection\/[^/]+\/Page\/[^/]+$/i,
     /^\/memberdetail\/[^/]+$/i,
     /^\/creatordetail\/[^/]+$/i,
     /^\/collections\/[^/]+$/i,
@@ -208,10 +209,10 @@ api.interceptors.response.use(
             }
         } else if (error.request) {
             // Request made but no response
-            console.error('âŒ No response from server:', error.message);
+            console.error('❌ No response from server:', error.message);
         } else {
             // Something else happened
-            console.error('âŒ Request setup error:', error.message);
+            console.error('❌ Request setup error:', error.message);
         }
         
         return Promise.reject(error);

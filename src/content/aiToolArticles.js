@@ -1,6 +1,6 @@
-import videosImg from '../assets/01_Videos_4K.jpg';
-import imagesImg from '../assets/02_Images_4K.jpg';
-import aiImagesImg from '../assets/05_AI_Images_4K.jpg';
+import videosImg from '../assets/01_Videos_4K.jpeg';
+import imagesImg from '../assets/02_Images_4K.jpeg';
+import aiImagesImg from '../assets/05_AI_Images_4K.jpeg';
 import textVoiceoverRaw from './ai-articles/ai-text-voiceover.txt?raw';
 import bgRemoveRaw from './ai-articles/ai-bg-remove.txt?raw';
 import imageGeneratorRaw from './ai-articles/ai-generator.txt?raw';
@@ -27,4 +27,5 @@ export const AI_TOOL_ARTICLES = {
   'ai-generator': buildArticle(imageGeneratorRaw, aiImagesImg, 'Introduction to AI Image Generator'),
   'ai-video-generator': buildArticle(videoGeneratorRaw, videosImg, 'Introduction to AI Video Generator'),
 };
+
 

@@ -1,4 +1,4 @@
-﻿// import "bootstrap/dist/css/bootstrap.min.css";
+// import "bootstrap/dist/css/bootstrap.min.css";
 // import React from "react";
 // import Cookies from "js-cookie";
 // import {
@@ -533,6 +533,18 @@ function Routing() {
       element: <HomePage />,
     },
     {
+      path: "/Page/:galleryPage",
+      element: <HomePage />,
+    },
+    {
+      path: "/galleryCategory/:galleryCategory",
+      element: <HomePage />,
+    },
+    {
+      path: "/galleryCategory/:galleryCategory/Page/:galleryPage",
+      element: <HomePage />,
+    },
+    {
       path: "/dashboard",
       element: (
         <ProtectedCreatorRoute>
@@ -570,6 +582,10 @@ function Routing() {
     },
     {
       path: "/collection/:name",
+      element: <Sidebar />,
+    },
+    {
+      path: "/collection/:name/Page/:collectionPage",
       element: <Sidebar />,
     },
     {
