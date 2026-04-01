@@ -135,9 +135,6 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
                     </AccordionDetails>
                 </Accordion>
                 <div className="text-start w-100 border-bottom border-end border-start">
-                    <Link className='btn  w-100 fw-semibold py-3 text-start' onClick={handleCLoseBtn} target='_blank' to={`https://design.hdpiks.com/`}>Creating Design</Link>
-                </div>
-                <div className="text-start w-100 border-bottom border-end border-start">
                     <Link className='btn  w-100 fw-semibold py-3 text-start' onClick={handleCLoseBtn} to={`/pricing`}>Pricing</Link>
                 </div>
                 <div className="text-start w-100 border-bottom border-end border-start">
@@ -149,3 +146,4 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
 }
 
 export default AppNavbarOffcanvasContentCompo
+

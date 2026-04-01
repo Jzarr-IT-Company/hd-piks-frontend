@@ -10,6 +10,7 @@ import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
 import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
+import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
@@ -19,12 +20,14 @@ const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase(
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
 const COLLECTION_PAGE_SIZE = 16;
 
-const getOriginalMediaUrl = (asset) => (
-    asset?.imageUrl
-    || asset?.s3Url
-    || asset?.imageData?.[0]?.url
-    || ''
-);
+const getBrowseMediaUrl = (asset) => {
+    const mime = String(asset?.fileMetadata?.mimeType || asset?.imagetype || '').toLowerCase();
+    const fallback = asset?.imageUrl || asset?.s3Url || asset?.imageData?.[0]?.url || '';
+    if (mime.startsWith('video/') || /\\.mp4$|\\.mov$|\\.m4v$|\\.webm$/i.test(fallback)) {
+        return getMediaVariantUrl(asset, ['360p', '720p', '1080p', 'original']) || fallback;
+    }
+    return getMediaVariantUrl(asset, ['thumbnail', 'small', 'medium', 'large', 'original']) || fallback;
+};
 
 function FilterationMedia({ img, src, alt }) {
     const [videoDuration, setVideoDuration] = useState(null);
@@ -807,7 +810,7 @@ function FilterationImages({
                                                     <div className="card card-container rounded-4">
                                                         <FilterationMedia
                                                             img={img}
-                                                            src={getOriginalMediaUrl(img)}
+                                                            src={getBrowseMediaUrl(img)}
                                                             alt={
                                                                 getSubcategoryName(img.subcategory) ||
                                                                 getCategoryName(img.category) ||
@@ -1037,6 +1040,7 @@ function FilterationImages({
 }
 
 export default React.memo(FilterationImages);
+
 
 
 

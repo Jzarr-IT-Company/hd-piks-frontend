@@ -9,6 +9,7 @@ import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import { QueryErrorRetry, QueryGridSkeleton } from '../QueryState/QueryState.jsx';
 import { PAGE_SIZE, useAssetsPageQuery } from '../../query/assetsQueries.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
+import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { buildHomepageCategoryEntries } from '../../utils/homepageCategories.js';
 import '../LazyLoadImage2/LazyLoadImage.css';
@@ -17,12 +18,14 @@ import './HomeGallery.css';
 const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
 
-const getOriginalMediaUrl = (asset) => (
-    asset?.imageUrl
-    || asset?.s3Url
-    || asset?.imageData?.[0]?.url
-    || ''
-);
+const getBrowseMediaUrl = (asset) => {
+    const mime = String(asset?.fileMetadata?.mimeType || asset?.imagetype || '').toLowerCase();
+    const fallback = asset?.imageUrl || asset?.s3Url || asset?.imageData?.[0]?.url || '';
+    if (mime.startsWith('video/') || /\\.mp4$|\\.mov$|\\.m4v$|\\.webm$/i.test(fallback)) {
+        return getMediaVariantUrl(asset, ['360p', '720p', '1080p', 'original']) || fallback;
+    }
+    return getMediaVariantUrl(asset, ['thumbnail', 'small', 'medium', 'large', 'original']) || fallback;
+};
 // Reusable gallery card
 function GalleryItem({
     asset,
@@ -569,7 +572,7 @@ function HomeGallery() {
                         <div key={asset._id} className="col-6 col-md-3">
                             <GalleryItem
                                 asset={asset}
-                                src={getOriginalMediaUrl(asset)}
+                                src={getBrowseMediaUrl(asset)}
                                 alt={asset.title || getName(asset.subcategory) || 'Asset'}
                                 onOpen={() => navigate(buildAssetUrl(asset))}
                                 onEdit={handleEdit}
@@ -714,6 +717,7 @@ function HomeGallery() {
 }
 
 export default HomeGallery;
+
 
 
 

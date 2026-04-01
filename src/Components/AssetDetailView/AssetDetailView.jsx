@@ -90,7 +90,7 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
             ) : (
                 <LazyLoadImage2
                     {...getResponsiveImageProps(item, {
-                        preferredOrder: ['small', 'medium', 'thumbnail', 'large', 'original'],
+                        preferredOrder: ['thumbnail', 'small', 'medium', 'large', 'original'],
                         sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
                     })}
                     className="related-media-el"
@@ -347,13 +347,13 @@ function AssetDetailView() {
         if (!asset) return { src: '', srcSet: '', sizes: '' };
         if (isVideo) {
             return {
-                src: getMediaVariantUrl(asset, ['720p', '1080p', '360p', 'original']),
+                src: getMediaVariantUrl(asset, ['360p', '720p', '1080p', 'original']),
                 srcSet: '',
                 sizes: '',
             };
         }
         return getResponsiveImageProps(asset, {
-            preferredOrder: ['medium', 'large', 'small', 'original'],
+            preferredOrder: ['medium', 'small', 'large', 'original'],
             sizes: '(max-width: 992px) 100vw, 70vw',
         });
     }, [asset, isVideo]);
@@ -2054,3 +2054,4 @@ function AssetDetailView() {
 }
 
 export default AssetDetailView;
+
