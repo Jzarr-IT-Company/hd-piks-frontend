@@ -110,7 +110,7 @@
 //                         role="button"
 //                         style={{ backgroundColor: "#E1306C", color: "#fff" }}
 //                       >
-//                         <i className="fab fa-instagram" />
+//                         <i className="fab fa-pinterest-p" />
 //                       </a>
 //                       <a
 //                         className="btn btn-outline-light btn-floating m-1"
@@ -247,7 +247,7 @@ function AppFooter() {
                   <section className="mb-4 text-center">
                     <a
                       className="btn btn-outline-light btn-floating m-1"
-                      href="https://www.facebook.com/hdpiks/"
+                      href="https://www.facebook.com/thehdpiks"
                       role="button"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -266,6 +266,17 @@ function AppFooter() {
                       style={{ backgroundColor: "#E1306C", color: "#fff" }}
                     >
                       <i className="fab fa-instagram" />
+                    </a>
+                    <a
+                      className="btn btn-outline-light btn-floating m-1"
+                      href="https://www.pinterest.com/HDpiks/?actingBusinessId=869194934241189877"
+                      role="button"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Follow HDpiks on Pinterest"
+                      style={{ backgroundColor: "#BD081C", color: "#fff" }}
+                    >
+                      <i className="fab fa-pinterest-p" />
                     </a>
                     <a
                       className="btn btn-outline-light btn-floating m-1"
@@ -310,3 +321,6 @@ function AppFooter() {
 }
 
 export default AppFooter;
+
+
+
