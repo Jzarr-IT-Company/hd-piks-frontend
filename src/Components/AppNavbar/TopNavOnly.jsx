@@ -5,6 +5,7 @@ import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
 import AppNavbarOffcanvas from '../AppNavbarOffcanvas/AppNavbarOffcanvas';
+import logo from '../../assets/logo.png';
 const CreateImagesLikeCanva = React.lazy(() => import('../CreateImagesLikeCanva/CreateImagesLikeCanva'));
 const NavbarProfileCompo = React.lazy(() => import('../NavbarProfileCompo/NavbarProfileCompo'));
 const SidebarCompo = React.lazy(() => import('../SidebarCompo/SidebarCompo'));
@@ -21,8 +22,8 @@ function TopNavOnly() {
                     <div className="d-flex align-items-center justify-content-between">
                         <div className="d-flex align-items-center">
                             <AppNavbarOffcanvas />
-                            <Link to="/" onClick={handleLogoClick}>
-                                <span className='fs-3 text-white fw-bold'>HDpiks</span>
+                            <Link to="/" onClick={handleLogoClick} style={{ display: 'inline-flex', alignItems: 'center', marginRight: 18 }}>
+                                <img src={logo} alt="HDpiks" style={{ height: 40, width: 150, objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
                             </Link>
                         </div>
                     </div>
@@ -50,3 +51,9 @@ function TopNavOnly() {
 }
 
 export default TopNavOnly;
+
+
+
+
+
+

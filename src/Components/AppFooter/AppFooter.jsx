@@ -1,5 +1,5 @@
 // import React from 'react';
-// import logo from '../../assets/logo1.webp';
+// import logo from '../../assets/logo.png';
 // import { Link } from 'react-router-dom';
 // import './Footer.css'
 
@@ -151,7 +151,7 @@
 // export default AppFooter;
 
 import React from 'react';
-import logo from '../../assets/logo1.webp';
+import logo from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
 import './Footer.css';
 
@@ -192,7 +192,7 @@ function AppFooter() {
               <div className="row">
                 <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
                   <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <img src={logo} alt="Hdpiks" style={{ height: 40 }} />
+                    <img src={logo} alt="Hdpiks" style={{ height: 40, width: 150, objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
                     <h5 className="text-uppercase mb-0">GadgetHub Gallery</h5>
                   </Link>
                   <p className="mt-3">
@@ -321,6 +321,9 @@ function AppFooter() {
 }
 
 export default AppFooter;
+
+
+
 
 
 

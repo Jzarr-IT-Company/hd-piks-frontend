@@ -10,6 +10,7 @@ import HomeBannerSearchFilterationCompo2 from '../HomeBannerSearchFilterationCom
 import AppNavbarBanner1Compo from '../AppNavbarBanner1Compo/AppNavbarBanner1Compo';
 import AiToolsCards from '../AiToolsCards/AiToolsCards';
 import heroSectionImg from '../../assets/Hero-Section.jpg';
+import logo from '../../assets/logo.png';
 
 const CreateImagesLikeCanva = lazy(() => import('../CreateImagesLikeCanva/CreateImagesLikeCanva'));
 const NavbarProfileCompo = lazy(() => import('../NavbarProfileCompo/NavbarProfileCompo'));
@@ -28,8 +29,8 @@ function AppNavbar() {
                         <div className="d-flex align-items-center justify-content-between">
                             <div className="d-flex align-items-center">
                                 <AppNavbarOffcanvas />
-                                <Link to="/" onClick={handleLogoClick}>
-                                    <span className='fs-3 text-white fw-bold'>HDpiks</span>
+                                <Link to="/" onClick={handleLogoClick} style={{ display: 'inline-flex', alignItems: 'center', marginRight: 18 }}>
+                                    <img src={logo} alt="HDpiks" style={{ height: 40, width: 150, objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
                                 </Link>
                             </div>
                         </div>
@@ -93,3 +94,9 @@ function AppNavbar() {
 }
 
 export default AppNavbar;
+
+
+
+
+
+
