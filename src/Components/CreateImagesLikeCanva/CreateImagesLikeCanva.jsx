@@ -11,10 +11,10 @@ function CreateImagesLikeCanva() {
                     id && token ?
                         (
                             <>
-                                <Link className='btn me-3 start-creating-btn' to={'/design-hdpiks'}>Start Creating</Link>
-                                <Link className='text-white' to={'/pricing'}>Pricing</Link>
+                                <Link className='text-white pricing-link' to={'/pricing'}>Pricing</Link>
+                                <Link className='btn start-creating-btn' to={'/design-hdpiks'}>Start Creating</Link>
                             </>
-                        ) : <Link className='text-white' style={{ fontSize: "18px" }} to={'/pricing'}>Pricing</Link>
+                        ) : <Link className='text-white pricing-link' to={'/pricing'}>Pricing</Link>
                 }
             </div>
         </>

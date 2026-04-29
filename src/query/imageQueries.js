@@ -13,15 +13,35 @@ const fetchAllImages = async () => {
     return parseImages(response?.data);
 };
 
+const fetchBrowseImages = async ({ parentCategory, subcategory }) => {
+    const params = {
+        limit: 240,
+        parentCategory,
+    };
+
+    if (subcategory && subcategory !== 'all') {
+        params.subcategory = subcategory;
+    }
+
+    const response = await api.get(API_ENDPOINTS.ASSETS, { params });
+    return parseImages(response?.data);
+};
+
 const fetchImagesByCreatorId = async (creatorId) => {
     const response = await api.post(API_ENDPOINTS.GET_IMAGES_BY_CREATOR_ID, { id: creatorId });
     return parseImages(response?.data);
 };
 
-export const useAllImagesQuery = (enabled = true) => {
+export const useAllImagesQuery = (enabled = true, parentCategory = '', subcategory = '') => {
+    const usePaginatedAssets = Boolean(parentCategory);
+
     return useQuery({
-        queryKey: ["images", "all"],
-        queryFn: fetchAllImages,
+        queryKey: usePaginatedAssets
+            ? ["images", "browse", parentCategory, subcategory || "all"]
+            : ["images", "all"],
+        queryFn: usePaginatedAssets
+            ? () => fetchBrowseImages({ parentCategory, subcategory })
+            : fetchAllImages,
         enabled,
         staleTime: 60 * 1000,
     });

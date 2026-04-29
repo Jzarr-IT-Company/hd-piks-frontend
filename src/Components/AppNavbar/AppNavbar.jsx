@@ -37,17 +37,15 @@ function AppNavbar() {
                         <Navbar.Collapse id="navbarScroll">
                             <Nav
                                 className="me-auto my-2 my-lg-0"
-                                style={{ maxHeight: '100px' }}
-                                navbarScroll
                             >
                                 <SidebarCompo />
                             </Nav>
-                            <div className="d-flex align-items-center" style={{ gap: "0px 20px" }}>
+                            <div className="d-flex align-items-center hdp-navbar-actions">
                                 <CreateImagesLikeCanva />
                                 <NavbarProfileCompo />
                             </div>
                         </Navbar.Collapse>
-                        <div className="d-flex d-lg-none align-items-center" style={{ gap: "0px 20px" }}>
+                        <div className="d-flex d-lg-none align-items-center hdp-navbar-actions">
                             <CreateImagesLikeCanva />
                             <NavbarProfileCompo />
                         </div>

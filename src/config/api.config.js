@@ -71,6 +71,7 @@ export const API_ENDPOINTS = {
 
     // Images
     GET_ALL_IMAGES: '/AllImagesfromDB', // legacy full fetch, avoid in new components
+    COLLECTION_BOOTSTRAP: '/collection-bootstrap',
     // NEW: paginated public assets endpoint for galleries
     ASSETS: '/assets',
     GET_PUBLIC_ASSET_BY_ID: id => `/assets/${id}`,

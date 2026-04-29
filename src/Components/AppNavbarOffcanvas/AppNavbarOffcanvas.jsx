@@ -18,16 +18,14 @@ function AppNavbarOffcanvas() {
                 <Button onClick={handleShow} aria-label="Open navigation menu" title="Open navigation menu" style={{ zIndex: 1040, background: "transparent", border: "none", boxShadow: "none" }}>
                     <i className="fa-solid fa-bars-staggered fs-5 text-white"></i>
                 </Button>
-                <Offcanvas show={show} onHide={handleClose} style={{ zIndex: 1055 }}>
-                    <Offcanvas.Header closeButton>
+                <Offcanvas show={show} onHide={handleClose} className="hdp-mobile-offcanvas" style={{ zIndex: 1055 }}>
+                    <Offcanvas.Header closeButton className="hdp-mobile-offcanvas__header">
                         <Offcanvas.Title>
-                            <img src={logo} className='img-fluid' width={150} alt="" />
+                            <img src={logo} className='img-fluid hdp-mobile-offcanvas__logo' width={150} alt="HDpiks" />
                         </Offcanvas.Title>
                     </Offcanvas.Header>
-                    <Offcanvas.Body>
-                        <div className="">
-                            <AppNavbarOffcanvasContentCompo handleClose={handleClose} />
-                        </div>
+                    <Offcanvas.Body className="hdp-mobile-offcanvas__body">
+                        <AppNavbarOffcanvasContentCompo handleClose={handleClose} />
                     </Offcanvas.Body>
                 </Offcanvas>
             </div>

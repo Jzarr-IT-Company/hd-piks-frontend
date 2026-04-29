@@ -8,13 +8,18 @@ import './Sidebar.css';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
+import {
+    resolveCategoryFromSlug,
+    resolveSubcategoryFromSlug,
+    slugifyCategory,
+} from '../../utils/navbarMenuConfig.js';
 
 function Sidebar() {
     const [categoryname, setCategoryName] = useState('');
     const [subcategories, setSubcategories] = useState([]);
     const [presetSubcategory, setPresetSubcategory] = useState('all');
     const [collectionAssetIds, setCollectionAssetIds] = useState(null);
-    const { name } = useParams();
+    const { name, parentSlug, subSlug } = useParams();
     const [searchParams] = useSearchParams();
     const collectionSlug = searchParams.get('collection');             // NEW
     const discoverMode = searchParams.get('discover') === '1' && !collectionSlug;
@@ -22,20 +27,35 @@ function Sidebar() {
     const discoverSubSubcategory = searchParams.get('dsSubSub') || '';
     const categoriesQuery = usePublicCategoriesQuery();
 
-    // Resolve route param 'name' to parent or subcategory using cached /categories query
+    // Resolve route params to backend category names using cached /categories query.
     useEffect(() => {
-        if (!name) return;
+        const routeCategory = parentSlug || name;
+        if (!routeCategory) return;
         const tree = categoriesQuery.data;
         if (!Array.isArray(tree) || !tree.length) {
             if (categoriesQuery.isError) {
-                setCategoryName(name);
+                setCategoryName(routeCategory);
                 setPresetSubcategory('all');
             }
             return;
         }
 
-        const lower = name.toLowerCase();
-        const parentMatch = tree.find((p) => p.name?.toLowerCase() === lower);
+        if (parentSlug) {
+            const parentResolved = resolveCategoryFromSlug(tree, parentSlug);
+            const parentCategory = parentResolved.category;
+            setCategoryName(parentResolved.label);
+
+            if (subSlug) {
+                const subcategory = resolveSubcategoryFromSlug(parentCategory, subSlug);
+                setPresetSubcategory(subcategory?.name || subSlug);
+            } else {
+                setPresetSubcategory('all');
+            }
+            return;
+        }
+
+        const normalizedName = slugifyCategory(name);
+        const parentMatch = tree.find((p) => slugifyCategory(p.slug || p.name) === normalizedName);
         if (parentMatch) {
             setCategoryName(parentMatch.name);
             setPresetSubcategory('all');
@@ -44,7 +64,7 @@ function Sidebar() {
 
         for (const parent of tree) {
             if (!Array.isArray(parent.children)) continue;
-            const child = parent.children.find((c) => c.name?.toLowerCase() === lower);
+            const child = parent.children.find((c) => slugifyCategory(c.slug || c.name) === normalizedName);
             if (child) {
                 setCategoryName(parent.name);
                 setPresetSubcategory(child.name);
@@ -54,7 +74,7 @@ function Sidebar() {
 
         setCategoryName(name);
         setPresetSubcategory('all');
-    }, [name, categoriesQuery.data, categoriesQuery.isError]);
+    }, [name, parentSlug, subSlug, categoriesQuery.data, categoriesQuery.isError]);
 
     // When a collection slug is present, load that collection and
     // restrict results to its assetIds.
@@ -96,50 +116,24 @@ function Sidebar() {
         loadCollection();
     }, [collectionSlug]);
 
-    // Load available subcategories for current category from images
+    // Load available subcategories from cached taxonomy instead of the heavy full-assets endpoint.
     useEffect(() => {
-        const fetchSubs = async () => {
-            try {
-                const res = await api.get(API_ENDPOINTS.GET_ALL_IMAGES);
-                const raw = res.data?.data || [];
-
-                const approved = raw.filter(
-                    (item) => item.approved === true && item.rejected !== true
-                );
-
-                const filtered = approved.filter((item) => {
-                    const cat = item.category;
-                    const catName =
-                        typeof cat === 'string'
-                            ? cat
-                            : (cat && cat.name) || '';
-                    return catName.toLowerCase() === (categoryname || '').toLowerCase();
-                });
-
-                const uniqueSubs = Array.from(
-                    new Set(
-                        filtered
-                            .map((item) => {
-                                const sub = item.subcategory;
-                                return typeof sub === 'string'
-                                    ? sub
-                                    : (sub && sub.name) || '';
-                            })
-                            .filter(Boolean)
-                    )
-                );
-
-                setSubcategories(uniqueSubs);
-            } catch (err) {
-                console.error('Failed to load subcategories', err.message);
-                setSubcategories([]);
-            }
-        };
-
-        if (categoryname) {
-            fetchSubs();
+        const tree = categoriesQuery.data;
+        if (!categoryname || !Array.isArray(tree)) {
+            setSubcategories([]);
+            return;
         }
-    }, [categoryname]);
+
+        const parent = tree.find(
+            (item) => String(item?.name || '').toLowerCase() === String(categoryname || '').toLowerCase()
+        );
+
+        const nextSubcategories = Array.isArray(parent?.children)
+            ? parent.children.map((child) => child?.name).filter(Boolean)
+            : [];
+
+        setSubcategories(nextSubcategories);
+    }, [categoryname, categoriesQuery.data]);
 
     const handleCategoryChange = (category) => {
         setCategoryName(category);
@@ -149,7 +143,7 @@ function Sidebar() {
         <>
             <TopNavOnly />
             <div className="container top-nav-content sidebar-searchbar-wrap">
-                <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding />
+                <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding hideSuggestions />
             </div>
 
             <div className="sidebar-main mb-0">

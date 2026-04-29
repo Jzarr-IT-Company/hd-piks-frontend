@@ -365,6 +365,7 @@ import AnalyticsPage from "../Admin/pages/Analytics";
 import TemplatesPage from "../Admin/pages/Templates";
 import PricingRulesPage from "../Admin/pages/PricingRules";
 import SubscriptionPlansPage from "../Admin/pages/SubscriptionPlans";
+import SuggestedStylesPage from "../Admin/pages/SuggestedStyles";
 import AdminSidebar from "../Admin/components/Sidebar";
 import AdminTopbar from "../Admin/components/Topbar";
 import PermissionRoute from "../Admin/components/PermissionRoute";
@@ -515,6 +516,7 @@ function Routing() {
         { path: "", element: (<PermissionRoute permission="dashboard.view"><AdminDashboard /></PermissionRoute>) },
         { path: "staff", element: (<PermissionRoute permission="staff.manage"><AdminStaffPage /></PermissionRoute>) },
         { path: "categories", element: (<PermissionRoute permission="categories.manage"><CategoriesPage /></PermissionRoute>) },
+        { path: "suggested-styles", element: (<PermissionRoute permission="categories.manage"><SuggestedStylesPage /></PermissionRoute>) },
         { path: "users", element: (<PermissionRoute permission="users.manage"><UsersPage /></PermissionRoute>) },
         { path: "creators", element: (<PermissionRoute permission="creators.manage"><CreatorsPage /></PermissionRoute>) },
         { path: "images", element: (<PermissionRoute permission="images.manage"><ImagesPage /></PermissionRoute>) },
@@ -579,6 +581,10 @@ function Routing() {
     {
       path: "/design-hdpiks",
       element: <DesignHdpiks />,
+    },
+    {
+      path: "/collection/:parentSlug/:subSlug",
+      element: <Sidebar />,
     },
     {
       path: "/collection/:name",

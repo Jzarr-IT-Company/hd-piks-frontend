@@ -57,7 +57,7 @@ const isPublicPath = (pathname = '') => {
 // Create axios instance with base configuration
 const api = axios.create({
     baseURL: API_BASE_URL,
-    timeout: 30000, // 30 seconds
+    timeout: 90000, // large asset endpoints can be slow on first DB wake-up
     withCredentials: true,
     headers: {
         'Content-Type': 'application/json'

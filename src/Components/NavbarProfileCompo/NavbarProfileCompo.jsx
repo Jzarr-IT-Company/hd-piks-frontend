@@ -98,8 +98,8 @@ function NavbarProfileCompo() {
                             </Box>
                         </Menu>
                     </Box> : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Link className='btn text-white' to={'/login'}>Signin</Link>
+                    <Box className="hdp-profile-actions">
+                            <Link className='btn text-white signin-link' to={'/login'}>Signin</Link>
                             <Link className='btn start-creating-btn' to={'/design-hdpiks'}>Start Creating</Link>
                         </Box>
                     )

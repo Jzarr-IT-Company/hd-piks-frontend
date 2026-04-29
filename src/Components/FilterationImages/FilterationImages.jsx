@@ -2,7 +2,7 @@ import { ImageList, ImageListItem, Skeleton } from '@mui/material';
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { FiChevronLeft, FiChevronRight, FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3 } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight, FiCompass, FiDownload, FiFolderPlus, FiShare2, FiEdit3, FiZap } from 'react-icons/fi';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import API_BASE_URL from '../../config/api.config';
@@ -12,6 +12,17 @@ import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
 import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
+import {
+    useCollectionBootstrapQuery,
+} from '../../query/collectionBootstrapQueries.js';
+import {
+    DEFAULT_SUGGESTED_ICON_BG,
+    DEFAULT_SUGGESTED_ICON_COLOR,
+    DEFAULT_SUGGESTED_STYLE_ICON,
+    getSuggestedStyleIcon,
+    recommendSuggestedStyleIcon,
+} from '../../utils/suggestedStyleIcons.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
 import './FilterationImages.css';
@@ -126,9 +137,15 @@ function FilterationImages({
     const [showCollectionModal, setShowCollectionModal] = useState(false);
     const [selectedAssetId, setSelectedAssetId] = useState(null);
     const [showPillArrows, setShowPillArrows] = useState(false);
+    const [showSuggestedArrows, setShowSuggestedArrows] = useState(false);
+    const [subcategoryPage, setSubcategoryPage] = useState(1);
+    const [suggestedPage, setSuggestedPage] = useState(1);
     const pillsRowRef = useRef(null);
+    const suggestedRowRef = useRef(null);
+    const categoriesQuery = usePublicCategoriesQuery();
 
     const isSearchMode = !!searchSubcategory;
+    const useBootstrapMode = !creatorId && !isSearchMode && !collectionAssetIds && Boolean(name);
     const parsedCollectionPage = Number.parseInt(collectionPageParamRaw || '1', 10);
     const currentPage = Number.isFinite(parsedCollectionPage) && parsedCollectionPage > 0 ? parsedCollectionPage : 1;
 
@@ -203,14 +220,40 @@ function FilterationImages({
         }
     }, []);
 
-    const allImagesQuery = useAllImagesQuery(!creatorId);
+    const collectionBootstrapQuery = useCollectionBootstrapQuery({
+        parentCategory: name,
+        subcategory: activeSubcategory,
+        subsubcategory: activeSubsubcategory,
+        subcategoryPage,
+        suggestedPage,
+        assetPage: currentPage,
+        enabled: useBootstrapMode,
+    });
+
+    const bootstrapData = collectionBootstrapQuery.data || null;
+    const bootstrapAssets = bootstrapData?.assets || null;
+    const bootstrapSubcategories = bootstrapData?.subcategories || null;
+    const bootstrapSuggestedStyles = bootstrapData?.suggestedStyles || null;
+
+    const allImagesQuery = useAllImagesQuery(
+        !creatorId && Boolean(name) && !useBootstrapMode,
+        name,
+        activeSubcategory !== 'all' ? activeSubcategory : ''
+    );
     const creatorImagesQuery = useCreatorImagesQuery(creatorId, Boolean(creatorId));
     const sourceImages = useMemo(
-        () => (creatorId ? (creatorImagesQuery.data || []) : (allImagesQuery.data || [])),
-        [creatorId, creatorImagesQuery.data, allImagesQuery.data]
+        () => {
+            if (useBootstrapMode) return bootstrapAssets?.items || [];
+            return creatorId ? (creatorImagesQuery.data || []) : (allImagesQuery.data || []);
+        },
+        [useBootstrapMode, bootstrapAssets?.items, creatorId, creatorImagesQuery.data, allImagesQuery.data]
     );
-    const sourceLoading = creatorId ? creatorImagesQuery.isLoading : allImagesQuery.isLoading;
-    const sourceError = creatorId ? creatorImagesQuery.error : allImagesQuery.error;
+    const sourceLoading = useBootstrapMode
+        ? collectionBootstrapQuery.isLoading
+        : (creatorId ? creatorImagesQuery.isLoading : allImagesQuery.isLoading);
+    const sourceError = useBootstrapMode
+        ? collectionBootstrapQuery.error
+        : (creatorId ? creatorImagesQuery.error : allImagesQuery.error);
 
     const imagesdata = useMemo(() => {
         const approved = sourceImages.filter((item) => item.approved === true && item.rejected !== true);
@@ -291,7 +334,31 @@ function FilterationImages({
     const loading = sourceLoading || creatorsMapQuery.isLoading;
     const queryErrorMessage = sourceError?.response?.data?.message || sourceError?.message || '';
 
+    const taxonomySubcategoryMap = useMemo(() => {
+        const tree = categoriesQuery.data;
+        if (!Array.isArray(tree) || !tree.length || !name) return new Map();
+        const parent = tree.find((item) => normalize(item?.name) === normalize(name));
+        const map = new Map();
+        (parent?.children || []).forEach((subcat) => {
+            const subName = getSubcategoryName(subcat);
+            if (subName) map.set(normalize(subName), subcat);
+        });
+        return map;
+    }, [categoriesQuery.data, getSubcategoryName, name, normalize]);
+
     const subcategories = useMemo(() => {
+        if (useBootstrapMode) {
+            return (bootstrapSubcategories?.items || [])
+                .map((subcat) => getSubcategoryName(subcat))
+                .filter(Boolean);
+        }
+
+        if (taxonomySubcategoryMap.size) {
+            return Array.from(taxonomySubcategoryMap.values())
+                .map((subcat) => getSubcategoryName(subcat))
+                .filter(Boolean);
+        }
+
         const set = new Set();
         imagesdata.forEach((img) => {
             if (normalize(getCategoryName(img.category)) === normalize(name)) {
@@ -300,7 +367,7 @@ function FilterationImages({
             }
         });
         return Array.from(set);
-    }, [imagesdata, name, normalize, getCategoryName, getSubcategoryName]);
+    }, [useBootstrapMode, bootstrapSubcategories?.items, taxonomySubcategoryMap, imagesdata, name, normalize, getCategoryName, getSubcategoryName]);
 
     const subSubcategoriesForSearch = useMemo(() => {
         if (!isSearchMode) return [];
@@ -320,6 +387,8 @@ function FilterationImages({
     useEffect(() => {
         setActiveSubcategory('all');
         setActiveSubsubcategory('all');
+        setSubcategoryPage(1);
+        setSuggestedPage(1);
     }, [name, searchSubcategory, searchSubSubcategory, creatorId, collectionAssetIds, similarMatchMode]);
 
     useEffect(() => {
@@ -327,9 +396,11 @@ function FilterationImages({
         if (presetSubcategory === 'all') {
             setActiveSubcategory('all');
             setActiveSubsubcategory('all');
+            setSuggestedPage(1);
         } else {
             setActiveSubcategory(presetSubcategory);
             setActiveSubsubcategory('all');
+            setSuggestedPage(1);
         }
     }, [presetSubcategory]);
 
@@ -532,6 +603,84 @@ function FilterationImages({
         return buckets;
     }, [imagesdata, getSubcategoryName, getSubSubcategoryName]);
 
+    const suggestedStyleItems = useMemo(() => {
+        if (useBootstrapMode) {
+            return (bootstrapSuggestedStyles?.items || []).map((item) => ({
+                label: item.name,
+                count: Number(item.assetCount || 0),
+                order: Number.isFinite(Number(item.order)) ? Number(item.order) : 9999,
+                icon: item.icon || recommendSuggestedStyleIcon(item.name, name, activeSubcategory),
+                iconColor: item.iconColor || DEFAULT_SUGGESTED_ICON_COLOR,
+                iconBg: item.iconBg || DEFAULT_SUGGESTED_ICON_BG,
+                hasAdminRef: true,
+            }));
+        }
+
+        const counts = new Map();
+        const scopedBuckets = activeSubcategory === 'all'
+            ? Object.values(subcategoryBuckets)
+            : [subcategoryBuckets[activeSubcategory]].filter(Boolean);
+
+        scopedBuckets.forEach((bucket) => {
+            bucket.items.forEach((item) => {
+                const subsub = getSubSubcategoryName(item.subsubcategory)?.trim();
+                if (!subsub) return;
+                counts.set(subsub, (counts.get(subsub) || 0) + 1);
+            });
+        });
+
+        const activeTaxonomySubcat = activeSubcategory !== 'all'
+            ? taxonomySubcategoryMap.get(normalize(activeSubcategory))
+            : null;
+        const taxonomySubsubs = Array.isArray(activeTaxonomySubcat?.children)
+            ? activeTaxonomySubcat.children
+            : [];
+        const hasAdminSuggested = taxonomySubsubs.some((item) => item?.showInSuggestedStyles === true);
+        const adminMeta = new Map();
+
+        taxonomySubsubs
+            .filter((item) => !hasAdminSuggested || item?.showInSuggestedStyles === true)
+            .forEach((item) => {
+                const label = getSubSubcategoryName(item);
+                if (!label) return;
+                adminMeta.set(normalize(label), {
+                    order: Number.isFinite(Number(item?.suggestedOrder)) ? Number(item.suggestedOrder) : 9999,
+                    icon: item?.suggestedIcon && item.suggestedIcon !== DEFAULT_SUGGESTED_STYLE_ICON
+                        ? item.suggestedIcon
+                        : recommendSuggestedStyleIcon(label, name, activeSubcategory),
+                    iconColor: item?.suggestedIconColor || DEFAULT_SUGGESTED_ICON_COLOR,
+                    iconBg: item?.suggestedIconBg || DEFAULT_SUGGESTED_ICON_BG,
+                });
+            });
+
+        return Array.from(counts.entries())
+            .map(([label, count]) => ({
+                label,
+                count,
+                order: adminMeta.get(normalize(label))?.order ?? 9999,
+                icon: adminMeta.get(normalize(label))?.icon || recommendSuggestedStyleIcon(label, name, activeSubcategory),
+                iconColor: adminMeta.get(normalize(label))?.iconColor || DEFAULT_SUGGESTED_ICON_COLOR,
+                iconBg: adminMeta.get(normalize(label))?.iconBg || DEFAULT_SUGGESTED_ICON_BG,
+                hasAdminRef: adminMeta.has(normalize(label)),
+            }))
+            .filter((item) => !hasAdminSuggested || item.hasAdminRef)
+            .sort((left, right) => {
+                if (left.order !== right.order) return left.order - right.order;
+                if (right.count !== left.count) return right.count - left.count;
+                return left.label.localeCompare(right.label);
+            })
+            .slice(0, 18);
+    }, [
+        useBootstrapMode,
+        bootstrapSuggestedStyles?.items,
+        activeSubcategory,
+        getSubSubcategoryName,
+        name,
+        normalize,
+        subcategoryBuckets,
+        taxonomySubcategoryMap,
+    ]);
+
     const filteredGroups = useMemo(() => {
         const groups = [];
         Object.entries(subcategoryBuckets).forEach(([sub, bucket]) => {
@@ -567,13 +716,16 @@ function FilterationImages({
         );
     }, [visibleGroups]);
 
-    const totalPaginatedItems = paginatedEntries.length;
+    const totalPaginatedItems = useBootstrapMode
+        ? Number(bootstrapAssets?.total || paginatedEntries.length)
+        : paginatedEntries.length;
     const totalPages = Math.max(1, Math.ceil(totalPaginatedItems / COLLECTION_PAGE_SIZE));
 
     const pagedEntries = useMemo(() => {
+        if (useBootstrapMode) return paginatedEntries;
         const startIndex = (currentPage - 1) * COLLECTION_PAGE_SIZE;
         return paginatedEntries.slice(startIndex, startIndex + COLLECTION_PAGE_SIZE);
-    }, [currentPage, paginatedEntries]);
+    }, [useBootstrapMode, currentPage, paginatedEntries]);
 
     const paginatedGroups = useMemo(() => {
         const groups = [];
@@ -632,6 +784,7 @@ function FilterationImages({
                 // In normal category page: local filter by subcategory
                 setActiveSubcategory(subcat);
                 setActiveSubsubcategory('all');
+                setSuggestedPage(1);
                 if (currentPage !== 1) {
                     navigate(buildCollectionPagePath(1));
                 }
@@ -641,21 +794,63 @@ function FilterationImages({
     );
 
     const scrollPills = useCallback((direction) => {
+        if (useBootstrapMode) {
+            const meta = bootstrapSubcategories;
+            if (!meta) return;
+            if (direction > 0 && meta.hasNext) setSubcategoryPage((page) => page + 1);
+            if (direction < 0 && meta.hasPrev) setSubcategoryPage((page) => Math.max(1, page - 1));
+            return;
+        }
+
         const row = pillsRowRef.current;
         if (!row) return;
-        const step = Math.max(120, Math.floor(row.clientWidth * 0.6));
+        const step = Math.max(220, Math.floor(row.clientWidth * 0.75));
         row.scrollBy({ left: direction * step, behavior: 'smooth' });
-    }, []);
+    }, [useBootstrapMode, bootstrapSubcategories]);
+
+    const scrollSuggestedStyles = useCallback((direction) => {
+        if (useBootstrapMode) {
+            const meta = bootstrapSuggestedStyles;
+            if (!meta) return;
+            if (direction > 0 && meta.hasNext) setSuggestedPage((page) => page + 1);
+            if (direction < 0 && meta.hasPrev) setSuggestedPage((page) => Math.max(1, page - 1));
+            return;
+        }
+
+        const row = suggestedRowRef.current;
+        if (!row) return;
+        const step = Math.max(260, Math.floor(row.clientWidth * 0.82));
+        row.scrollBy({ left: direction * step, behavior: 'smooth' });
+    }, [useBootstrapMode, bootstrapSuggestedStyles]);
 
     const updatePillArrowVisibility = useCallback(() => {
+        if (useBootstrapMode) {
+            setShowPillArrows(Boolean(bootstrapSubcategories?.hasPrev || bootstrapSubcategories?.hasNext));
+            return;
+        }
+
         const row = pillsRowRef.current;
-        if (!row || !isMobile) {
+        if (!row) {
             setShowPillArrows(false);
             return;
         }
         const overflowed = row.scrollWidth > row.clientWidth + 2;
         setShowPillArrows(overflowed);
-    }, [isMobile]);
+    }, [useBootstrapMode, bootstrapSubcategories]);
+
+    const updateSuggestedArrowVisibility = useCallback(() => {
+        if (useBootstrapMode) {
+            setShowSuggestedArrows(Boolean(bootstrapSuggestedStyles?.hasPrev || bootstrapSuggestedStyles?.hasNext));
+            return;
+        }
+
+        const row = suggestedRowRef.current;
+        if (!row) {
+            setShowSuggestedArrows(false);
+            return;
+        }
+        setShowSuggestedArrows(row.scrollWidth > row.clientWidth + 2);
+    }, [useBootstrapMode, bootstrapSuggestedStyles]);
 
     useEffect(() => {
         updatePillArrowVisibility();
@@ -670,35 +865,97 @@ function FilterationImages({
         imagesdata.length,
     ]);
 
-    // NEW: shared styles for subcategory pills
-    const pillBaseStyle = {
-        borderRadius: 999,
-        fontSize: 13,
-        padding: '6px 18px',
-        border: '1px solid #020617',
-        backgroundColor: '#020617',
-        color: '#ffffff',
-    };
-    const pillActiveStyle = {
-        borderRadius: 999,
-        fontSize: 13,
-        padding: '6px 18px',
-        background: 'linear-gradient(90deg, rgb(143, 92, 255), rgb(184, 69, 146))',
-        color: '#ffffff',
-        border: '1px solid rgb(143, 92, 255)',
-        boxShadow: '0 1px 3px rgba(15,23,42,0.25)',
-    };
+    useEffect(() => {
+        updateSuggestedArrowVisibility();
+        window.addEventListener('resize', updateSuggestedArrowVisibility);
+        return () => window.removeEventListener('resize', updateSuggestedArrowVisibility);
+    }, [activeSubcategory, suggestedStyleItems.length, updateSuggestedArrowVisibility]);
 
     return (
         <>
         <div className="container filteration-page-container">
-            {/* Row 1: category + subcategory pills */}
+            {suggestedStyleItems.length > 0 && (
+                <section className="filteration-suggested mb-3" aria-label="Suggested styles">
+                    <div className="filteration-suggested__header">
+                        <div>
+                            <div className="filteration-suggested__title">
+                                <FiZap size={16} />
+                                Pick Suggested Styles
+                            </div>
+                            <p className="filteration-suggested__subtitle">
+                                {activeSubcategory === 'all'
+                                    ? 'Choose from curated styles in this category'
+                                    : `Choose styles related to ${activeSubcategory}`}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="filteration-suggested__shell">
+                        {showSuggestedArrows ? (
+                            <button
+                                type="button"
+                                className="filteration-carousel-arrow filteration-carousel-arrow--left"
+                                onClick={() => scrollSuggestedStyles(-1)}
+                                disabled={useBootstrapMode && !bootstrapSuggestedStyles?.hasPrev}
+                                aria-label="Scroll suggested styles left"
+                            >
+                                <FiChevronLeft size={18} />
+                            </button>
+                        ) : null}
+
+                        <div ref={suggestedRowRef} className="filteration-suggested__track">
+                            {suggestedStyleItems.map((styleItem) => {
+                                const StyleIcon = getSuggestedStyleIcon(styleItem.icon);
+                                return (
+                                    <button
+                                        key={styleItem.label}
+                                        type="button"
+                                        className={`filteration-suggested-card ${activeSubsubcategory === styleItem.label ? 'is-active' : ''}`}
+                                        onClick={() => {
+                                            setActiveSubsubcategory(styleItem.label);
+                                            setSuggestedPage(1);
+                                            if (currentPage !== 1) navigate(buildCollectionPagePath(1));
+                                        }}
+                                    >
+                                        <span
+                                            className="filteration-suggested-card__icon"
+                                            style={{
+                                                color: styleItem.iconColor,
+                                                background: styleItem.iconBg,
+                                            }}
+                                        >
+                                            <StyleIcon size={18} />
+                                        </span>
+                                        <span className="filteration-suggested-card__text">{styleItem.label}</span>
+                                        <span className="filteration-suggested-card__meta">{styleItem.count} assets</span>
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        {showSuggestedArrows ? (
+                            <button
+                                type="button"
+                                className="filteration-carousel-arrow filteration-carousel-arrow--right"
+                                onClick={() => scrollSuggestedStyles(1)}
+                                disabled={useBootstrapMode && !bootstrapSuggestedStyles?.hasNext}
+                                aria-label="Scroll suggested styles right"
+                            >
+                                <FiChevronRight size={18} />
+                            </button>
+                        ) : null}
+                    </div>
+                </section>
+            )}
+
+            {/* Row 1: category + subcategory carousel */}
             <div className="filteration-pill-shell mb-3">
                 {showPillArrows ? (
                     <button
                         type="button"
-                        className="filteration-pill-arrow filteration-pill-arrow-left"
+                        className="filteration-carousel-arrow filteration-carousel-arrow--left"
                         onClick={() => scrollPills(-1)}
+                        disabled={useBootstrapMode && !bootstrapSubcategories?.hasPrev}
                         aria-label="Scroll categories left"
                     >
                         <FiChevronLeft size={16} />
@@ -707,26 +964,21 @@ function FilterationImages({
 
                 <div
                     ref={pillsRowRef}
-                    className={`filteration-pill-row d-flex flex-wrap align-items-center gap-2 justify-content-center justify-content-md-start ${showPillArrows ? 'filteration-pill-row--with-arrows' : ''}`}
-                    style={{ background: '#f7f3ff', borderRadius: 999, padding: '6px 10px' }}
+                    className={`filteration-pill-row ${showPillArrows ? 'filteration-pill-row--with-arrows' : ''}`}
                 >
-                <span
-                    className="fw-bold px-3 py-1 text-white"
-                    style={{
-                        background: 'linear-gradient(90deg, rgb(143, 92, 255), rgb(184, 69, 146))',
-                        borderRadius: 999,
-                        fontSize: 13,
-                        border: '1px solid rgb(143, 92, 255)',
-                    }}
-                >
+                <span className="filteration-pill-label">
                     {`Category/${name ? name.charAt(0).toUpperCase() + name.slice(1) : 'All'}`}
                 </span>
 
                 {!isSearchMode && (
                     <button
-                        className="btn btn-sm"
-                        style={activeSubcategory === 'all' ? pillActiveStyle : pillBaseStyle}
-                        onClick={() => { setActiveSubcategory('all'); setActiveSubsubcategory('all'); if (currentPage !== 1) navigate(buildCollectionPagePath(1)); }}
+                        className={`filteration-category-pill ${activeSubcategory === 'all' ? 'is-active' : ''}`}
+                        onClick={() => {
+                            setActiveSubcategory('all');
+                            setActiveSubsubcategory('all');
+                            setSuggestedPage(1);
+                            if (currentPage !== 1) navigate(buildCollectionPagePath(1));
+                        }}
                     >
                         All
                     </button>
@@ -740,8 +992,7 @@ function FilterationImages({
                 {subcategories.map((subcat) => (
                     <button
                         key={subcat}
-                        className="btn btn-sm"
-                        style={activeSubcategory === subcat ? pillActiveStyle : pillBaseStyle}
+                        className={`filteration-category-pill ${activeSubcategory === subcat ? 'is-active' : ''}`}
                         onClick={() => handleSubcategoryPillClick(subcat)}
                     >
                         {subcat}
@@ -752,8 +1003,9 @@ function FilterationImages({
                 {showPillArrows ? (
                     <button
                         type="button"
-                        className="filteration-pill-arrow filteration-pill-arrow-right"
+                        className="filteration-carousel-arrow filteration-carousel-arrow--right"
                         onClick={() => scrollPills(1)}
+                        disabled={useBootstrapMode && !bootstrapSubcategories?.hasNext}
                         aria-label="Scroll categories right"
                     >
                         <FiChevronRight size={16} />
@@ -779,7 +1031,8 @@ function FilterationImages({
                 <QueryErrorRetry
                     message={queryErrorMessage}
                     onRetry={() => {
-                        if (creatorId) creatorImagesQuery.refetch();
+                        if (useBootstrapMode) collectionBootstrapQuery.refetch();
+                        else if (creatorId) creatorImagesQuery.refetch();
                         else allImagesQuery.refetch();
                         creatorsMapQuery.refetch();
                     }}

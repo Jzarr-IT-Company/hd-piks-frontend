@@ -20,6 +20,7 @@ function HomeBannerSearchFilterationCompo2({
 	compact = false,
 	hideSearchBarMargin = false,
 	hideWrapperPadding = false,
+	hideSuggestions = false,
 }) {
 	const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useUI();
 	const [searchQuerry, setSearchQuerry] = useState("");
@@ -361,7 +362,7 @@ function HomeBannerSearchFilterationCompo2({
 							</button>
 						</div>
 					)}
-					{suggestions.length > 0 && (
+					{!hideSuggestions && suggestions.length > 0 && (
 						<div className="mt-3">
 							<div
 								className="d-flex align-items-center justify-content-between flex-wrap mb-2"

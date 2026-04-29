@@ -1,6 +1,7 @@
 ﻿import React, { useEffect, useState } from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
 import CategoryIcon from '@mui/icons-material/Category';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import PeopleIcon from '@mui/icons-material/People';
 import ImageIcon from '@mui/icons-material/Image';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -40,6 +41,7 @@ export default function Sidebar() {
     { label: 'Dashboard', icon: <DashboardIcon />, to: '/admin', requiredPermission: 'dashboard.view' },
     { label: 'Admin Staff', icon: <AdminPanelSettingsIcon />, to: '/admin/staff', requiredPermission: 'staff.manage' },
     { label: 'Categories', icon: <CategoryIcon />, to: '/admin/categories', requiredPermission: 'categories.manage' },
+    { label: 'Suggested Styles', icon: <AutoAwesomeIcon />, to: '/admin/suggested-styles', requiredPermission: 'categories.manage' },
     { label: 'Users', icon: <PeopleIcon />, to: '/admin/users', requiredPermission: 'users.manage' },
     { label: 'Creators', icon: <PeopleIcon />, to: '/admin/creators', requiredPermission: 'creators.manage' },
     { label: 'Images', icon: <ImageIcon />, to: '/admin/images', requiredPermission: 'images.manage' },

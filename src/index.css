@@ -1,5 +1,7 @@
 html {
     scroll-behavior: smooth;
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 ::-webkit-scrollbar {
@@ -31,6 +33,13 @@ body {
     font-smooth: always;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+#root {
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 a,
