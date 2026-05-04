@@ -8,8 +8,8 @@ import ButtonGroup from '@mui/material/ButtonGroup';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Grow from '@mui/material/Grow';
-import Paper from '@mui/material/Paper';
 import Popper from '@mui/material/Popper';
+import Paper from '@mui/material/Paper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import './HomeBannerSearchbarFilterationCompo.css';
@@ -280,6 +280,9 @@ function HomeBannerSearchbarFilterationCompo() {
                                                         <i className="fa-solid fa-magnifying-glass" />
                                                     </span>
                                                     <span className="search-suggestion-text">{suggestion.label}</span>
+                                                    <span style={{ marginLeft: 'auto', color: '#64748b', fontSize: 12 }}>
+                                                        {suggestion.type}
+                                                    </span>
                                                 </button>
                                             ))}
                                         </div>
