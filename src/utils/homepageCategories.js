@@ -1,20 +1,20 @@
-import videosImg from '../assets/01_Videos_4K.jpeg';
-import imagesImg from '../assets/02_Images_4K.jpeg';
-import vectorImg from '../assets/03_Vector_4K.jpeg';
-import psdImg from '../assets/04_PSD_4K.jpeg';
-import aiImagesImg from '../assets/05_AI_Images_4K.jpeg';
-import templatesImg from '../assets/06_Templates_4K.jpeg';
-import iconsImg from '../assets/07_Icons_4K.jpeg';
-import mockupsImg from '../assets/08_Mockups_4K.jpeg';
-import nftsImg from '../assets/09_NFTs_4K.jpeg';
+import videosImg from '../assets/01_Videos_4K.png';
+import imagesImg from '../assets/02_Images_4K.png';
+import vectorImg from '../assets/03_Vector_4K.png';
+import psdImg from '../assets/04_PSD_4K.png';
+import aiImagesImg from '../assets/05_AI_Images_4K.png';
+import templatesImg from '../assets/06_Templates_4K.png';
+import iconsImg from '../assets/07_Icons_4K.png';
+import mockupsImg from '../assets/08_Mockups_4K.png';
+import nftsImg from '../assets/09_NFTs_4K.png';
 
 const CATEGORY_VISUALS = {
-    video: { src: videosImg, tabLabel: 'Video', cardLabel: 'Videos', order: 10 },
-    videos: { src: videosImg, tabLabel: 'Video', cardLabel: 'Videos', order: 10 },
-    image: { src: imagesImg, tabLabel: 'Image', cardLabel: 'Images', order: 20 },
-    images: { src: imagesImg, tabLabel: 'Image', cardLabel: 'Images', order: 20 },
-    vector: { src: vectorImg, tabLabel: 'Vector', cardLabel: 'Vector', order: 30 },
-    vectors: { src: vectorImg, tabLabel: 'Vector', cardLabel: 'Vector', order: 30 },
+    vector: { src: vectorImg, tabLabel: 'Vector', cardLabel: 'Vectors', order: 10 },
+    vectors: { src: vectorImg, tabLabel: 'Vector', cardLabel: 'Vectors', order: 10 },
+    image: { src: imagesImg, tabLabel: 'Image', cardLabel: 'Photos', order: 20 },
+    images: { src: imagesImg, tabLabel: 'Image', cardLabel: 'Photos', order: 20 },
+    video: { src: videosImg, tabLabel: 'Video', cardLabel: 'Videos', order: 30 },
+    videos: { src: videosImg, tabLabel: 'Video', cardLabel: 'Videos', order: 30 },
     psd: { src: psdImg, tabLabel: 'PSD', cardLabel: 'PSD', order: 40 },
     'ai images': { src: aiImagesImg, tabLabel: 'AI images', cardLabel: 'AI images', order: 50 },
     'ai image': { src: aiImagesImg, tabLabel: 'AI images', cardLabel: 'AI images', order: 50 },

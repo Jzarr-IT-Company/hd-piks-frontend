@@ -9,7 +9,7 @@ import HomeBannerSearchbarFilterationCompo from '../HomeBannerSearchbarFilterati
 import HomeBannerSearchFilterationCompo2 from '../HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
 import AppNavbarBanner1Compo from '../AppNavbarBanner1Compo/AppNavbarBanner1Compo';
 import AiToolsCards from '../AiToolsCards/AiToolsCards';
-import heroSectionImg from '../../assets/Hero-Section.jpg';
+import heroSectionImg from '../../assets/Hero-Section.jpeg';
 import logo from '../../assets/logo.png';
 
 const CreateImagesLikeCanva = lazy(() => import('../CreateImagesLikeCanva/CreateImagesLikeCanva'));

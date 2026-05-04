@@ -39,6 +39,43 @@ const fetchCollectionBootstrap = async (params) => {
     };
 };
 
+const fetchCollectionNavigation = async (params) => {
+    const response = await api.get(API_ENDPOINTS.COLLECTION_NAVIGATION, { params });
+    const payload = response?.data || {};
+    const subcategories = Array.isArray(payload.subcategories) ? payload.subcategories : [];
+    const suggestedStyles = Array.isArray(payload.suggestedStyles) ? payload.suggestedStyles : [];
+
+    return {
+        parentCategory: payload.parentCategory || params.parentCategory,
+        activeSubcategory: payload.activeSubcategory || params.subcategory || "all",
+        subcategories: {
+            items: subcategories,
+            total: subcategories.length,
+        },
+        suggestedStyles: {
+            items: suggestedStyles,
+            total: suggestedStyles.length,
+        },
+    };
+};
+
+const fetchCollectionAssets = async (params) => {
+    const response = await api.get(API_ENDPOINTS.ASSETS, { params });
+    const payload = response?.data || {};
+    const items = Array.isArray(payload.data) ? payload.data : [];
+
+    return normalizePageBlock(
+        {
+            items,
+            page: payload.page,
+            limit: payload.limit,
+            total: payload.total,
+            hasMore: payload.hasMore,
+        },
+        COLLECTION_ASSET_LIMIT
+    );
+};
+
 export const useCollectionBootstrapQuery = ({
     parentCategory,
     subcategory = "",
@@ -73,6 +110,59 @@ export const useCollectionBootstrapQuery = ({
         queryFn: () => fetchCollectionBootstrap(params),
         enabled: enabled && Boolean(parentCategory),
         staleTime: 5 * 60 * 1000,
+        keepPreviousData: true,
+    });
+};
+
+export const useCollectionNavigationQuery = ({
+    parentCategory,
+    subcategory = "",
+    enabled = true,
+}) => {
+    const params = {
+        parentCategory,
+        subcategory: subcategory && subcategory !== "all" ? subcategory : undefined,
+    };
+
+    return useQuery({
+        queryKey: [
+            "collection-navigation",
+            parentCategory || "",
+            params.subcategory || "all",
+        ],
+        queryFn: () => fetchCollectionNavigation(params),
+        enabled: enabled && Boolean(parentCategory),
+        staleTime: 10 * 60 * 1000,
+        keepPreviousData: true,
+    });
+};
+
+export const useCollectionAssetsQuery = ({
+    parentCategory,
+    subcategory = "",
+    subsubcategory = "",
+    page = 1,
+    enabled = true,
+}) => {
+    const params = {
+        parentCategory,
+        subcategory: subcategory && subcategory !== "all" ? subcategory : undefined,
+        subsubcategory: subsubcategory && subsubcategory !== "all" ? subsubcategory : undefined,
+        page,
+        limit: COLLECTION_ASSET_LIMIT,
+    };
+
+    return useQuery({
+        queryKey: [
+            "collection-assets",
+            parentCategory || "",
+            params.subcategory || "all",
+            params.subsubcategory || "all",
+            page,
+        ],
+        queryFn: () => fetchCollectionAssets(params),
+        enabled: enabled && Boolean(parentCategory),
+        staleTime: 2 * 60 * 1000,
         keepPreviousData: true,
     });
 };

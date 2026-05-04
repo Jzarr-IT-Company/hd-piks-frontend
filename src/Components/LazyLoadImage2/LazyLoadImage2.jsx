@@ -3,8 +3,8 @@ import PropTypes from 'prop-types'; // Import PropTypes
 import { Skeleton } from 'antd';
 import './LazyLoadImage.css';
 
-const LazyLoadImage2 = ({ src, alt, className, srcSet, sizes }) => {
-    const [isVisible, setIsVisible] = useState(false);
+const LazyLoadImage2 = ({ src, alt, className, srcSet, sizes, priority = false }) => {
+    const [isVisible, setIsVisible] = useState(priority);
     const [isLoaded, setIsLoaded] = useState(false);
     const imgRef = React.useRef();
 
@@ -18,6 +18,11 @@ const LazyLoadImage2 = ({ src, alt, className, srcSet, sizes }) => {
 
     // Intersection Observer for Lazy Loading
     useEffect(() => {
+        if (priority) {
+            setIsVisible(true);
+            return undefined;
+        }
+
         const observer = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting && !isVisible) {
@@ -34,7 +39,7 @@ const LazyLoadImage2 = ({ src, alt, className, srcSet, sizes }) => {
         return () => {
             observer.disconnect();
         };
-    }, [isVisible]);
+    }, [isVisible, priority]);
 
     // Handle image loading
     const handleImageLoad = () => {
@@ -75,7 +80,9 @@ const LazyLoadImage2 = ({ src, alt, className, srcSet, sizes }) => {
                     opacity: isLoaded ? 1 : 0,
                     transition: 'opacity 0.5s ease-in-out',
                 }}
-                loading="lazy"
+                loading={priority ? 'eager' : 'lazy'}
+                fetchPriority={priority ? 'high' : 'auto'}
+                decoding="async"
                 onLoad={handleImageLoad}
             />
         </div>
@@ -89,6 +96,7 @@ LazyLoadImage2.propTypes = {
     className: PropTypes.string,       // `className` should be a string, optional
     srcSet: PropTypes.string,
     sizes: PropTypes.string,
+    priority: PropTypes.bool,
 };
 
 export default LazyLoadImage2;

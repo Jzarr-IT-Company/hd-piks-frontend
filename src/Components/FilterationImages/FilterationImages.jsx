@@ -10,11 +10,15 @@ import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
 import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
+import { useAssetLikeStatusBatchQuery } from '../../query/likeQueries.js';
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
 import {
-    useCollectionBootstrapQuery,
+    useCollectionAssetsQuery,
+    useCollectionNavigationQuery,
+    SUBCATEGORY_SLICE_LIMIT,
+    SUGGESTED_STYLE_SLICE_LIMIT,
 } from '../../query/collectionBootstrapQueries.js';
 import {
     DEFAULT_SUGGESTED_ICON_BG,
@@ -24,7 +28,9 @@ import {
     recommendSuggestedStyleIcon,
 } from '../../utils/suggestedStyleIcons.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
+import { useAuth } from '../../Context/AuthContext.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
+import watermarkLogo from '../../assets/watermark-logo.png';
 import './FilterationImages.css';
 
 const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
@@ -40,7 +46,7 @@ const getBrowseMediaUrl = (asset) => {
     return getMediaVariantUrl(asset, ['thumbnail', 'small', 'medium', 'large', 'original']) || fallback;
 };
 
-function FilterationMedia({ img, src, alt }) {
+function FilterationMedia({ img, src, alt, priority = false }) {
     const [videoDuration, setVideoDuration] = useState(null);
     const videoRef = useRef(null);
 
@@ -49,6 +55,7 @@ function FilterationMedia({ img, src, alt }) {
         || img?.imagetype?.startsWith('video/')
         || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
     );
+    const isPremiumAsset = isPremiumByLicense(img?.freePremium);
 
     const formatDuration = useCallback((durationSeconds) => {
         const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
@@ -88,7 +95,7 @@ function FilterationMedia({ img, src, alt }) {
                     src={src}
                     className="filteration-video-preview"
                     muted
-                    loop
+                    loop    
                     playsInline
                     preload="metadata"
                     onLoadedMetadata={(event) => {
@@ -101,13 +108,23 @@ function FilterationMedia({ img, src, alt }) {
                 <LazyLoadImage2
                     src={src}
                     alt={alt}
-                    loading="lazy"
+                    priority={priority}
                 />
             )}
             {isVideoAsset && durationLabel && (
                 <div className="filteration-video-duration" aria-label={`Duration ${durationLabel}`}>
                     {durationLabel}
                 </div>
+            )}
+            {isPremiumAsset && (
+                <img
+                    src={watermarkLogo}
+                    alt=""
+                    aria-hidden="true"
+                    className="filteration-watermark-overlay"
+                    loading="eager"
+                    draggable="false"
+                />
             )}
         </div>
     );
@@ -120,11 +137,15 @@ function FilterationImages({
     searchSubcategory = undefined,
     subSubcategoryNames = [],
     searchSubSubcategory = undefined,
+    presetSubSubcategory = 'all',
     collectionAssetIds = undefined,   // NEW: limit to these asset IDs
+    providedImages = undefined,
+    providedTotal = undefined,
     similarMatchMode = false,
     showFooter = false,
 }) {
     const theme = useTheme();
+    const { isLoggedIn } = useAuth();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const isTablet = useMediaQuery(theme.breakpoints.down('md'));
     const [activeSubcategory, setActiveSubcategory] = useState('all');
@@ -138,14 +159,15 @@ function FilterationImages({
     const [selectedAssetId, setSelectedAssetId] = useState(null);
     const [showPillArrows, setShowPillArrows] = useState(false);
     const [showSuggestedArrows, setShowSuggestedArrows] = useState(false);
-    const [subcategoryPage, setSubcategoryPage] = useState(1);
-    const [suggestedPage, setSuggestedPage] = useState(1);
+    const [subcategoryOffset, setSubcategoryOffset] = useState(0);
+    const [suggestedOffset, setSuggestedOffset] = useState(0);
     const pillsRowRef = useRef(null);
     const suggestedRowRef = useRef(null);
     const categoriesQuery = usePublicCategoriesQuery();
 
     const isSearchMode = !!searchSubcategory;
-    const useBootstrapMode = !creatorId && !isSearchMode && !collectionAssetIds && Boolean(name);
+    const useProvidedImagesMode = Array.isArray(providedImages);
+    const useBootstrapMode = !creatorId && !isSearchMode && !collectionAssetIds && !useProvidedImagesMode && Boolean(name);
     const parsedCollectionPage = Number.parseInt(collectionPageParamRaw || '1', 10);
     const currentPage = Number.isFinite(parsedCollectionPage) && parsedCollectionPage > 0 ? parsedCollectionPage : 1;
 
@@ -220,40 +242,44 @@ function FilterationImages({
         }
     }, []);
 
-    const collectionBootstrapQuery = useCollectionBootstrapQuery({
+    const collectionNavigationQuery = useCollectionNavigationQuery({
+        parentCategory: name,
+        subcategory: activeSubcategory,
+        enabled: useBootstrapMode,
+    });
+    const collectionAssetsQuery = useCollectionAssetsQuery({
         parentCategory: name,
         subcategory: activeSubcategory,
         subsubcategory: activeSubsubcategory,
-        subcategoryPage,
-        suggestedPage,
-        assetPage: currentPage,
+        page: currentPage,
         enabled: useBootstrapMode,
     });
 
-    const bootstrapData = collectionBootstrapQuery.data || null;
-    const bootstrapAssets = bootstrapData?.assets || null;
+    const bootstrapData = collectionNavigationQuery.data || null;
+    const bootstrapAssets = collectionAssetsQuery.data || null;
     const bootstrapSubcategories = bootstrapData?.subcategories || null;
     const bootstrapSuggestedStyles = bootstrapData?.suggestedStyles || null;
 
     const allImagesQuery = useAllImagesQuery(
-        !creatorId && Boolean(name) && !useBootstrapMode,
+        !creatorId && Boolean(name) && !useBootstrapMode && !useProvidedImagesMode,
         name,
         activeSubcategory !== 'all' ? activeSubcategory : ''
     );
     const creatorImagesQuery = useCreatorImagesQuery(creatorId, Boolean(creatorId));
     const sourceImages = useMemo(
         () => {
+            if (useProvidedImagesMode) return providedImages || [];
             if (useBootstrapMode) return bootstrapAssets?.items || [];
             return creatorId ? (creatorImagesQuery.data || []) : (allImagesQuery.data || []);
         },
-        [useBootstrapMode, bootstrapAssets?.items, creatorId, creatorImagesQuery.data, allImagesQuery.data]
+        [useProvidedImagesMode, providedImages, useBootstrapMode, bootstrapAssets?.items, creatorId, creatorImagesQuery.data, allImagesQuery.data]
     );
     const sourceLoading = useBootstrapMode
-        ? collectionBootstrapQuery.isLoading
-        : (creatorId ? creatorImagesQuery.isLoading : allImagesQuery.isLoading);
+        ? (collectionNavigationQuery.isLoading || collectionAssetsQuery.isLoading)
+        : (useProvidedImagesMode ? false : (creatorId ? creatorImagesQuery.isLoading : allImagesQuery.isLoading));
     const sourceError = useBootstrapMode
-        ? collectionBootstrapQuery.error
-        : (creatorId ? creatorImagesQuery.error : allImagesQuery.error);
+        ? (collectionAssetsQuery.error || collectionNavigationQuery.error)
+        : (useProvidedImagesMode ? null : (creatorId ? creatorImagesQuery.error : allImagesQuery.error));
 
     const imagesdata = useMemo(() => {
         const approved = sourceImages.filter((item) => item.approved === true && item.rejected !== true);
@@ -350,10 +376,11 @@ function FilterationImages({
         if (useBootstrapMode) {
             return (bootstrapSubcategories?.items || [])
                 .map((subcat) => getSubcategoryName(subcat))
-                .filter(Boolean);
+                .filter(Boolean)
+                .slice(subcategoryOffset, subcategoryOffset + SUBCATEGORY_SLICE_LIMIT);
         }
 
-        if (taxonomySubcategoryMap.size) {
+        if (taxonomySubcategoryMap.size && !useProvidedImagesMode) {
             return Array.from(taxonomySubcategoryMap.values())
                 .map((subcat) => getSubcategoryName(subcat))
                 .filter(Boolean);
@@ -367,7 +394,7 @@ function FilterationImages({
             }
         });
         return Array.from(set);
-    }, [useBootstrapMode, bootstrapSubcategories?.items, taxonomySubcategoryMap, imagesdata, name, normalize, getCategoryName, getSubcategoryName]);
+    }, [useBootstrapMode, bootstrapSubcategories?.items, subcategoryOffset, taxonomySubcategoryMap, useProvidedImagesMode, imagesdata, name, normalize, getCategoryName, getSubcategoryName]);
 
     const subSubcategoriesForSearch = useMemo(() => {
         if (!isSearchMode) return [];
@@ -387,8 +414,8 @@ function FilterationImages({
     useEffect(() => {
         setActiveSubcategory('all');
         setActiveSubsubcategory('all');
-        setSubcategoryPage(1);
-        setSuggestedPage(1);
+        setSubcategoryOffset(0);
+        setSuggestedOffset(0);
     }, [name, searchSubcategory, searchSubSubcategory, creatorId, collectionAssetIds, similarMatchMode]);
 
     useEffect(() => {
@@ -396,13 +423,17 @@ function FilterationImages({
         if (presetSubcategory === 'all') {
             setActiveSubcategory('all');
             setActiveSubsubcategory('all');
-            setSuggestedPage(1);
+            setSuggestedOffset(0);
         } else {
             setActiveSubcategory(presetSubcategory);
-            setActiveSubsubcategory('all');
-            setSuggestedPage(1);
+            setActiveSubsubcategory(
+                presetSubSubcategory && presetSubSubcategory !== 'all'
+                    ? presetSubSubcategory
+                    : 'all'
+            );
+            setSuggestedOffset(0);
         }
-    }, [presetSubcategory]);
+    }, [presetSubcategory, presetSubSubcategory]);
 
     const gridColumns = isMobile ? 2 : (isTablet ? 3 : 4);
     const gridGap = isMobile ? 10 : 8;
@@ -605,15 +636,17 @@ function FilterationImages({
 
     const suggestedStyleItems = useMemo(() => {
         if (useBootstrapMode) {
-            return (bootstrapSuggestedStyles?.items || []).map((item) => ({
-                label: item.name,
-                count: Number(item.assetCount || 0),
-                order: Number.isFinite(Number(item.order)) ? Number(item.order) : 9999,
-                icon: item.icon || recommendSuggestedStyleIcon(item.name, name, activeSubcategory),
-                iconColor: item.iconColor || DEFAULT_SUGGESTED_ICON_COLOR,
-                iconBg: item.iconBg || DEFAULT_SUGGESTED_ICON_BG,
-                hasAdminRef: true,
-            }));
+            return (bootstrapSuggestedStyles?.items || [])
+                .slice(suggestedOffset, suggestedOffset + SUGGESTED_STYLE_SLICE_LIMIT)
+                .map((item) => ({
+                    label: item.name,
+                    count: Number(item.assetCount || 0),
+                    order: Number.isFinite(Number(item.order)) ? Number(item.order) : 9999,
+                    icon: item.icon || recommendSuggestedStyleIcon(item.name, name, activeSubcategory),
+                    iconColor: item.iconColor || DEFAULT_SUGGESTED_ICON_COLOR,
+                    iconBg: item.iconBg || DEFAULT_SUGGESTED_ICON_BG,
+                    hasAdminRef: true,
+                }));
         }
 
         const counts = new Map();
@@ -673,6 +706,7 @@ function FilterationImages({
     }, [
         useBootstrapMode,
         bootstrapSuggestedStyles?.items,
+        suggestedOffset,
         activeSubcategory,
         getSubSubcategoryName,
         name,
@@ -698,6 +732,23 @@ function FilterationImages({
         return groups;
     }, [subcategoryBuckets, activeSubcategory, activeSubsubcategory, getSubSubcategoryName]);
 
+    const bootstrapSubcategoryTotal = useBootstrapMode ? Number(bootstrapSubcategories?.total || bootstrapSubcategories?.items?.length || 0) : 0;
+    const bootstrapSuggestedTotal = useBootstrapMode ? Number(bootstrapSuggestedStyles?.total || bootstrapSuggestedStyles?.items?.length || 0) : 0;
+    const hasBootstrapSubcategoryPrev = useBootstrapMode && subcategoryOffset > 0;
+    const hasBootstrapSubcategoryNext = useBootstrapMode && subcategoryOffset + SUBCATEGORY_SLICE_LIMIT < bootstrapSubcategoryTotal;
+    const hasBootstrapSuggestedPrev = useBootstrapMode && suggestedOffset > 0;
+    const hasBootstrapSuggestedNext = useBootstrapMode && suggestedOffset + SUGGESTED_STYLE_SLICE_LIMIT < bootstrapSuggestedTotal;
+
+    useEffect(() => {
+        if (!useBootstrapMode) return;
+        setSubcategoryOffset((offset) => Math.min(offset, Math.max(0, bootstrapSubcategoryTotal - SUBCATEGORY_SLICE_LIMIT)));
+    }, [useBootstrapMode, bootstrapSubcategoryTotal]);
+
+    useEffect(() => {
+        if (!useBootstrapMode) return;
+        setSuggestedOffset((offset) => Math.min(offset, Math.max(0, bootstrapSuggestedTotal - SUGGESTED_STYLE_SLICE_LIMIT)));
+    }, [useBootstrapMode, bootstrapSuggestedTotal]);
+
     const visibleGroups = useMemo(() => {
         return filteredGroups.map(([subcat, items]) => ({
             key: subcat,
@@ -718,14 +769,23 @@ function FilterationImages({
 
     const totalPaginatedItems = useBootstrapMode
         ? Number(bootstrapAssets?.total || paginatedEntries.length)
+        : useProvidedImagesMode
+            ? Number(providedTotal || paginatedEntries.length)
         : paginatedEntries.length;
     const totalPages = Math.max(1, Math.ceil(totalPaginatedItems / COLLECTION_PAGE_SIZE));
 
     const pagedEntries = useMemo(() => {
-        if (useBootstrapMode) return paginatedEntries;
+        if (useBootstrapMode || useProvidedImagesMode) return paginatedEntries;
         const startIndex = (currentPage - 1) * COLLECTION_PAGE_SIZE;
         return paginatedEntries.slice(startIndex, startIndex + COLLECTION_PAGE_SIZE);
-    }, [useBootstrapMode, currentPage, paginatedEntries]);
+    }, [useBootstrapMode, useProvidedImagesMode, currentPage, paginatedEntries]);
+
+    const visibleAssetIds = useMemo(
+        () => pagedEntries.map((entry) => entry?.img?._id).filter(Boolean),
+        [pagedEntries]
+    );
+    const likeStatusQuery = useAssetLikeStatusBatchQuery(visibleAssetIds, isLoggedIn);
+    const likeStatusMap = likeStatusQuery.data || {};
 
     const paginatedGroups = useMemo(() => {
         const groups = [];
@@ -779,12 +839,12 @@ function FilterationImages({
         (subcat) => {
             if (isSearchMode) {
                 // In search context: reset to that subcategory (show all wallpapers, etc.)
-                navigate(`/search/${encodeURIComponent(subcat)}`);
+                navigate(`/search/${encodeURIComponent(slugify(name || 'image'))}/${encodeURIComponent(subcat)}`);
             } else {
                 // In normal category page: local filter by subcategory
                 setActiveSubcategory(subcat);
                 setActiveSubsubcategory('all');
-                setSuggestedPage(1);
+                setSuggestedOffset(0);
                 if (currentPage !== 1) {
                     navigate(buildCollectionPagePath(1));
                 }
@@ -795,10 +855,11 @@ function FilterationImages({
 
     const scrollPills = useCallback((direction) => {
         if (useBootstrapMode) {
-            const meta = bootstrapSubcategories;
-            if (!meta) return;
-            if (direction > 0 && meta.hasNext) setSubcategoryPage((page) => page + 1);
-            if (direction < 0 && meta.hasPrev) setSubcategoryPage((page) => Math.max(1, page - 1));
+            setSubcategoryOffset((offset) => {
+                const nextOffset = offset + (direction > 0 ? SUBCATEGORY_SLICE_LIMIT : -SUBCATEGORY_SLICE_LIMIT);
+                const maxOffset = Math.max(0, bootstrapSubcategoryTotal - SUBCATEGORY_SLICE_LIMIT);
+                return Math.min(Math.max(0, nextOffset), maxOffset);
+            });
             return;
         }
 
@@ -806,14 +867,15 @@ function FilterationImages({
         if (!row) return;
         const step = Math.max(220, Math.floor(row.clientWidth * 0.75));
         row.scrollBy({ left: direction * step, behavior: 'smooth' });
-    }, [useBootstrapMode, bootstrapSubcategories]);
+    }, [useBootstrapMode, bootstrapSubcategoryTotal]);
 
     const scrollSuggestedStyles = useCallback((direction) => {
         if (useBootstrapMode) {
-            const meta = bootstrapSuggestedStyles;
-            if (!meta) return;
-            if (direction > 0 && meta.hasNext) setSuggestedPage((page) => page + 1);
-            if (direction < 0 && meta.hasPrev) setSuggestedPage((page) => Math.max(1, page - 1));
+            setSuggestedOffset((offset) => {
+                const nextOffset = offset + (direction > 0 ? SUGGESTED_STYLE_SLICE_LIMIT : -SUGGESTED_STYLE_SLICE_LIMIT);
+                const maxOffset = Math.max(0, bootstrapSuggestedTotal - SUGGESTED_STYLE_SLICE_LIMIT);
+                return Math.min(Math.max(0, nextOffset), maxOffset);
+            });
             return;
         }
 
@@ -821,11 +883,11 @@ function FilterationImages({
         if (!row) return;
         const step = Math.max(260, Math.floor(row.clientWidth * 0.82));
         row.scrollBy({ left: direction * step, behavior: 'smooth' });
-    }, [useBootstrapMode, bootstrapSuggestedStyles]);
+    }, [useBootstrapMode, bootstrapSuggestedTotal]);
 
     const updatePillArrowVisibility = useCallback(() => {
         if (useBootstrapMode) {
-            setShowPillArrows(Boolean(bootstrapSubcategories?.hasPrev || bootstrapSubcategories?.hasNext));
+            setShowPillArrows(bootstrapSubcategoryTotal > SUBCATEGORY_SLICE_LIMIT);
             return;
         }
 
@@ -836,11 +898,11 @@ function FilterationImages({
         }
         const overflowed = row.scrollWidth > row.clientWidth + 2;
         setShowPillArrows(overflowed);
-    }, [useBootstrapMode, bootstrapSubcategories]);
+    }, [useBootstrapMode, bootstrapSubcategoryTotal]);
 
     const updateSuggestedArrowVisibility = useCallback(() => {
         if (useBootstrapMode) {
-            setShowSuggestedArrows(Boolean(bootstrapSuggestedStyles?.hasPrev || bootstrapSuggestedStyles?.hasNext));
+            setShowSuggestedArrows(bootstrapSuggestedTotal > SUGGESTED_STYLE_SLICE_LIMIT);
             return;
         }
 
@@ -850,7 +912,7 @@ function FilterationImages({
             return;
         }
         setShowSuggestedArrows(row.scrollWidth > row.clientWidth + 2);
-    }, [useBootstrapMode, bootstrapSuggestedStyles]);
+    }, [useBootstrapMode, bootstrapSuggestedTotal]);
 
     useEffect(() => {
         updatePillArrowVisibility();
@@ -896,7 +958,7 @@ function FilterationImages({
                                 type="button"
                                 className="filteration-carousel-arrow filteration-carousel-arrow--left"
                                 onClick={() => scrollSuggestedStyles(-1)}
-                                disabled={useBootstrapMode && !bootstrapSuggestedStyles?.hasPrev}
+                                disabled={useBootstrapMode && !hasBootstrapSuggestedPrev}
                                 aria-label="Scroll suggested styles left"
                             >
                                 <FiChevronLeft size={18} />
@@ -913,7 +975,7 @@ function FilterationImages({
                                         className={`filteration-suggested-card ${activeSubsubcategory === styleItem.label ? 'is-active' : ''}`}
                                         onClick={() => {
                                             setActiveSubsubcategory(styleItem.label);
-                                            setSuggestedPage(1);
+                                            setSuggestedOffset(0);
                                             if (currentPage !== 1) navigate(buildCollectionPagePath(1));
                                         }}
                                     >
@@ -938,7 +1000,7 @@ function FilterationImages({
                                 type="button"
                                 className="filteration-carousel-arrow filteration-carousel-arrow--right"
                                 onClick={() => scrollSuggestedStyles(1)}
-                                disabled={useBootstrapMode && !bootstrapSuggestedStyles?.hasNext}
+                                disabled={useBootstrapMode && !hasBootstrapSuggestedNext}
                                 aria-label="Scroll suggested styles right"
                             >
                                 <FiChevronRight size={18} />
@@ -953,10 +1015,10 @@ function FilterationImages({
                 {showPillArrows ? (
                     <button
                         type="button"
-                        className="filteration-carousel-arrow filteration-carousel-arrow--left"
-                        onClick={() => scrollPills(-1)}
-                        disabled={useBootstrapMode && !bootstrapSubcategories?.hasPrev}
-                        aria-label="Scroll categories left"
+                    className="filteration-carousel-arrow filteration-carousel-arrow--left"
+                    onClick={() => scrollPills(-1)}
+                    disabled={useBootstrapMode && !hasBootstrapSubcategoryPrev}
+                    aria-label="Scroll categories left"
                     >
                         <FiChevronLeft size={16} />
                     </button>
@@ -976,7 +1038,7 @@ function FilterationImages({
                         onClick={() => {
                             setActiveSubcategory('all');
                             setActiveSubsubcategory('all');
-                            setSuggestedPage(1);
+                            setSuggestedOffset(0);
                             if (currentPage !== 1) navigate(buildCollectionPagePath(1));
                         }}
                     >
@@ -1005,7 +1067,7 @@ function FilterationImages({
                         type="button"
                         className="filteration-carousel-arrow filteration-carousel-arrow--right"
                         onClick={() => scrollPills(1)}
-                        disabled={useBootstrapMode && !bootstrapSubcategories?.hasNext}
+                        disabled={useBootstrapMode && !hasBootstrapSubcategoryNext}
                         aria-label="Scroll categories right"
                     >
                         <FiChevronRight size={16} />
@@ -1031,7 +1093,10 @@ function FilterationImages({
                 <QueryErrorRetry
                     message={queryErrorMessage}
                     onRetry={() => {
-                        if (useBootstrapMode) collectionBootstrapQuery.refetch();
+                        if (useBootstrapMode) {
+                            collectionNavigationQuery.refetch();
+                            collectionAssetsQuery.refetch();
+                        }
                         else if (creatorId) creatorImagesQuery.refetch();
                         else allImagesQuery.refetch();
                         creatorsMapQuery.refetch();
@@ -1051,7 +1116,7 @@ function FilterationImages({
                                         cols={gridColumns}
                                         gap={gridGap}
                                     >
-                                        {items.map((img) => {
+                                        {items.map((img, itemIndex) => {
                                             const imgCreatorId =
                                                 img.creatorId && (img.creatorId.$oid || img.creatorId);
                                             const creator = imgCreatorId
@@ -1064,6 +1129,7 @@ function FilterationImages({
                                                         <FilterationMedia
                                                             img={img}
                                                             src={getBrowseMediaUrl(img)}
+                                                            priority={itemIndex < 4}
                                                             alt={
                                                                 getSubcategoryName(img.subcategory) ||
                                                                 getCategoryName(img.category) ||
@@ -1117,7 +1183,14 @@ function FilterationImages({
                                                                 >
                                                                     <FiDownload size={16} />
                                                                 </button>
-                                                                <LikeBttnSm imgId={img?._id} compact stopPropagation />
+                                                                <LikeBttnSm
+                                                                    imgId={img?._id}
+                                                                    compact
+                                                                    stopPropagation
+                                                                    initialLikesCount={img?.likes}
+                                                                    initialLiked={isLoggedIn ? Boolean(likeStatusMap[String(img?._id)]) : false}
+                                                                    skipInvalidate
+                                                                />
                                                             </div>
                                                             <h5
                                                                 className="mb-1 text-white fw-semibold"

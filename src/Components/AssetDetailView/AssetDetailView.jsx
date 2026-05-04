@@ -25,11 +25,13 @@ import { useAssetDetailQuery, useRelatedAssetsQuery } from '../../query/assetDet
 import { useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
+import watermarkLogo from '../../assets/watermark-logo.png';
 import './AssetDetailView.css';
 
 function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getResponsiveImageProps }) {
     const [videoDuration, setVideoDuration] = useState(null);
     const videoRef = useRef(null);
+    const isPremiumItem = String(item?.freePremium || '').trim().toLowerCase() === 'premium';
 
     const isVideoAsset = useMemo(() => {
         const mime = String(item?.fileMetadata?.mimeType || item?.imagetype || '').toLowerCase();
@@ -101,6 +103,16 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
                 <div className="related-video-duration" aria-label={`Duration ${durationLabel}`}>
                     {durationLabel}
                 </div>
+            )}
+            {isPremiumItem && (
+                <img
+                    src={watermarkLogo}
+                    alt=""
+                    aria-hidden="true"
+                    className="asset-watermark-overlay asset-watermark-overlay--related"
+                    loading="eager"
+                    draggable="false"
+                />
             )}
         </div>
     );
@@ -347,13 +359,13 @@ function AssetDetailView() {
         if (!asset) return { src: '', srcSet: '', sizes: '' };
         if (isVideo) {
             return {
-                src: getMediaVariantUrl(asset, ['360p', '720p', '1080p', 'original']),
+                src: getMediaVariantUrl(asset, ['720p', '360p', '1080p', 'original']),
                 srcSet: '',
                 sizes: '',
             };
         }
         return getResponsiveImageProps(asset, {
-            preferredOrder: ['medium', 'small', 'large', 'original'],
+            preferredOrder: ['medium', 'large', 'small', 'thumbnail'],
             sizes: '(max-width: 992px) 100vw, 70vw',
         });
     }, [asset, isVideo]);
@@ -1202,6 +1214,16 @@ function AssetDetailView() {
                                     sizes={heroMedia.sizes || undefined}
                                     alt={asset.title || getSubcategoryName(asset.subcategory) || 'Asset'}
                                     className="asset-hero__media-el"
+                                />
+                            )}
+                            {resolvedPurchaseStatus.isPremium && (
+                                <img
+                                    src={watermarkLogo}
+                                    alt=""
+                                    aria-hidden="true"
+                                    className="asset-watermark-overlay asset-watermark-overlay--hero"
+                                    loading="eager"
+                                    draggable="false"
                                 />
                             )}
                         </div>

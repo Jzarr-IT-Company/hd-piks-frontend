@@ -6,15 +6,15 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/scrollbar';
 import { useNavigate } from 'react-router-dom';
-import videosImg from '../../assets/01_Videos_4K.jpeg';
-import imagesImg from '../../assets/02_Images_4K.jpeg';
-import vectorImg from '../../assets/03_Vector_4K.jpeg';
-import psdImg from '../../assets/04_PSD_4K.jpeg';
-import aiImagesImg from '../../assets/05_AI_Images_4K.jpeg';
-import templatesImg from '../../assets/06_Templates_4K.jpeg';
-import iconsImg from '../../assets/07_Icons_4K.jpeg';
-import mockupsImg from '../../assets/08_Mockups_4K.jpeg';
-import nftsImg from '../../assets/09_NFTs_4K.jpeg';
+import videosImg from '../../assets/01_Videos_4K.png';
+import imagesImg from '../../assets/02_Images_4K.png';
+import vectorImg from '../../assets/03_Vector_4K.png';
+import psdImg from '../../assets/04_PSD_4K.png';
+import aiImagesImg from '../../assets/05_AI_Images_4K.png';
+import templatesImg from '../../assets/06_Templates_4K.png';
+import iconsImg from '../../assets/07_Icons_4K.png';
+import mockupsImg from '../../assets/08_Mockups_4K.png';
+import nftsImg from '../../assets/09_NFTs_4K.png';
 import superHerosImg from '../../assets/Super-Heros.jpeg';
 
 const homeBannerItems = [

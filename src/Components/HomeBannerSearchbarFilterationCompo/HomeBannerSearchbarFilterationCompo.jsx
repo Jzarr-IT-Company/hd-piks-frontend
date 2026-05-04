@@ -13,6 +13,14 @@ import Popper from '@mui/material/Popper';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
 import './HomeBannerSearchbarFilterationCompo.css';
+import { useSearchSuggestionsQuery } from '../../query/searchQueries.js';
+
+const slugifySearchCategory = (value = '') => String(value || 'image')
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 function HomeBannerSearchbarFilterationCompo() {
     const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useUI();
@@ -39,32 +47,6 @@ function HomeBannerSearchbarFilterationCompo() {
             .map(c => (typeof c?.name === 'string' ? c.name.trim() : ''))
             .filter(Boolean);
     }, [categories]);
-
-    const subcategorySuggestions = useMemo(() => {
-        if (!categories.length || !homeBannerSearchbarFilteration) return [];
-        const parent = categories.find(
-            c => normalize(c.name) === normalize(homeBannerSearchbarFilteration)
-        );
-        if (!parent) return [];
-        const subs = parent.children || [];
-        let names = subs
-            .map(c => (typeof c?.name === 'string' ? c.name.trim() : ''))
-            .filter(Boolean);
-        const q = normalize(searchQuerry);
-        if (q) {
-            names = names.filter(n => normalize(n).includes(q));
-        }
-        const seen = new Set();
-        const unique = [];
-        for (const n of names) {
-            const k = normalize(n);
-            if (!k || seen.has(k)) continue;
-            seen.add(k);
-            unique.push(n);
-            if (unique.length >= 6) break;
-        }
-        return unique;
-    }, [categories, homeBannerSearchbarFilteration, searchQuerry, normalize]);
 
     useEffect(() => {
         let active = true;
@@ -111,17 +93,18 @@ function HomeBannerSearchbarFilterationCompo() {
     const handleSearchBttn = async () => {
         if (!searchQuerry.trim()) return;
         setShowSuggestions(false);
-        navigate(`/search/${searchQuerry.trim()}`);
+        navigate(`/search/${encodeURIComponent(slugifySearchCategory(selectedScope))}/${encodeURIComponent(searchQuerry.trim())}`);
     };
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter') handleSearchBttn();
     };
 
-    const handleSuggestionClick = (name) => {
-        setSearchQuerry(name);
+    const handleSuggestionClick = (suggestion) => {
+        const value = typeof suggestion === 'string' ? suggestion : suggestion?.value || suggestion?.label || '';
+        setSearchQuerry(value);
         setShowSuggestions(false);
-        navigate(`/search/${encodeURIComponent(name)}`);
+        navigate(`/search/${encodeURIComponent(slugifySearchCategory(selectedScope))}/${encodeURIComponent(value)}`);
     };
 
     // NEW: dropdown handlers (copied pattern from HomeBannerSearchFilterationCompo2)
@@ -145,6 +128,12 @@ function HomeBannerSearchbarFilterationCompo() {
     };
 
     const selectedScope = parentOptions[selectedIndex] || homeBannerSearchbarFilteration || 'Image';
+    const suggestionsQuery = useSearchSuggestionsQuery({
+        category: selectedScope,
+        q: searchQuerry,
+        enabled: Boolean(selectedScope),
+    });
+    const searchSuggestions = suggestionsQuery.data || [];
 
     return (
         <>
@@ -245,14 +234,14 @@ function HomeBannerSearchbarFilterationCompo() {
                                             background: 'transparent',
                                             fontSize: 14,
                                         }}
-                                        onKeyPress={handleKeyPress}
+                                        onKeyDown={handleKeyPress}
                                         value={searchQuerry}
                                         onChange={(e) => {
                                             setSearchQuerry(e.target.value);
                                             setShowSuggestions(true);
                                         }}
                                         onFocus={() => {
-                                            if (subcategorySuggestions.length) setShowSuggestions(true);
+                                            if (searchSuggestions.length) setShowSuggestions(true);
                                         }}
                                     />
 
@@ -277,20 +266,20 @@ function HomeBannerSearchbarFilterationCompo() {
                                 </div>
 
                                 {/* Autocomplete panel under bar (unchanged) */}
-                                {showSuggestions && subcategorySuggestions.length > 0 && (
+                                {showSuggestions && searchSuggestions.length > 0 && (
                                     <div className="home-search-autocomplete">
                                         <div className="home-search-autocomplete-panel">
-                                            {subcategorySuggestions.map((name) => (
+                                            {searchSuggestions.map((suggestion) => (
                                                 <button
-                                                    key={name}
+                                                    key={`${suggestion.type}-${suggestion.label}`}
                                                     type="button"
-                                                    onClick={() => handleSuggestionClick(name)}
+                                                    onClick={() => handleSuggestionClick(suggestion)}
                                                     className="search-suggestion-row"
                                                 >
                                                     <span className="search-suggestion-icon">
                                                         <i className="fa-solid fa-magnifying-glass" />
                                                     </span>
-                                                    <span className="search-suggestion-text">{name}</span>
+                                                    <span className="search-suggestion-text">{suggestion.label}</span>
                                                 </button>
                                             ))}
                                         </div>

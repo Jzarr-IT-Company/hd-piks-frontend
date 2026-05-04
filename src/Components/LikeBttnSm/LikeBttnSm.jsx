@@ -6,7 +6,15 @@ import { API_ENDPOINTS } from '../../config/api.config.js';
 import { useAuth } from '../../Context/AuthContext.jsx';
 import { invalidateLikesRelatedQueries } from '../../utils/likesCache.js';
 
-function LikeBttnSm({ imgId, compact = false, compactSize = 34, stopPropagation = false }) {
+function LikeBttnSm({
+    imgId,
+    compact = false,
+    compactSize = 34,
+    stopPropagation = false,
+    initialLikesCount = undefined,
+    initialLiked = undefined,
+    skipInvalidate = false,
+}) {
     const navigate = useNavigate();
     const { userData } = useAuth();
     const [liked, setLiked] = useState(false);
@@ -14,6 +22,11 @@ function LikeBttnSm({ imgId, compact = false, compactSize = 34, stopPropagation 
     const [likesCount, setLikesCount] = useState(0);
 
     useEffect(() => {
+        if (initialLikesCount !== undefined && initialLikesCount !== null) {
+            setLikesCount(Number(initialLikesCount || 0));
+            return;
+        }
+
         const fetchCount = async () => {
             if (!imgId) return;
             try {
@@ -25,9 +38,14 @@ function LikeBttnSm({ imgId, compact = false, compactSize = 34, stopPropagation 
             }
         };
         fetchCount();
-    }, [imgId]);
+    }, [imgId, initialLikesCount]);
 
     useEffect(() => {
+        if (initialLiked !== undefined && initialLiked !== null) {
+            setLiked(Boolean(initialLiked));
+            return;
+        }
+
         const fetchStatus = async () => {
             if (!imgId || !userData?._id) {
                 setLiked(false);
@@ -41,7 +59,7 @@ function LikeBttnSm({ imgId, compact = false, compactSize = 34, stopPropagation 
             }
         };
         fetchStatus();
-    }, [imgId, userData?._id]);
+    }, [imgId, userData?._id, initialLiked]);
 
     const handleClick = async (event) => {
         if (stopPropagation && event?.stopPropagation) {
@@ -62,13 +80,19 @@ function LikeBttnSm({ imgId, compact = false, compactSize = 34, stopPropagation 
 
         try {
             if (nextLiked) {
-                await api.post(API_ENDPOINTS.ASSET_LIKE(imgId));
+                const response = await api.post(API_ENDPOINTS.ASSET_LIKE(imgId));
+                const count = response?.data?.data?.likesCount;
+                if (Number.isFinite(Number(count))) setLikesCount(Number(count));
                 message.success('Liked');
             } else {
-                await api.delete(API_ENDPOINTS.ASSET_LIKE(imgId));
+                const response = await api.delete(API_ENDPOINTS.ASSET_LIKE(imgId));
+                const count = response?.data?.data?.likesCount;
+                if (Number.isFinite(Number(count))) setLikesCount(Number(count));
                 message.success('Unliked');
             }
-            await invalidateLikesRelatedQueries();
+            if (!skipInvalidate) {
+                await invalidateLikesRelatedQueries();
+            }
         } catch (error) {
             setLiked(!nextLiked);
             setLikesCount((prev) => Math.max(0, prev + (nextLiked ? -1 : 1)));

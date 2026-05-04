@@ -8,7 +8,9 @@ import CollectionSelectModal from '../CollectionSelectModal';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import { QueryErrorRetry, QueryGridSkeleton } from '../QueryState/QueryState.jsx';
 import { PAGE_SIZE, useAssetsPageQuery } from '../../query/assetsQueries.js';
+import { useAssetLikeStatusBatchQuery } from '../../query/likeQueries.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
+import { useAuth } from '../../Context/AuthContext.jsx';
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { buildHomepageCategoryEntries } from '../../utils/homepageCategories.js';
@@ -37,7 +39,9 @@ function GalleryItem({
     onShare,
     onDownload,
     onSaveToCollection,
-    getName
+    getName,
+    priority = false,
+    initialLiked = undefined,
 }) {
     const [loaded, setLoaded] = useState(false);
     const [videoDuration, setVideoDuration] = useState(null);
@@ -141,7 +145,9 @@ function GalleryItem({
                         opacity: loaded ? 1 : 0,
                         transition: 'opacity 0.35s ease',
                     }}
-                    loading="lazy"
+                    loading={priority ? 'eager' : 'lazy'}
+                    fetchPriority={priority ? 'high' : 'auto'}
+                    decoding="async"
                     onLoad={() => setLoaded(true)}
                 />
             )}
@@ -213,7 +219,14 @@ function GalleryItem({
                     >
                         <FiDownload size={16} />
                     </button>
-                    <LikeBttnSm imgId={asset?._id} compact stopPropagation />
+                    <LikeBttnSm
+                        imgId={asset?._id}
+                        compact
+                        stopPropagation
+                        initialLikesCount={asset?.likes}
+                        initialLiked={initialLiked}
+                        skipInvalidate
+                    />
                 </div>
 
                 <div className="home-gallery__overlay-meta">
@@ -231,6 +244,7 @@ function GalleryItem({
 
 function HomeGallery() {
     const navigate = useNavigate();
+    const { isLoggedIn } = useAuth();
     const { galleryCategory: galleryCategoryParamRaw, galleryPage: galleryPageParamRaw } = useParams();
     const categoriesQuery = usePublicCategoriesQuery();
     const homepageCategories = useMemo(
@@ -258,6 +272,9 @@ function HomeGallery() {
 
     const assetsQuery = useAssetsPageQuery(parentFilter, currentPage, PAGE_SIZE);
     const items = assetsQuery.data?.items || [];
+    const itemIds = useMemo(() => items.map((asset) => asset?._id).filter(Boolean), [items]);
+    const likeStatusQuery = useAssetLikeStatusBatchQuery(itemIds, isLoggedIn);
+    const likeStatusMap = likeStatusQuery.data || {};
     const loading = assetsQuery.isLoading;
     const loadingMore = assetsQuery.isFetching;
     const lastKnownTotalPagesRef = useRef(1);
@@ -568,12 +585,14 @@ function HomeGallery() {
                     )}
 
                     {/* Items */}
-                    {items.map((asset) => (
+                    {items.map((asset, index) => (
                         <div key={asset._id} className="col-6 col-md-3">
                             <GalleryItem
                                 asset={asset}
                                 src={getBrowseMediaUrl(asset)}
                                 alt={asset.title || getName(asset.subcategory) || 'Asset'}
+                                priority={index < 4}
+                                initialLiked={isLoggedIn ? Boolean(likeStatusMap[String(asset._id)]) : false}
                                 onOpen={() => navigate(buildAssetUrl(asset))}
                                 onEdit={handleEdit}
                                 onDiscoverSimilar={handleDiscoverSimilar}

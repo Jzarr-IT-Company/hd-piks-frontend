@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUI } from "../../Context/UIContext";
 import { useNavigate, useParams } from "react-router-dom";
 import useMediaQuery from "@mui/material/useMediaQuery";
@@ -12,8 +12,15 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
-import { getAllImages } from "../../Services/getImages";
 import { usePublicCategoriesQuery } from "../../query/categoryQueries.js";
+import { useSearchSuggestionsQuery } from "../../query/searchQueries.js";
+
+const slugifySearchCategory = (value = "") => String(value || "image")
+	.trim()
+	.toLowerCase()
+	.replace(/&/g, " and ")
+	.replace(/[^a-z0-9]+/g, "-")
+	.replace(/^-+|-+$/g, "");
 
 function HomeBannerSearchFilterationCompo2({
 	showOnDesktop = false,
@@ -25,20 +32,14 @@ function HomeBannerSearchFilterationCompo2({
 	const { homeBannerSearchbarFilteration, setHomeBannerSearchbarFilteration } = useUI();
 	const [searchQuerry, setSearchQuerry] = useState("");
 	const navigate = useNavigate();
-	const { term } = useParams();
-	const [open, setOpen] = React.useState(false);
-	const anchorRef = React.useRef(null);
-	const suggestionsRowRef = React.useRef(null);
+	const { category, name, term } = useParams();
+	const [open, setOpen] = useState(false);
+	const anchorRef = useRef(null);
+	const suggestionsRowRef = useRef(null);
 	const isMobile = useMediaQuery("(max-width:767.98px)");
-
-	// Parent dropdown options (from real backend categories)
 	const [options, setOptions] = useState(["Image", "Video"]);
-	const [selectedIndex, setSelectedIndex] = React.useState(0);
+	const [selectedIndex, setSelectedIndex] = useState(0);
 	const categoriesQuery = usePublicCategoriesQuery();
-
-	// All approved images + suggestions
-	const [allItems, setAllItems] = useState([]);
-	const [suggestions, setSuggestions] = useState([]);
 
 	const normalize = useCallback((val) => {
 		if (typeof val === "string") return val.trim().toLowerCase();
@@ -46,36 +47,10 @@ function HomeBannerSearchFilterationCompo2({
 		return String(val).trim().toLowerCase();
 	}, []);
 
-	const getCategoryName = useCallback((cat) => {
-		if (!cat) return "";
-		if (typeof cat === "string") return cat;
-		if (typeof cat === "object") return cat.name || "";
-		return String(cat);
-	}, []);
-
-	const getSubcategoryName = useCallback((sub) => {
-		if (!sub) return "";
-		if (typeof sub === "string") return sub;
-		if (typeof sub === "object") return sub.name || "";
-		return String(sub);
-	}, []);
-
-	const getSubSubcategoryName = useCallback((subsub) => {
-		if (!subsub) return "";
-		if (typeof subsub === "string") return subsub;
-		if (typeof subsub === "object") return subsub.name || "";
-		return String(subsub);
-	}, []);
-
 	useEffect(() => {
-		setHomeBannerSearchbarFilteration(options[selectedIndex]);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
-
-	// Prefill input on /search/:term
-	useEffect(() => {
-		if (term) setSearchQuerry(term.replace(/-/g, " "));
-	}, [term]);
+		const nextTerm = name || term;
+		if (nextTerm) setSearchQuerry(decodeURIComponent(nextTerm).replace(/-/g, " "));
+	}, [name, term]);
 
 	useEffect(() => {
 		const tree = categoriesQuery.data;
@@ -84,97 +59,23 @@ function HomeBannerSearchFilterationCompo2({
 		const parentNames = tree.map((c) => c.name).filter(Boolean);
 		if (!parentNames.length) return;
 
+		const routeCategory = category ? decodeURIComponent(category).replace(/-/g, " ") : "";
+		const current = routeCategory || homeBannerSearchbarFilteration;
+		const foundIndex = parentNames.findIndex((item) => normalize(item) === normalize(current));
+		const nextIndex = foundIndex >= 0 ? foundIndex : 0;
+
 		setOptions(parentNames);
-		setSelectedIndex(0);
-		setHomeBannerSearchbarFilteration(parentNames[0]);
-	}, [categoriesQuery.data, setHomeBannerSearchbarFilteration]);
+		setSelectedIndex(nextIndex);
+		setHomeBannerSearchbarFilteration(parentNames[nextIndex]);
+	}, [categoriesQuery.data, category, homeBannerSearchbarFilteration, normalize, setHomeBannerSearchbarFilteration]);
 
-	// Load all approved images once (for suggestions)
-	useEffect(() => {
-		let active = true;
-		(async () => {
-			try {
-				const data = await getAllImages();
-				if (!active) return;
-				const approved = data.filter(
-					(item) => item.approved === true && item.rejected !== true
-				);
-				setAllItems(approved);
-			} catch (e) {
-				console.error("[HomeBannerSearch] getAllImages failed", e);
-				if (active) setAllItems([]);
-			}
-		})();
-		return () => {
-			active = false;
-		};
-	}, []);
-
-	// Build suggestions: only sub‑subcategories under current parent + search term
-	useEffect(() => {
-		if (!allItems.length) {
-			setSuggestions([]);
-			return;
-		}
-
-		const selectedScope = options[selectedIndex] || "";
-		const parentItems = allItems.filter(
-			(img) => normalize(getCategoryName(img.category)) === normalize(selectedScope)
-		);
-		if (!parentItems.length) {
-			setSuggestions([]);
-			return;
-		}
-
-		const q = normalize(searchQuerry || term || "");
-		let baseItems = parentItems;
-
-		if (q) {
-			const direct = parentItems.filter(
-				(img) => normalize(getSubcategoryName(img.subcategory)) === q
-			);
-			if (direct.length) {
-				baseItems = direct;
-			} else {
-				const fuzzy = parentItems.filter((img) => {
-					const title = normalize(img.title);
-					const desc = normalize(img.description);
-					const kws = Array.isArray(img.keywords) ? img.keywords : [];
-					return (
-						title.includes(q) ||
-						desc.includes(q) ||
-						kws.some((k) => normalize(k) === q)
-					);
-				});
-				if (fuzzy.length) baseItems = fuzzy;
-			}
-		}
-
-		const counts = new Map();
-		baseItems.forEach((img) => {
-			const ss = getSubSubcategoryName(img.subsubcategory);
-			if (!ss) return;
-			const key = ss.trim();
-			if (!key) return;
-			counts.set(key, (counts.get(key) || 0) + 1);
-		});
-
-		const sorted = Array.from(counts.entries())
-			.sort((a, b) => b[1] - a[1])
-			.map(([name]) => name);
-
-		setSuggestions(sorted);
-	}, [
-		allItems,
-		options,
-		selectedIndex,
-		searchQuerry,
-		term,
-		normalize,
-		getCategoryName,
-		getSubcategoryName,
-		getSubSubcategoryName,
-	]);
+	const selectedScope = options[selectedIndex] || homeBannerSearchbarFilteration || "Image";
+	const suggestionsQuery = useSearchSuggestionsQuery({
+		category: selectedScope,
+		q: searchQuerry,
+		enabled: Boolean(selectedScope),
+	});
+	const suggestions = suggestionsQuery.data || [];
 
 	const handleMenuItemClick = (event, index) => {
 		setSelectedIndex(index);
@@ -189,16 +90,14 @@ function HomeBannerSearchFilterationCompo2({
 		setOpen(false);
 	};
 
-	const selectedScope = options[selectedIndex] || "";
-
 	const doNavigate = (termRaw) => {
 		const t = (termRaw || "").trim();
 		if (!t) return;
-		navigate(`/search/${encodeURIComponent(t)}`);
+		navigate(`/search/${encodeURIComponent(slugifySearchCategory(selectedScope))}/${encodeURIComponent(t)}`);
 	};
 
 	const handleSearchBttn = () => {
-		const fallback = suggestions[0] || selectedScope || "wallpapers";
+		const fallback = suggestions[0]?.value || suggestions[0]?.label || selectedScope || "wallpapers";
 		doNavigate(searchQuerry || fallback);
 	};
 
@@ -206,9 +105,10 @@ function HomeBannerSearchFilterationCompo2({
 		if (e.key === "Enter") handleSearchBttn();
 	};
 
-	const handleSuggestionClick = (termStr) => {
-		setSearchQuerry(termStr);
-		doNavigate(termStr);
+	const handleSuggestionClick = (suggestion) => {
+		const value = typeof suggestion === "string" ? suggestion : suggestion?.value || suggestion?.label || "";
+		setSearchQuerry(value);
+		doNavigate(value);
 	};
 
 	const scrollSuggestions = useCallback((direction) => {
@@ -228,80 +128,65 @@ function HomeBannerSearchFilterationCompo2({
 		<div className={wrapperClassName}>
 			<div className="d-flex justify-content-center">
 				<div className="w-100" style={{ maxWidth: 900 }}>
-					{/* Search bar */}
 					<div
 						className={`d-flex align-items-center w-100 ${compact || hideSearchBarMargin ? "" : "my-4"}`}
 						style={{
 							minHeight: compact ? 44 : 60,
-							background: '#ffffff',
+							background: "#ffffff",
 							borderRadius: 999,
 							paddingInline: compact ? 8 : 14,
-							border: '1px solid rgba(236,72,153,0.6)',
+							border: "1px solid rgba(236,72,153,0.6)",
 						}}
 					>
-						<React.Fragment>
-							<ButtonGroup ref={anchorRef} aria-label="search scope">
-								<Button
-									size="small"
-									aria-controls={open ? "split-button-menu" : undefined}
-									aria-expanded={open ? "true" : undefined}
-									aria-label="select search scope"
-									aria-haspopup="menu"
-									style={{
-										backgroundColor: "transparent",
-										color: "#111827",
-										height: "100%",
-										border: "none",
-										paddingInline: compact ? 6 : 10,
-										fontSize: compact ? 11 : 13,
-										fontWeight: 600,
-										textTransform: "uppercase",
-									}}
-									onClick={handleToggle}
-								>
-									{selectedScope || "Category"}
-									<ArrowDropDownIcon color="inherit" fontSize="small" />
-								</Button>
-							</ButtonGroup>
-							<Popper
-								sx={{ zIndex: 1000 }}
-								open={open}
-								anchorEl={anchorRef.current}
-								role={undefined}
-								transition
-								disablePortal
+						<ButtonGroup ref={anchorRef} aria-label="search scope">
+							<Button
+								size="small"
+								aria-controls={open ? "split-button-menu" : undefined}
+								aria-expanded={open ? "true" : undefined}
+								aria-label="select search scope"
+								aria-haspopup="menu"
+								style={{
+									backgroundColor: "transparent",
+									color: "#111827",
+									height: "100%",
+									border: "none",
+									paddingInline: compact ? 6 : 10,
+									fontSize: compact ? 11 : 13,
+									fontWeight: 600,
+									textTransform: "uppercase",
+								}}
+								onClick={handleToggle}
 							>
-								{({ TransitionProps, placement }) => (
-									<Grow
-										{...TransitionProps}
-										style={{
-											transformOrigin:
-												placement === "bottom" ? "center top" : "center bottom",
-										}}
-									>
-										<Paper elevation={4}>
-											<ClickAwayListener onClickAway={handleClose}>
-												<MenuList
-													id="split-button-menu"
-													autoFocusItem
-													style={{ maxHeight: "200px", overflow: "auto" }}
-												>
-													{options.map((option, index) => (
-														<MenuItem
-															key={option}
-															selected={index === selectedIndex}
-															onClick={(event) => handleMenuItemClick(event, index)}
-														>
-															{option}
-														</MenuItem>
-													))}
-												</MenuList>
-											</ClickAwayListener>
-										</Paper>
-									</Grow>
-								)}
-							</Popper>
-						</React.Fragment>
+								{selectedScope || "Category"}
+								<ArrowDropDownIcon color="inherit" fontSize="small" />
+							</Button>
+						</ButtonGroup>
+						<Popper sx={{ zIndex: 1000 }} open={open} anchorEl={anchorRef.current} transition disablePortal>
+							{({ TransitionProps, placement }) => (
+								<Grow
+									{...TransitionProps}
+									style={{
+										transformOrigin: placement === "bottom" ? "center top" : "center bottom",
+									}}
+								>
+									<Paper elevation={4}>
+										<ClickAwayListener onClickAway={handleClose}>
+											<MenuList id="split-button-menu" autoFocusItem style={{ maxHeight: "200px", overflow: "auto" }}>
+												{options.map((option, index) => (
+													<MenuItem
+														key={option}
+														selected={index === selectedIndex}
+														onClick={(event) => handleMenuItemClick(event, index)}
+													>
+														{option}
+													</MenuItem>
+												))}
+											</MenuList>
+										</ClickAwayListener>
+									</Paper>
+								</Grow>
+							)}
+						</Popper>
 
 						<input
 							type="text"
@@ -309,7 +194,7 @@ function HomeBannerSearchFilterationCompo2({
 							placeholder={`Search free ${selectedScope || "assets"} (e.g. wallpapers)`}
 							value={searchQuerry}
 							onChange={(e) => setSearchQuerry(e.target.value)}
-							onKeyPress={handleKeyPress}
+							onKeyDown={handleKeyPress}
 							style={{
 								flex: 1,
 								height: compact ? 34 : 42,
@@ -335,76 +220,32 @@ function HomeBannerSearchFilterationCompo2({
 								marginLeft: compact ? 2 : 4,
 							}}
 						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								viewBox="0 0 16 16"
-								width={compact ? "13" : "15"}
-								height={compact ? "13" : "15"}
-							>
+							<svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 16 16" width={compact ? "13" : "15"} height={compact ? "13" : "15"}>
 								<path d="M11 6a5 5 0 1 1-10 0 5 5 0 0 1 10 0z" />
 								<path d="M15.5 15.5l-3-3" />
 							</svg>
 						</button>
 					</div>
 
-					{/* Suggestions slider: only related sub‑subcategories */}
 					{categoriesQuery.isError && (
 						<div className="d-flex justify-content-center justify-content-md-start mb-2">
-							<button
-								type="button"
-								className="btn btn-sm btn-outline-danger"
-								onClick={() => categoriesQuery.refetch()}
-							>
+							<button type="button" className="btn btn-sm btn-outline-danger" onClick={() => categoriesQuery.refetch()}>
 								Retry categories
 							</button>
 						</div>
 					)}
+
 					{!hideSuggestions && suggestions.length > 0 && (
 						<div className="mt-3">
-							<div
-								className="d-flex align-items-center justify-content-between flex-wrap mb-2"
-								style={{ gap: 8 }}
-							>
-								<div>
-									<div
-										style={{
-											fontSize: compact ? 12 : 13,
-											fontWeight: 700,
-											color: "#1f2937",
-											lineHeight: 1.1,
-										}}
-									>
-										Pick Suggested styles
-									</div>
+							<div className="d-flex align-items-center justify-content-between flex-wrap mb-2" style={{ gap: 8 }}>
+								<div style={{ fontSize: compact ? 12 : 13, fontWeight: 700, color: "#1f2937", lineHeight: 1.1 }}>
+									Search suggestions
 								</div>
 							</div>
 
 							<div className="position-relative">
 								{isMobile && suggestions.length > 2 && (
-									<button
-										type="button"
-										onClick={() => scrollSuggestions(-1)}
-										aria-label="Scroll suggestions left"
-										style={{
-											position: "absolute",
-											left: -2,
-											top: "50%",
-											transform: "translateY(-50%)",
-											zIndex: 2,
-											width: 24,
-											height: 24,
-											borderRadius: "50%",
-											border: "1px solid #d1d5db",
-											background: "#fff",
-											display: "inline-flex",
-											alignItems: "center",
-											justifyContent: "center",
-											boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-										}}
-									>
+									<button type="button" onClick={() => scrollSuggestions(-1)} aria-label="Scroll suggestions left" style={arrowStyle("left")}>
 										<FiChevronLeft size={14} />
 									</button>
 								)}
@@ -422,11 +263,11 @@ function HomeBannerSearchFilterationCompo2({
 										msOverflowStyle: "none",
 									}}
 								>
-									{suggestions.map((s) => (
+									{suggestions.map((suggestion) => (
 										<button
-											key={s}
+											key={`${suggestion.type}-${suggestion.label}`}
 											type="button"
-											onClick={() => handleSuggestionClick(s)}
+											onClick={() => handleSuggestionClick(suggestion)}
 											className="btn btn-sm"
 											style={{
 												borderRadius: 999,
@@ -440,33 +281,13 @@ function HomeBannerSearchFilterationCompo2({
 												whiteSpace: "nowrap",
 											}}
 										>
-											{s}
+											{suggestion.label}
 										</button>
 									))}
 								</div>
 
 								{isMobile && suggestions.length > 2 && (
-									<button
-										type="button"
-										onClick={() => scrollSuggestions(1)}
-										aria-label="Scroll suggestions right"
-										style={{
-											position: "absolute",
-											right: -2,
-											top: "50%",
-											transform: "translateY(-50%)",
-											zIndex: 2,
-											width: 24,
-											height: 24,
-											borderRadius: "50%",
-											border: "1px solid #d1d5db",
-											background: "#fff",
-											display: "inline-flex",
-											alignItems: "center",
-											justifyContent: "center",
-											boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
-										}}
-									>
+									<button type="button" onClick={() => scrollSuggestions(1)} aria-label="Scroll suggestions right" style={arrowStyle("right")}>
 										<FiChevronRight size={14} />
 									</button>
 								)}
@@ -478,5 +299,22 @@ function HomeBannerSearchFilterationCompo2({
 		</div>
 	);
 }
+
+const arrowStyle = (side) => ({
+	position: "absolute",
+	[side]: -2,
+	top: "50%",
+	transform: "translateY(-50%)",
+	zIndex: 2,
+	width: 24,
+	height: 24,
+	borderRadius: "50%",
+	border: "1px solid #d1d5db",
+	background: "#fff",
+	display: "inline-flex",
+	alignItems: "center",
+	justifyContent: "center",
+	boxShadow: "0 2px 8px rgba(0,0,0,0.12)",
+});
 
 export default HomeBannerSearchFilterationCompo2;

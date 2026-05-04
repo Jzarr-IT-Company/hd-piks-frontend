@@ -1,8 +1,8 @@
 import React, { useRef } from 'react';
 import './HomeBlogHighlights.css';
-import blogImgOne from '../assets/02_Images_4K.jpeg';
-import blogImgTwo from '../assets/01_Videos_4K.jpeg';
-import blogImgThree from '../assets/08_Mockups_4K.jpeg';
+import blogImgOne from '../assets/02_Images_4K.png';
+import blogImgTwo from '../assets/01_Videos_4K.png';
+import blogImgThree from '../assets/08_Mockups_4K.png';
 
 const BLOGS = [
   {

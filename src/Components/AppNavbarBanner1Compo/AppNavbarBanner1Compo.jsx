@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
 import { buildHomepageCategoryEntries } from '../../utils/homepageCategories.js';
+import './AppNavbarBanner1Compo.css';
 
 function AppNavbarBanner1Compo() {
     const navigate = useNavigate();
@@ -24,31 +25,27 @@ function AppNavbarBanner1Compo() {
         }
     }, [cards.length, mobileIndex]);
 
-    const firstRowCards = cards.slice(0, 5);
-    const secondRowCards = cards.slice(5);
-
     const handleClick = (card) => {
         if (!card?.slug) return;
         navigate(`/collection/${encodeURIComponent(card.slug)}`);
         window.scroll(0, 0);
     };
 
-    const renderCardInner = (card) => (
+    const renderCard = (card, imageHeight = 160) => (
         <div
-            className="h-100 w-100 position-relative overflow-hidden"
-            style={{
-                borderRadius: 16,
-                backgroundImage: `url(${card.src})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-            }}
+            className="asset-type-card"
+            onClick={() => handleClick(card)}
+            style={{ '--asset-type-image-height': `${imageHeight}px` }}
         >
-            <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center">
-                <h5 className="text-white mb-0" style={{ fontSize: '0.95rem', fontWeight: 600 }}>
-                    {card.cardLabel}
-                </h5>
-            </div>
+            <div
+                className="asset-type-card__image"
+                style={{ backgroundImage: `url(${card.src})` }}
+            />
+            <h5
+                className="asset-type-card__title mb-0 text-center"
+            >
+                {card.cardLabel}
+            </h5>
         </div>
     );
 
@@ -70,46 +67,19 @@ function AppNavbarBanner1Compo() {
     }, [mobileIndex]);
 
     return (
-        <div className="asset-type-wrapper">
-            <div className="mt-3 px-3 px-md-0 d-flex flex-column flex-md-row align-items-md-center justify-content-between">
-                <h5 className="text-white fw-semibold mb-1 mb-md-0" style={{ fontSize: '1.05rem' }}>
-                    Browse by asset type
-                </h5>
-                <span className="text-white-50" style={{ fontSize: 12 }}>
-                    Videos, images, vectors, PSDs, AI graphics and more
-                </span>
+        <section className="asset-type-wrapper">
+            <div className="container-fluid px-3 px-lg-5">
+                <h3 className="asset-type-heading text-center mb-5">
+                    Browse by Content Type
+                </h3>
             </div>
 
-            <div className="d-none d-md-block px-3 px-md-0 mt-2">
-                <div className="d-flex justify-content-center flex-wrap" style={{ gap: 24 }}>
-                    {firstRowCards.map((card) => (
-                        <div
-                            key={card.id}
-                            onClick={() => handleClick(card)}
-                            style={{ cursor: 'pointer', width: 220, maxWidth: '20rem', flexShrink: 0 }}
-                        >
-                            <div className="card border-0 h-100" style={{ borderRadius: 18, overflow: 'hidden', minHeight: 150 }}>
-                                {renderCardInner(card)}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {!!secondRowCards.length && (
-                    <div className="d-flex justify-content-center flex-wrap mt-3" style={{ gap: 24 }}>
-                        {secondRowCards.map((card) => (
-                            <div
-                                key={card.id}
-                                onClick={() => handleClick(card)}
-                                style={{ cursor: 'pointer', width: 220, maxWidth: '20rem', flexShrink: 0 }}
-                            >
-                                <div className="card border-0 h-100" style={{ borderRadius: 18, overflow: 'hidden', minHeight: 150 }}>
-                                    {renderCardInner(card)}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+            <div className="asset-type-grid d-none d-md-grid">
+                {cards.map((card) => (
+                    <React.Fragment key={card.id}>
+                        {renderCard(card)}
+                    </React.Fragment>
+                ))}
             </div>
 
             <div className="d-flex d-md-none align-items-center justify-content-between mt-3 px-3">
@@ -140,26 +110,13 @@ function AppNavbarBanner1Compo() {
                     <div
                         key={card.id}
                         ref={(el) => (mobileCardRefs.current[index] = el)}
-                        style={{ minWidth: '80%', maxWidth: 320, flexShrink: 0, scrollSnapAlign: 'center' }}
-                        onClick={() => handleClick(card)}
+                        style={{ minWidth: '78%', maxWidth: 320, flexShrink: 0, scrollSnapAlign: 'center' }}
                     >
-                        <div
-                            className="card border-0 shadow-sm"
-                            style={{
-                                borderRadius: 18,
-                                overflow: 'hidden',
-                                height: 180,
-                                cursor: 'pointer',
-                                boxShadow: '0 14px 38px rgba(15,23,42,0.5)',
-                                backgroundColor: '#020617',
-                            }}
-                        >
-                            {renderCardInner(card)}
-                        </div>
+                        {renderCard(card, 150)}
                     </div>
                 ))}
             </div>
-        </div>
+        </section>
     );
 }
 

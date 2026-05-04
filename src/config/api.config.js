@@ -71,6 +71,7 @@ export const API_ENDPOINTS = {
 
     // Images
     GET_ALL_IMAGES: '/AllImagesfromDB', // legacy full fetch, avoid in new components
+    COLLECTION_NAVIGATION: '/collection-navigation',
     COLLECTION_BOOTSTRAP: '/collection-bootstrap',
     // NEW: paginated public assets endpoint for galleries
     ASSETS: '/assets',
@@ -102,6 +103,8 @@ export const API_ENDPOINTS = {
     // Search images by keyword/category/title/description.
     // Backend expects a query param, e.g. GET /searchFilterationImages?searchQuery=term
     SEARCH_IMAGES: '/searchFilterationImages',
+    SEARCH_SUGGESTIONS: '/search-suggestions',
+    SEARCH_ASSETS: '/search-assets',
     FILTER_BY_WORD: '/filterationByWord',
     APPROVE_IMAGES: '/approvedimages',
     REJECT_IMAGES: '/rejectedimages',
@@ -111,6 +114,7 @@ export const API_ENDPOINTS = {
     UNLIKE: '/unLikController',
     ASSET_LIKE: id => `/assets/${id}/like`,
     ASSET_LIKE_STATUS: id => `/assets/${id}/like-status`,
+    ASSET_LIKE_STATUS_BATCH: '/assets/like-status/batch',
     ASSET_LIKE_COUNT: id => `/assets/${id}/like-count`,
     
     // S3
