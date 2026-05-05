@@ -1,0 +1,479 @@
+.pdf-tools-page {
+    min-height: calc(100vh - 76px);
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    background: #f6f8fb;
+    color: #172033;
+}
+
+.pdf-tools-sidebar {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    min-height: calc(100vh - 76px);
+    padding: 22px 16px;
+    border-right: 1px solid #dce3ef;
+    background: #ffffff;
+}
+
+.pdf-tools-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 8px 18px;
+    border-bottom: 1px solid #edf1f7;
+}
+
+.pdf-tools-brand-mark {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #111827;
+    color: #ffffff;
+    font-weight: 800;
+    font-size: 13px;
+}
+
+.pdf-tools-brand strong,
+.pdf-tools-brand span {
+    display: block;
+}
+
+.pdf-tools-brand span {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.pdf-tools-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.pdf-tools-nav-button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 12px;
+    background: transparent;
+    color: #334155;
+    font-weight: 600;
+    text-align: left;
+}
+
+.pdf-tools-nav-button:hover,
+.pdf-tools-nav-button.active {
+    background: #eef2ff;
+    color: #4f46e5;
+}
+
+.pdf-tools-workspace {
+    min-width: 0;
+    padding: 28px;
+}
+
+.pdf-tools-workspace-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 22px;
+}
+
+.pdf-tools-title-block {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.pdf-tools-title-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #4f46e5;
+    color: #ffffff;
+}
+
+.pdf-tools-title-block h1 {
+    margin: 0;
+    color: #111827;
+    font-size: 28px;
+    font-weight: 800;
+}
+
+.pdf-tools-title-block p {
+    margin: 4px 0 0;
+    color: #64748b;
+}
+
+.pdf-tools-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+    gap: 18px;
+}
+
+.pdf-tools-panel {
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 18px;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.pdf-tools-drop-zone {
+    width: 100%;
+    min-height: 190px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px dashed #94a3b8;
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #334155;
+}
+
+.pdf-tools-drop-zone strong {
+    font-size: 16px;
+}
+
+.pdf-tools-drop-zone span,
+.pdf-tools-muted,
+.pdf-tools-file-row span {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.pdf-tools-hidden-input {
+    display: none;
+}
+
+.pdf-tools-field {
+    display: grid;
+    gap: 6px;
+    margin-top: 16px;
+    color: #334155;
+    font-weight: 600;
+}
+
+.pdf-tools-field select {
+    height: 40px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 10px;
+}
+
+.pdf-tools-file-list {
+    display: grid;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.pdf-tools-file-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.pdf-tools-file-row strong,
+.pdf-tools-file-row span {
+    display: block;
+}
+
+.pdf-tools-row-actions {
+    display: inline-flex;
+    gap: 6px;
+}
+
+.pdf-tools-row-actions button,
+.pdf-tools-tool-button {
+    width: 36px;
+    height: 36px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    color: #334155;
+}
+
+.pdf-tools-primary-button,
+.pdf-tools-download-button {
+    min-height: 42px;
+    border: 0;
+    border-radius: 8px;
+    padding: 9px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #4f46e5;
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.pdf-tools-primary-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.pdf-tools-primary-button.compact {
+    min-height: 38px;
+}
+
+.pdf-tools-status-panel h2 {
+    font-size: 18px;
+    font-weight: 800;
+    margin: 0 0 12px;
+}
+
+.pdf-tools-job-box {
+    display: grid;
+    gap: 14px;
+}
+
+.pdf-tools-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #4f46e5;
+    font-weight: 800;
+    text-transform: capitalize;
+}
+
+.pdf-tools-state.completed {
+    color: #15803d;
+}
+
+.pdf-tools-state.failed,
+.pdf-tools-state.error,
+.pdf-tools-error-text {
+    color: #dc2626;
+}
+
+.pdf-tools-progress-track {
+    height: 9px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #e2e8f0;
+}
+
+.pdf-tools-progress-fill {
+    height: 100%;
+    border-radius: inherit;
+    background: #4f46e5;
+    transition: width 0.25s ease;
+}
+
+.pdf-tools-download-button {
+    width: fit-content;
+    background: #111827;
+}
+
+.pdf-tools-spin {
+    animation: pdfToolsSpin 0.8s linear infinite;
+}
+
+.pdf-tools-editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.pdf-tools-tool-button.active {
+    background: #eef2ff;
+    color: #4f46e5;
+    border-color: #a5b4fc;
+}
+
+.pdf-tools-zoom-control {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0 10px;
+    background: #ffffff;
+    color: #334155;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.pdf-tools-editor-upload {
+    max-width: 620px;
+}
+
+.pdf-tools-editor-meta,
+.pdf-tools-editor-notice {
+    margin-bottom: 12px;
+}
+
+.pdf-tools-editor-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 8px 12px;
+}
+
+.pdf-tools-editor-meta span {
+    color: #64748b;
+}
+
+.pdf-tools-editor-download {
+    margin-bottom: 14px;
+}
+
+.pdf-tools-pdf-stage {
+    display: grid;
+    gap: 22px;
+    overflow: auto;
+    padding: 18px;
+    border: 1px solid #dbe3ef;
+    border-radius: 8px;
+    background: #e5e7eb;
+}
+
+.pdf-tools-pdf-page {
+    position: relative;
+    margin: 0 auto;
+    background: #ffffff;
+    box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+}
+
+.pdf-tools-pdf-page canvas,
+.pdf-tools-text-layer {
+    position: absolute;
+    inset: 0;
+}
+
+.pdf-tools-text-layer {
+    pointer-events: none;
+}
+
+.pdf-tools-editor-element {
+    position: absolute;
+    pointer-events: auto;
+    border: 1px dashed rgba(79, 70, 229, 0.55);
+    background: rgba(255, 255, 255, 0.64);
+    cursor: move;
+}
+
+.pdf-tools-editor-element.detected {
+    border-color: transparent;
+    background: transparent;
+}
+
+.pdf-tools-editor-element.detected:hover,
+.pdf-tools-editor-element.detected.is-editing {
+    border-color: rgba(79, 70, 229, 0.55);
+}
+
+.pdf-tools-editor-element.detected.is-editing {
+    background: #ffffff;
+}
+
+.pdf-tools-editor-element.highlight {
+    border-color: rgba(202, 138, 4, 0.72);
+}
+
+.pdf-tools-editor-element input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+}
+
+.pdf-tools-editor-element.detected:not(.is-editing) input {
+    color: transparent !important;
+    caret-color: transparent;
+}
+
+.pdf-tools-editor-element.detected.is-editing input {
+    caret-color: auto;
+}
+
+.pdf-tools-resize-handle {
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #4f46e5;
+    cursor: nwse-resize;
+}
+
+.pdf-tools-editor-element.detected:not(.is-editing) .pdf-tools-resize-handle {
+    display: none;
+}
+
+@keyframes pdfToolsSpin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 992px) {
+    .pdf-tools-page {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-tools-sidebar {
+        position: relative;
+        min-height: auto;
+        border-right: 0;
+        border-bottom: 1px solid #dce3ef;
+    }
+
+    .pdf-tools-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .pdf-tools-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .pdf-tools-workspace {
+        padding: 18px;
+    }
+
+    .pdf-tools-workspace-header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .pdf-tools-nav {
+        grid-template-columns: 1fr;
+    }
+
+    .pdf-tools-title-block h1 {
+        font-size: 23px;
+    }
+}

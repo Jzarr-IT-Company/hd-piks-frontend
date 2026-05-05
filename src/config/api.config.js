@@ -172,6 +172,17 @@ export const API_ENDPOINTS = {
     AI_CONVERSATION_MESSAGES: id => `/ai/conversations/${id}/messages`,
     AI_VOICEOVER_VOICES: '/ai/voiceover/voices',
     AI_VOICEOVER_GENERATE: '/ai/voiceover/generate',
+
+    // PDF tools
+    PDF_TOOLS_UPLOAD: '/pdf-tools/files/upload',
+    PDF_TOOLS_FILE_DOWNLOAD: id => `/pdf-tools/files/${id}/download`,
+    PDF_TOOLS_JOB_MERGE: '/pdf-tools/jobs/merge',
+    PDF_TOOLS_JOB_COMPRESS: '/pdf-tools/jobs/compress',
+    PDF_TOOLS_JOB_OFFICE_TO_PDF: '/pdf-tools/jobs/office-to-pdf',
+    PDF_TOOLS_JOB_IMAGE_TO_PDF: '/pdf-tools/jobs/image-to-pdf',
+    PDF_TOOLS_JOB: id => `/pdf-tools/jobs/${id}`,
+    PDF_TOOLS_JOB_DOWNLOAD: id => `/pdf-tools/jobs/${id}/download`,
+    PDF_TOOLS_EDITOR_EXPORT: '/pdf-tools/editor/export',
 };
 
 export default API_BASE_URL;

@@ -138,6 +138,48 @@
 	border-color: rgba(148, 163, 184, 0.26);
 }
 
+.ai-bg-mode-control {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 8px;
+}
+
+.ai-bg-mode-button {
+	min-height: 54px;
+	border: 1px solid #dbe3ef;
+	border-radius: 12px;
+	background: #ffffff;
+	color: #334155;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	padding: 8px 12px;
+	text-align: left;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.ai-bg-mode-button span {
+	font-size: 14px;
+	font-weight: 700;
+}
+
+.ai-bg-mode-button small {
+	color: #64748b;
+	font-size: 11px;
+}
+
+.ai-bg-mode-button.is-active {
+	border-color: #8f5cff;
+	background: #f4f1ff;
+	box-shadow: 0 8px 18px rgba(143, 92, 255, 0.12);
+}
+
+.ai-bg-mode-button:disabled {
+	cursor: not-allowed;
+	opacity: 0.72;
+}
+
 .ai-bg-dropzone {
 	position: relative;
 	min-height: 320px;

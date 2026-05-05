@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, GraduationCap, ShoppingCart } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, FileText, GraduationCap, ShoppingCart } from 'lucide-react';
 import './HomeBanner1.css';
 
 function HomeBanner1() {
@@ -31,6 +31,14 @@ function HomeBanner1() {
             route: '/ai/ai-commerce',
             icon: ShoppingCart,
         },
+        {
+            id: 'pdf-tools',
+            title: 'PDF Tools',
+            description: 'Edit, merge, compress, and convert files to PDF using your HDPiks workspace.',
+            action: 'Open Tool',
+            route: '/pdf-tools',
+            icon: FileText,
+        },
     ];
 
     return (
@@ -46,7 +54,7 @@ function HomeBanner1() {
                 {tools.map((tool) => {
                     const Icon = tool.icon;
                     return (
-                        <div key={tool.id} className="col-12 col-md-6 col-lg-4 d-flex">
+                        <div key={tool.id} className="col-12 col-md-6 col-lg-3 d-flex">
                             <article className="exclusive-tools-card w-100">
                                 <div className="exclusive-tools-icon">
                                     <Icon size={22} />

@@ -437,6 +437,7 @@ import Legal from "../Pages/Company/Legal";
 import HelpCenter from "../Pages/Company/HelpCenter";
 import HelpCenterTopic from "../Pages/Company/HelpCenterTopic";
 import DesignHdpiks from "../Pages/DesignHdpiks";
+const PdfTools = React.lazy(() => import("../Pages/PdfTools"));
 
 function ProtectedRoute({ children }) {
   const token = Cookies.get("token");
@@ -581,6 +582,14 @@ function Routing() {
     {
       path: "/design-hdpiks",
       element: <DesignHdpiks />,
+    },
+    {
+      path: "/pdf-tools",
+      element: (
+        <ProtectedRoute>
+          <PdfTools />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/collection/:parentSlug/:subSlug",

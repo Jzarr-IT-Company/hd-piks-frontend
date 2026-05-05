@@ -249,6 +249,7 @@ function AiToolPage() {
 	const [bgRemoveFileName, setBgRemoveFileName] = useState("");
 	const [bgRemoveDragActive, setBgRemoveDragActive] = useState(false);
 	const [bgRemovePreviewPhase, setBgRemovePreviewPhase] = useState("idle");
+	const [bgRemoveMode, setBgRemoveMode] = useState("fast");
 	const [textAiInput, setTextAiInput] = useState("");
 	const [textAiSending, setTextAiSending] = useState(false);
 	const [textAiError, setTextAiError] = useState("");
@@ -1064,6 +1065,14 @@ function AiToolPage() {
 
 	useEffect(() => {
 		return () => {
+			if (bgRemoveResultUrl && bgRemoveResultUrl.startsWith("blob:")) {
+				URL.revokeObjectURL(bgRemoveResultUrl);
+			}
+		};
+	}, [bgRemoveResultUrl]);
+
+	useEffect(() => {
+		return () => {
 			clearAiGenerateStageTimers();
 		};
 	}, []);
@@ -1227,6 +1236,9 @@ function AiToolPage() {
 	};
 
 	const resetBgRemovePreview = () => {
+		if (bgRemoveResultUrl && bgRemoveResultUrl.startsWith("blob:")) {
+			URL.revokeObjectURL(bgRemoveResultUrl);
+		}
 		setBgRemoveResultUrl("");
 		setBgRemoveError("");
 		setBgRemoveUploadProgress(0);
@@ -1237,17 +1249,18 @@ function AiToolPage() {
 	const processBgRemovePublic = async (file) => {
 		const formData = new FormData();
 		formData.append("file", file);
-		formData.append("replaceBg", "false");
+		formData.append("mode", bgRemoveMode);
 		const response = await api.post(API_ENDPOINTS.AI_BG_REMOVE, formData, {
 			headers: {
 				"Content-Type": "multipart/form-data",
 			},
+			responseType: "blob",
 		});
-		const previewUrl = String(response?.data?.data?.previewUrl || "").trim();
-		if (!previewUrl) {
-			throw new Error("No background-removed preview returned.");
+		const blob = response?.data;
+		if (!(blob instanceof Blob) || !blob.size) {
+			throw new Error("No background-removed image returned.");
 		}
-		return previewUrl;
+		return URL.createObjectURL(blob);
 	};
 
 	const runBgRemoveFlow = async (inputFile) => {
@@ -1261,9 +1274,9 @@ function AiToolPage() {
 			return;
 		}
 
-		const maxBytes = 30 * 1024 * 1024;
+		const maxBytes = 10 * 1024 * 1024;
 		if (Number(file.size || 0) > maxBytes) {
-			setBgRemoveError("Max file size is 30MB.");
+			setBgRemoveError("Max file size is 10MB.");
 			return;
 		}
 
@@ -1288,15 +1301,22 @@ function AiToolPage() {
 			setBgRemovePreviewPhase("processing");
 			const processingStartTime = Date.now();
 			const previewUrl = await processBgRemovePublic(uploadFile);
-			const cacheBustedPreviewUrl = `${previewUrl}${previewUrl.includes("?") ? "&" : "?"}v=${Date.now()}`;
-			await preloadImage(cacheBustedPreviewUrl);
+			await preloadImage(previewUrl);
 			const elapsedMs = Date.now() - processingStartTime;
 			if (elapsedMs < BG_REMOVE_MIN_PROCESSING_VISUAL_MS) {
 				await sleep(BG_REMOVE_MIN_PROCESSING_VISUAL_MS - elapsedMs);
 			}
 			setBgRemoveProcessingProgress(100);
-			setBgRemoveResultUrl(cacheBustedPreviewUrl);
+			setBgRemoveResultUrl(previewUrl);
 		} catch (error) {
+			if (error?.response?.data instanceof Blob) {
+				try {
+					const payload = JSON.parse(await error.response.data.text());
+					error.response.data = payload;
+				} catch {
+					// Keep the original error when the binary response is not JSON.
+				}
+			}
 			const statusCode = Number(error?.response?.status || 0);
 			const rawMessage = String(
 				error?.response?.data?.message ||
@@ -1310,7 +1330,7 @@ function AiToolPage() {
 				statusCode === 429
 					? "Too many requests. Please wait a moment and try again."
 					: statusCode === 413
-					? "File is too large. Please upload up to 30MB."
+					? "File is too large. Please upload a smaller image."
 					: statusCode === 401
 					? "Background remover is temporarily unavailable."
 					: isImageKitLimitError
@@ -1901,6 +1921,23 @@ function AiToolPage() {
 								<p className="text-muted mb-3" style={{ fontSize: 14 }}>
 									Upload a JPG, PNG, or WEBP image and watch the transform from original to clean cutout.
 								</p>
+								<div className="ai-bg-mode-control mb-3" aria-label="Background remover mode">
+									{[
+										{ value: "fast", label: "Fast", helper: "Quick cutout" },
+										{ value: "hd", label: "HD", helper: "Refined edges" },
+									].map((option) => (
+										<button
+											key={option.value}
+											type="button"
+											className={`ai-bg-mode-button ${bgRemoveMode === option.value ? "is-active" : ""}`}
+											onClick={() => setBgRemoveMode(option.value)}
+											disabled={bgRemoveBusy}
+										>
+											<span>{option.label}</span>
+											<small>{option.helper}</small>
+										</button>
+									))}
+								</div>
 								<input
 									ref={bgRemoveInputRef}
 									type="file"
@@ -1957,7 +1994,7 @@ function AiToolPage() {
 											: "Upload Image"}
 									</button>
 									<p className="text-muted mt-2 mb-0" style={{ fontSize: 12 }}>
-										Max 30MB - JPG, PNG, WEBP
+										Max 10MB - JPG, PNG, WEBP
 									</p>
 									<div className="ai-bg-progress-wrap">
 										<div className="ai-bg-progress-track">
@@ -1968,8 +2005,8 @@ function AiToolPage() {
 										</div>
 										<div className="ai-bg-step-list">
 											{[
-												{ key: "upload", label: "Upload to ImageKit" },
-												{ key: "process", label: "AI background remove" },
+												{ key: "upload", label: "Upload to HDPiks" },
+												{ key: "process", label: bgRemoveMode === "hd" ? "HD edge refinement" : "AI background remove" },
 												{ key: "final", label: "Ready to download" },
 											].map((step) => {
 												const state = getBgRemoveStepState(step.key);
