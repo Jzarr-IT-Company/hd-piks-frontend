@@ -19,7 +19,7 @@ function AiToolArticleSection({ article }) {
     <section className="articles-section ai-tool-articles mt-4 mt-md-5">
       <div className="articles-card ai-tool-articles__card">
         <div className="articles-header">
-          <h2 className="articles-title">HDPiks Articles</h2>
+          <h2 className="articles-title">Elvify Articles</h2>
         </div>
 
         <article className="article-item ai-tool-article-item">

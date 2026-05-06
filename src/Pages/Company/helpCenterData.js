@@ -13,7 +13,7 @@ const STATIC_TOPICS = [
     title: "Contact Support",
     category: "Contact Support",
     badge: "Help",
-    summary: "Get direct help from the HDPiks support team for unresolved account or billing issues.",
+    summary: "Get direct help from the Elvify support team for unresolved account or billing issues.",
     href: "/company/contact-us",
   },
 ];

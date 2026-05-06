@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Empty } from "antd";
 import { usePublicCategoriesQuery } from "../../query/categoryQueries";
+import { getAssetDisplayName } from "../../utils/assetName";
 
 const getEntityNameFromValue = (value) => {
     if (!value) return "";
@@ -324,7 +325,7 @@ function TopDownloadedAssetsTable({ items }) {
                             {tableItems.map((item, index) => (
                                 <tr key={item._id || `${item.title}-${index}`}>
                                     <td>{index + 1}</td>
-                                    <td>{item.title || "Untitled asset"}</td>
+                                    <td>{getAssetDisplayName(item)}</td>
                                     <td>{item.imagetype || item.fileMetadata?.mimeType || "-"}</td>
                                     <td>{item.downloads || item.download || 0}</td>
                                     <td>{item.likes || 0}</td>

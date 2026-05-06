@@ -63,7 +63,7 @@ function Contactus() {
                     />
                     <div>
                       <h5 style={{ color: "#435461" }}>EMAIL ADDRESS</h5>
-                      <p>contact@hdpiks.com</p>
+                      <p>contact@elvify.com</p>
                     </div>
                   </li>
                 </ul>

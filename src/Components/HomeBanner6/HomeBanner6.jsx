@@ -14,7 +14,7 @@ function HomeBanner6() {
             <div className="col-12 col-lg-6">
               <div className="home-banner-6__content">
                 <span className="home-banner-6__kicker">Design Better, Faster</span>
-                <h3 className="home-banner-6__title">Create Scroll-Stopping Visuals With HDPiks</h3>
+                <h3 className="home-banner-6__title">Create Scroll-Stopping Visuals With Elvify</h3>
                 <p className="home-banner-6__desc">
                   Discover curated assets, quick edit tools, and creative-ready downloads in one place.
                   Build your next campaign with consistent quality and speed.
@@ -23,7 +23,7 @@ function HomeBanner6() {
                   <button className="home-banner-6__btn home-banner-6__btn--primary" onClick={() => navigate('/collection/image')}>
                     Explore Images
                   </button>
-                  <button className="home-banner-6__btn home-banner-6__btn--ghost" onClick={() => navigate('/design-hdpiks')}>
+                  <button className="home-banner-6__btn home-banner-6__btn--ghost" onClick={() => navigate('/design-elvify')}>
                     Open Studio
                   </button>
                 </div>

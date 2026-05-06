@@ -14,6 +14,7 @@ import { useAuth } from '../../Context/AuthContext.jsx';
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { buildHomepageCategoryEntries } from '../../utils/homepageCategories.js';
+import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug } from '../../utils/assetName.js';
 import '../LazyLoadImage2/LazyLoadImage.css';
 import './HomeGallery.css';
 
@@ -233,9 +234,6 @@ function GalleryItem({
                     <div className="home-gallery__overlay-sub">
                         {getName(asset?.subcategory) || getName(asset?.category) || 'Asset'}
                     </div>
-                    <div className="home-gallery__overlay-title">
-                        {asset?.title || 'Untitled'}
-                    </div>
                 </div>
             </div>
         </div>
@@ -367,7 +365,7 @@ function HomeGallery() {
         (asset) => {
             const categorySlug = slugify(getName(asset.category)) || 'image';
             const subSlug = slugify(getName(asset.subcategory)) || 'all';
-            return `/asset/${categorySlug}/${subSlug}/${asset._id}`;
+            return `/asset/${categorySlug}/${subSlug}/${getAssetUrlSlug(asset)}`;
         },
         [slugify, getName]
     );
@@ -429,8 +427,8 @@ function HomeGallery() {
         const params = new URLSearchParams();
         params.set('assetId', asset._id);
         if (asset.imageUrl) params.set('assetUrl', asset.imageUrl);
-        if (asset.title) params.set('title', asset.title);
-        navigate(`/design-hdpiks?${params.toString()}`);
+        params.set('title', getAssetDisplayName(asset, 'Asset'));
+        navigate(`/design-elvify?${params.toString()}`);
     }, [navigate]);
 
     const handleShare = useCallback(async (asset) => {
@@ -440,7 +438,7 @@ function HomeGallery() {
             : asset?.imageUrl || window.location.href;
         try {
             if (navigator.share) {
-                await navigator.share({ title: asset?.title || 'Asset', url: detailUrl });
+                await navigator.share({ title: getAssetDisplayName(asset, 'Asset'), url: detailUrl });
                 return;
             }
             if (navigator.clipboard?.writeText) {
@@ -493,7 +491,7 @@ function HomeGallery() {
             const w = variant.dimensions?.width;
             const h = variant.dimensions?.height;
             const sizeSuffix = w && h ? `-${w}x${h}px` : '';
-            const baseTitle = (item?.title || 'asset').toString().replace(/[^\\w.-]+/g, '-');
+            const baseTitle = getAssetDownloadBaseName(item);
             const ext = getExtensionFromUrl(variant.url) || '';
             const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
 
@@ -590,7 +588,7 @@ function HomeGallery() {
                             <GalleryItem
                                 asset={asset}
                                 src={getBrowseMediaUrl(asset)}
-                                alt={asset.title || getName(asset.subcategory) || 'Asset'}
+                                alt={getAssetDisplayName(asset, getName(asset.subcategory) || 'Asset')}
                                 priority={index < 4}
                                 initialLiked={isLoggedIn ? Boolean(likeStatusMap[String(asset._id)]) : false}
                                 onOpen={() => navigate(buildAssetUrl(asset))}

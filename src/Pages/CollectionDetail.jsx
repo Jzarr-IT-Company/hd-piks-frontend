@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../Services/api';
 import { API_ENDPOINTS } from '../config/api.config';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
+import { getAssetDisplayName, getAssetUrlSlug, slugifyAssetValue } from '../utils/assetName';
 
 function CollectionDetail() {
   const { id } = useParams();
@@ -51,8 +52,14 @@ function CollectionDetail() {
     const params = new URLSearchParams();
     params.set('assetId', asset._id);
     if (asset.imageUrl) params.set('assetUrl', asset.imageUrl);
-    if (asset.title) params.set('title', asset.title);
-    navigate(`/design-hdpiks?${params.toString()}`);
+    params.set('title', getAssetDisplayName(asset));
+    navigate(`/design-elvify?${params.toString()}`);
+  };
+
+  const buildAssetPath = (asset) => {
+    const category = asset?.category?.name || asset?.category || 'image';
+    const subcategory = asset?.subcategory?.name || asset?.subcategory || 'all';
+    return `/asset/${slugifyAssetValue(category) || 'image'}/${slugifyAssetValue(subcategory) || 'all'}/${getAssetUrlSlug(asset)}`;
   };
 
   return (
@@ -66,11 +73,11 @@ function CollectionDetail() {
           {assets.map(asset => (
             <div key={asset._id} className="dash-most__item" style={{ gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
               <div className="dash-most__info">
-                <div className="dash-most__title">{asset.title || asset.fileName || 'Untitled'}</div>
+                <div className="dash-most__title">{getAssetDisplayName(asset)}</div>
                 {asset.imageUrl && <img src={asset.imageUrl} alt="" style={{ maxWidth: 120, maxHeight: 80, objectFit: 'cover' }} />}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                <button className="dash-shell__upload-btn" onClick={() => navigate(`/asset/${asset._id}`)} disabled={loading}>View</button>
+                <button className="dash-shell__upload-btn" onClick={() => navigate(buildAssetPath(asset))} disabled={loading}>View</button>
                 <button className="dash-shell__upload-btn" onClick={() => handleEdit(asset)} disabled={loading}>Edit</button>
                 <button className="dash-shell__upload-btn" onClick={() => handleRemove(asset._id)} disabled={loading}>Remove</button>
               </div>

@@ -14,6 +14,7 @@ import { useAssetLikeStatusBatchQuery } from '../../query/likeQueries.js';
 import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
+import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug } from '../../utils/assetName.js';
 import {
     useCollectionAssetsQuery,
     useCollectionNavigationQuery,
@@ -36,6 +37,13 @@ import './FilterationImages.css';
 const normalizeLicenseValue = (value) => String(value || '').trim().toLowerCase();
 const isPremiumByLicense = (value) => normalizeLicenseValue(value) === 'premium';
 const COLLECTION_PAGE_SIZE = 16;
+const slugifyCollectionSegment = (value) =>
+    String(value || '')
+        .trim()
+        .toLowerCase()
+        .replace(/&/g, 'and')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 
 const getBrowseMediaUrl = (asset) => {
     const mime = String(asset?.fileMetadata?.mimeType || asset?.imagetype || '').toLowerCase();
@@ -152,7 +160,7 @@ function FilterationImages({
     const [activeSubsubcategory, setActiveSubsubcategory] = useState('all');
     const navigate = useNavigate();
     const location = useLocation();
-    const { name: routeCollectionName, collectionPage: collectionPageParamRaw } = useParams();
+    const { name: routeCollectionName, parentSlug, collectionPage: collectionPageParamRaw } = useParams();
     const [downloadTarget, setDownloadTarget] = useState(null);
     const [showDownloadModal, setShowDownloadModal] = useState(false);
     const [showCollectionModal, setShowCollectionModal] = useState(false);
@@ -176,14 +184,6 @@ function FilterationImages({
         if (val == null) return '';
         return String(val).trim().toLowerCase();
     }, []);
-
-    const buildCollectionPagePath = useCallback((nextPage) => {
-        const normalizedPage = Number.isFinite(nextPage) && nextPage > 0 ? nextPage : 1;
-        const routeName = routeCollectionName || name || '';
-        const encodedName = encodeURIComponent(routeName);
-        const suffix = normalizedPage > 1 ? `/Page/${normalizedPage}` : '';
-        return `/collection/${encodedName}${suffix}${location.search || ''}`;
-    }, [location.search, name, routeCollectionName]);
 
     const getCategoryName = useCallback((cat) => {
         if (!cat) return '';
@@ -223,6 +223,35 @@ function FilterationImages({
             return base.replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         },
         [normalize]
+    );
+
+    const buildCollectionPath = useCallback(
+        ({
+            subcategory = activeSubcategory,
+            subsubcategory = activeSubsubcategory,
+            page = 1,
+            includeSearch = true,
+        } = {}) => {
+            const normalizedPage = Number.isFinite(page) && page > 0 ? page : 1;
+            const categorySlug = slugifyCollectionSegment(parentSlug || routeCollectionName || name || 'image') || 'image';
+            const subcategorySlug = subcategory && subcategory !== 'all' ? slugifyCollectionSegment(subcategory) : '';
+            const subsubcategorySlug = subcategorySlug && subsubcategory && subsubcategory !== 'all'
+                ? slugifyCollectionSegment(subsubcategory)
+                : '';
+            const segments = ['/collection', categorySlug];
+
+            if (subcategorySlug) segments.push(subcategorySlug);
+            if (subsubcategorySlug) segments.push(subsubcategorySlug);
+            if (normalizedPage > 1) segments.push('Page', String(normalizedPage));
+
+            return `${segments.join('/')}${includeSearch ? (location.search || '') : ''}`;
+        },
+        [activeSubcategory, activeSubsubcategory, location.search, name, parentSlug, routeCollectionName]
+    );
+
+    const buildCollectionPagePath = useCallback(
+        (nextPage) => buildCollectionPath({ page: nextPage }),
+        [buildCollectionPath]
     );
 
     const getExtensionFromUrl = useCallback((url) => {
@@ -439,13 +468,12 @@ function FilterationImages({
     const gridGap = isMobile ? 10 : 8;
     const gridVariant = isMobile ? 'standard' : 'masonry';
 
-    // Build SEO-friendly URL: /asset/:categorySlug/:subSlug/:id
+    // Build SEO-friendly URL: /asset/:categorySlug/:subSlug/:titleSlug
     const buildAssetUrl = useCallback(
         (img) => {
             const categorySlug = slugify(getCategoryName(img.category)) || 'image';
             const subSlug = slugify(getSubcategoryName(img.subcategory)) || 'all';
-            const id = img._id;
-            return `/asset/${categorySlug}/${subSlug}/${id}`;
+            return `/asset/${categorySlug}/${subSlug}/${getAssetUrlSlug(img)}`;
         },
         [slugify, getCategoryName, getSubcategoryName]
     );
@@ -478,7 +506,7 @@ function FilterationImages({
             : img?.imageUrl || window.location.href;
         try {
             if (navigator.share) {
-                await navigator.share({ title: img?.title || 'Asset', url: detailUrl });
+                await navigator.share({ title: getAssetDisplayName(img, 'Asset'), url: detailUrl });
                 return;
             }
             if (navigator.clipboard?.writeText) {
@@ -498,16 +526,16 @@ function FilterationImages({
         const params = new URLSearchParams();
         params.set('assetId', img._id);
         if (img.imageUrl) params.set('assetUrl', img.imageUrl);
-        if (img.title) params.set('title', img.title);
-        navigate(`/design-hdpiks?${params.toString()}`);
+        params.set('title', getAssetDisplayName(img, 'Asset'));
+        navigate(`/design-elvify?${params.toString()}`);
     }, [navigate]);
     const handleEditAsset = useCallback((img) => {
         if (!img?._id) return;
         const params = new URLSearchParams();
         params.set('assetId', img._id);
         if (img.imageUrl) params.set('assetUrl', img.imageUrl);
-        if (img.title) params.set('title', img.title);
-        navigate(`/design-hdpiks?${params.toString()}`);
+        params.set('title', getAssetDisplayName(img, 'Asset'));
+        navigate(`/design-elvify?${params.toString()}`);
     }, [navigate]);
 
     // NEW: build ordered list of variants for an image
@@ -563,7 +591,7 @@ function FilterationImages({
             const w = variant.dimensions?.width;
             const h = variant.dimensions?.height;
             const sizeSuffix = w && h ? `-${w}x${h}px` : '';
-            const baseTitle = (img.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const baseTitle = getAssetDownloadBaseName(img);
             const ext = getExtensionFromUrl(variant.url) || '';
             const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
 
@@ -633,6 +661,31 @@ function FilterationImages({
         });
         return buckets;
     }, [imagesdata, getSubcategoryName, getSubSubcategoryName]);
+
+    const resolveSubcategoryForStyle = useCallback(
+        (styleLabel) => {
+            if (activeSubcategory && activeSubcategory !== 'all') return activeSubcategory;
+
+            const target = normalize(styleLabel);
+            if (!target) return activeSubcategory || 'all';
+
+            for (const subcategory of taxonomySubcategoryMap.values()) {
+                const children = Array.isArray(subcategory?.children) ? subcategory.children : [];
+                const hasStyle = children.some((child) => normalize(getSubSubcategoryName(child)) === target);
+                if (hasStyle) {
+                    const subcategoryName = getSubcategoryName(subcategory);
+                    if (subcategoryName) return subcategoryName;
+                }
+            }
+
+            const matchingBucket = Object.entries(subcategoryBuckets).find(([, bucket]) =>
+                Array.from(bucket.subsubs || []).some((subsub) => normalize(subsub) === target)
+            );
+
+            return matchingBucket?.[0] || activeSubcategory || 'all';
+        },
+        [activeSubcategory, getSubSubcategoryName, getSubcategoryName, normalize, subcategoryBuckets, taxonomySubcategoryMap]
+    );
 
     const suggestedStyleItems = useMemo(() => {
         if (useBootstrapMode) {
@@ -845,12 +898,15 @@ function FilterationImages({
                 setActiveSubcategory(subcat);
                 setActiveSubsubcategory('all');
                 setSuggestedOffset(0);
-                if (currentPage !== 1) {
-                    navigate(buildCollectionPagePath(1));
-                }
+                navigate(buildCollectionPath({
+                    subcategory: subcat,
+                    subsubcategory: 'all',
+                    page: 1,
+                    includeSearch: false,
+                }));
             }
         },
-        [buildCollectionPagePath, currentPage, isSearchMode, navigate]
+        [buildCollectionPath, isSearchMode, name, navigate, slugify]
     );
 
     const scrollPills = useCallback((direction) => {
@@ -974,9 +1030,16 @@ function FilterationImages({
                                         type="button"
                                         className={`filteration-suggested-card ${activeSubsubcategory === styleItem.label ? 'is-active' : ''}`}
                                         onClick={() => {
+                                            const nextSubcategory = resolveSubcategoryForStyle(styleItem.label);
+                                            setActiveSubcategory(nextSubcategory);
                                             setActiveSubsubcategory(styleItem.label);
                                             setSuggestedOffset(0);
-                                            if (currentPage !== 1) navigate(buildCollectionPagePath(1));
+                                            navigate(buildCollectionPath({
+                                                subcategory: nextSubcategory,
+                                                subsubcategory: styleItem.label,
+                                                page: 1,
+                                                includeSearch: false,
+                                            }));
                                         }}
                                     >
                                         <span
@@ -1039,7 +1102,12 @@ function FilterationImages({
                             setActiveSubcategory('all');
                             setActiveSubsubcategory('all');
                             setSuggestedOffset(0);
-                            if (currentPage !== 1) navigate(buildCollectionPagePath(1));
+                            navigate(buildCollectionPath({
+                                subcategory: 'all',
+                                subsubcategory: 'all',
+                                page: 1,
+                                includeSearch: false,
+                            }));
                         }}
                     >
                         All
@@ -1130,11 +1198,13 @@ function FilterationImages({
                                                             img={img}
                                                             src={getBrowseMediaUrl(img)}
                                                             priority={itemIndex < 4}
-                                                            alt={
+                                                            alt={getAssetDisplayName(
+                                                                img,
                                                                 getSubcategoryName(img.subcategory) ||
-                                                                getCategoryName(img.category) ||
-                                                                getSubSubcategoryName(img.subsubcategory)
-                                                            }
+                                                                    getCategoryName(img.category) ||
+                                                                    getSubSubcategoryName(img.subsubcategory) ||
+                                                                    'Asset'
+                                                            )}
                                                         />
                                                         <span
                                                             className={`filteration-license-tag ${isPremiumByLicense(img?.freePremium) ? 'filteration-license-tag--premium' : 'filteration-license-tag--free'}`}

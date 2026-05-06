@@ -8,6 +8,7 @@ import api from '../../Services/api';
 import { getAllUsers } from '../../Services/user.js';
 import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug, slugifyAssetValue } from '../../utils/assetName.js';
 import '../FilterationImages/FilterationImages.css';
 
 function VideoCompo({ categoryname }) {
@@ -47,8 +48,15 @@ function VideoCompo({ categoryname }) {
         fetchUsers();
     }, [categoryname]);
 
-    const handleImageClick = (imageId) => {
-        navigate(`/asset/${imageId}`);
+    const buildAssetPath = (item) => {
+        const category = item?.category?.name || item?.category || categoryname || 'video';
+        const subcategory = item?.subcategory?.name || item?.subcategory || 'all';
+        return `/asset/${slugifyAssetValue(category) || 'video'}/${slugifyAssetValue(subcategory) || 'all'}/${getAssetUrlSlug(item)}`;
+    };
+
+    const handleImageClick = (item) => {
+        if (!item?._id) return;
+        navigate(buildAssetPath(item));
     };
 
     const handleDiscoverSimilar = (event, item) => {
@@ -60,11 +68,11 @@ function VideoCompo({ categoryname }) {
     const handleShare = async (event, item) => {
         event.stopPropagation();
         const detailUrl = item?._id
-            ? `${window.location.origin}/asset/${item._id}`
+            ? `${window.location.origin}${buildAssetPath(item)}`
             : item?.imageUrl || window.location.href;
         try {
             if (navigator.share) {
-                await navigator.share({ title: item?.title || 'Asset', url: detailUrl });
+                await navigator.share({ title: getAssetDisplayName(item, 'Asset'), url: detailUrl });
                 return;
             }
             if (navigator.clipboard?.writeText) {
@@ -94,7 +102,7 @@ function VideoCompo({ categoryname }) {
 
         try {
             const fallbackKey = item?.s3Key || getS3KeyFromUrl(item.imageUrl);
-            const safeTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const safeTitle = getAssetDownloadBaseName(item);
             const fileName = safeTitle.includes('.') ? safeTitle : `${safeTitle}.mp4`;
 
             let href = item.imageUrl;
@@ -148,8 +156,8 @@ function VideoCompo({ categoryname }) {
                             {allData.slice(0, 30).map((item) => {
                                 const user = usersData.find(user => user._id === item.userId);
                                 return (
-                                    <ImageListItem key={item._id} onClick={() => handleImageClick(item._id)}>
-                                        <div className="card card-container rounded-4" onClick={() => handleImageClick(item._id)}>
+                                    <ImageListItem key={item._id} onClick={() => handleImageClick(item)}>
+                                        <div className="card card-container rounded-4" onClick={() => handleImageClick(item)}>
                                             <div className="video-wrapper">
                                                 <video
                                                     src={item.imageUrl}

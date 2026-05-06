@@ -26,6 +26,7 @@ import {
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import SearchIcon from '@mui/icons-material/Search';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { getAssetDisplayName } from '../../utils/assetName.js';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AddIcon from '@mui/icons-material/Add';
 import ImageIcon from '@mui/icons-material/Image';
@@ -159,7 +160,7 @@ function AdminCollectionsPage({
     const q = assetQuery.trim().toLowerCase();
     if (!q) return assets;
     return assets.filter((asset) => {
-      const title = asset.title || 'Untitled asset';
+      const title = getAssetDisplayName(asset);
       const type = asset.fileMetadata?.mimeType || asset.imagetype || '';
       return `${title} ${type}`.toLowerCase().includes(q);
     });
@@ -561,7 +562,7 @@ function AdminCollectionsPage({
                     <Chip
                       key={toId(asset._id)}
                       size="small"
-                      label={asset.title || 'Untitled'}
+                      label={getAssetDisplayName(asset, 'Untitled')}
                       onDelete={() => onToggleAsset(toId(asset._id))}
                     />
                   ))}
@@ -631,7 +632,7 @@ function AdminCollectionsPage({
                               ) : (
                                 <img
                                   src={asset.imageUrl}
-                                  alt={asset.title || 'asset'}
+                                  alt={getAssetDisplayName(asset, 'asset')}
                                   style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                                 />
                               )
@@ -639,7 +640,7 @@ function AdminCollectionsPage({
                           </Box>
                           <Box sx={{ minWidth: 0 }}>
                             <Typography variant="body2" noWrap sx={{ fontWeight: 600 }}>
-                              {asset.title || 'Untitled asset'}
+                              {getAssetDisplayName(asset)}
                             </Typography>
                             <Typography variant="caption" color="text.secondary" noWrap>
                               {asset.fileMetadata?.mimeType || asset.imagetype || ''}
@@ -701,14 +702,14 @@ function AdminCollectionsPage({
                 ) : (
                   <img
                     src={previewAsset.imageUrl}
-                    alt={previewAsset.title || 'asset'}
+                    alt={getAssetDisplayName(previewAsset, 'asset')}
                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                   />
                 )}
               </Box>
 
               <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-                {previewAsset.title || 'Untitled asset'}
+                {getAssetDisplayName(previewAsset)}
               </Typography>
               {previewAsset.description && (
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5, whiteSpace: 'pre-line' }}>

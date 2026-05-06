@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
+import { useParams } from 'react-router-dom';
 import AppNavbar from '../Components/AppNavbar/AppNavbar';
 // Big collage: "Explore Our Collections" (Characters, Wallpaper, etc.)
 import HomeBanner1 from '../Components/HomeBanner1/HomeBanner1';
@@ -16,13 +17,35 @@ import HomeBlogHighlights from '../Components/HomeBlogHighlights';
 import Homebanner1Compo from '../Components/HomeBanner1Compo/HomeBanner1Compo';
 import HomeGallery from '../Components/HomeGallery/HomeGallery';
 import AppNavbarBanner1Compo from '../Components/AppNavbarBanner1Compo/AppNavbarBanner1Compo';
+import SeoHead from '../Components/SeoHead/SeoHead.jsx';
+import { usePublicCategoriesQuery } from '../query/categoryQueries.js';
 function HomePage() {
+  const { galleryCategory } = useParams();
+  const categoriesQuery = usePublicCategoriesQuery();
+
+  const currentGalleryCategory = useMemo(() => {
+    if (!galleryCategory || !Array.isArray(categoriesQuery.data)) return null;
+    const normalized = String(galleryCategory || '').trim().toLowerCase();
+    return categoriesQuery.data.find(
+      (item) => String(item?.name || '').trim().toLowerCase() === normalized
+    ) || null;
+  }, [categoriesQuery.data, galleryCategory]);
+
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
 
   return (
     <>
+      {currentGalleryCategory ? (
+        <SeoHead
+          title={`${currentGalleryCategory.name} | Elvify`}
+          description={currentGalleryCategory.description || `Browse ${currentGalleryCategory.name} assets on Elvify.`}
+          canonicalUrl={typeof window !== 'undefined' ? window.location.href : ''}
+          metaTagsHtml={currentGalleryCategory?.seo?.metaTagsHtml || ''}
+          schemaScriptHtml={currentGalleryCategory?.seo?.schemaScriptHtml || ''}
+        />
+      ) : null}
       {/* navbar top  with search bar */}
       <AppNavbar />
       {/* categories banner cards with carousel (Videos / Images / AI images / Templates / etc.) */}

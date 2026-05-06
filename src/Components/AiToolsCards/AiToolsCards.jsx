@@ -9,7 +9,7 @@ const DEFAULT_AI_TOOLS = [
 	{ id: "ai-generator", label: "AI Image Generator", icon: <FiCpu size={16} /> },
 	{ id: "ai-video-generator", label: "AI Video Generator", icon: <FiCpu size={16} /> },
 	{ id: "text-ai", label: "Text AI", icon: <FiMessageSquare size={16} /> },
-	{ id: "image-editor", label: "Image Editor", icon: <FiEdit3 size={16} />, path: "/design-hdpiks" },
+	{ id: "image-editor", label: "Image Editor", icon: <FiEdit3 size={16} />, path: "/design-elvify" },
 ];
 
 function AiToolsCards({ tools = DEFAULT_AI_TOOLS, onSelect }) {

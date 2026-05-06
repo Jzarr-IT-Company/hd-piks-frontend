@@ -141,13 +141,13 @@ const TOOL_ITEMS = [
 ];
 
 const FABRIC_EDITABLE_TEXT_CUSTOM_PROPS = [
-  "hdpiksEditableText",
-  "hdpiksEditableTextId",
-  "hdpiksEditableTextName",
-  "hdpiksTemplateObject",
-  "hdpiksTemplateTextObject",
-  "hdpiksUserShape",
-  "hdpiksShapeType",
+  "elvifyEditableText",
+  "elvifyEditableTextId",
+  "elvifyEditableTextName",
+  "elvifyTemplateObject",
+  "elvifyTemplateTextObject",
+  "elvifyUserShape",
+  "elvifyShapeType",
 ];
 
 const SHAPE_ITEMS = [
@@ -173,7 +173,7 @@ const CANVAS_VIEW_ZOOM_MAX = 300;
 const CANVAS_VIEW_ZOOM_STEP = 10;
 const PAGE_SIZE_OPTION_VALUES = [64, 128, 256, 512, 720, 800, 1080, 1200, 1440, 1600, 1920, 2048, 2560, 3000, 4000];
 
-function DesignHdpiks() {
+function DesignElvify() {
   const imageKitEndpoint = (import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || "").trim();
   const [params] = useSearchParams();
   const sourceImageId = params.get("assetId");
@@ -1633,13 +1633,13 @@ function DesignHdpiks() {
       splitByGrapheme: false,
     });
     textObj.set({
-      hdpiksEditableText: true,
-      hdpiksEditableTextId: textId,
-      hdpiksEditableTextName: textName,
-      hdpiksTemplateObject: false,
-      hdpiksTemplateTextObject: false,
-      hdpiksUserShape: false,
-      hdpiksShapeType: "",
+      elvifyEditableText: true,
+      elvifyEditableTextId: textId,
+      elvifyEditableTextName: textName,
+      elvifyTemplateObject: false,
+      elvifyTemplateTextObject: false,
+      elvifyUserShape: false,
+      elvifyShapeType: "",
     });
     markCanvasObjectEditableRecursive(textObj);
     canvas.add(textObj);
@@ -2164,7 +2164,7 @@ function DesignHdpiks() {
       const extension = exportFormat.split("/")[1] || "png";
       const a = document.createElement("a");
       a.href = downloadUrl;
-      a.download = `hdpiks-edit-${Date.now()}.${extension}`;
+      a.download = `elvify-edit-${Date.now()}.${extension}`;
       a.click();
       URL.revokeObjectURL(downloadUrl);
       setNotice(useFabricEditor ? "Export complete (Fabric template)." : "Export complete.");
@@ -2175,7 +2175,7 @@ function DesignHdpiks() {
     }
   };
 
-  const saveEditedToHdpiks = async () => {
+  const saveEditedToElvify = async () => {
     if (!source) {
       setNotice("Load an image first.");
       return;
@@ -2228,7 +2228,7 @@ function DesignHdpiks() {
 
       const imageKitUpload = await uploadBlobToImageKit({
         blob,
-        fileName: `hdpiks-edited-${Date.now()}.${mimeToExt(exportFormat)}`,
+        fileName: `elvify-edited-${Date.now()}.${mimeToExt(exportFormat)}`,
         authData,
       });
 
@@ -2238,7 +2238,7 @@ function DesignHdpiks() {
         subcategory: selectedSubCategory || undefined,
         subsubcategory: selectedSubSubCategory || undefined,
         imageUrl: imageKitUpload.url,
-        title: `Edited - ${params.get("title") || localFileName || "HDPiks Asset"}`,
+        title: `Edited - ${params.get("title") || localFileName || "Elvify Asset"}`,
         editConfig: {
           ...editValues,
           textLayers,
@@ -2273,11 +2273,11 @@ function DesignHdpiks() {
         },
       });
 
-      setNotice("Edited asset saved to HDPiks successfully.");
+      setNotice("Edited asset saved to Elvify successfully.");
       setHistoryRefreshKey((v) => v + 1);
     } catch (err) {
       if (err?.response?.status === 401) {
-        setNotice("Please login to save edited assets to HDPiks.");
+        setNotice("Please login to save edited assets to Elvify.");
       } else {
         setNotice(err?.response?.data?.message || err?.message || "Failed to save edited asset.");
       }
@@ -2350,12 +2350,12 @@ function DesignHdpiks() {
     <>
       <div className="design-studio">
         <header className="design-studio__topbar">
-          <Link className="design-studio__brand design-studio__brand-link" to="/" aria-label="Go to HDPiks homepage">
+          <Link className="design-studio__brand design-studio__brand-link" to="/" aria-label="Go to Elvify homepage">
             <span className="design-studio__logo" title="Go to homepage">
               <FiHome size={20} aria-hidden="true" />
             </span>
             <div>
-              <h1>HDPiks Design Studio</h1>
+              <h1>Elvify Design Studio</h1>
               <p>Edit images with professional controls</p>
             </div>
           </Link>
@@ -2372,8 +2372,8 @@ function DesignHdpiks() {
             <button className="ghost-btn" onMouseDown={() => setShowOriginal(true)} onMouseUp={() => setShowOriginal(false)} onMouseLeave={() => setShowOriginal(false)}>
               Compare
             </button>
-            <button className="ghost-btn" onClick={saveEditedToHdpiks} disabled={uploading || saving}>
-              {uploading ? "Saving..." : "Save to HDPiks"}
+            <button className="ghost-btn" onClick={saveEditedToElvify} disabled={uploading || saving}>
+              {uploading ? "Saving..." : "Save to Elvify"}
             </button>
             <button className="primary-btn" onClick={exportImage} disabled={saving || uploading}>
               {saving ? "Exporting..." : "Export"}
@@ -3659,7 +3659,7 @@ function DesignHdpiks() {
           {activeTool === "ai-bg-remove" && (
             <div className="control-group">
               <p className="studio-hint">
-                Remove image background using HDpiks AI
+                Remove image background using Elvify AI
               </p>
               <label className="toggle-control">
                 Replace transparent background with color
@@ -3697,7 +3697,7 @@ function DesignHdpiks() {
                 </button>
               </div>
               {aiBgEnabled ? (
-                <p className="studio-hint">AI BG Remove preview is active for export and Save to HDPiks.</p>
+                <p className="studio-hint">AI BG Remove preview is active for export and Save to Elvify.</p>
               ) : null}
             </div>
           )}
@@ -4110,11 +4110,11 @@ function addEditableTextLayersToFabricCanvas(canvas, rawLayers, referenceSize = 
     });
 
     textObj.set({
-      hdpiksEditableText: true,
-      hdpiksEditableTextId: layer.id,
-      hdpiksEditableTextName: layer.name,
-      hdpiksTemplateObject: false,
-      hdpiksTemplateTextObject: false,
+      elvifyEditableText: true,
+      elvifyEditableTextId: layer.id,
+      elvifyEditableTextName: layer.name,
+      elvifyTemplateObject: false,
+      elvifyTemplateTextObject: false,
     });
 
     markCanvasObjectEditableRecursive(textObj);
@@ -4138,7 +4138,7 @@ function extractEditableTextLayersFromCanvas(canvas, referenceSize = {}) {
 
   return canvas
     .getObjects()
-    .filter((obj) => isFabricTextObject(obj) && (obj?.hdpiksEditableText || obj?.hdpiksEditableTextId))
+    .filter((obj) => isFabricTextObject(obj) && (obj?.elvifyEditableText || obj?.elvifyEditableTextId))
     .map((obj, index) => {
       const scaledWidth =
         typeof obj?.getScaledWidth === "function"
@@ -4148,8 +4148,8 @@ function extractEditableTextLayersFromCanvas(canvas, referenceSize = {}) {
       const top = Number(obj?.top || 0);
       return normalizeEditableTextLayer(
         {
-          id: String(obj?.hdpiksEditableTextId || `editable-text-${index + 1}`),
-          name: String(obj?.hdpiksEditableTextName || `Text ${index + 1}`),
+          id: String(obj?.elvifyEditableTextId || `editable-text-${index + 1}`),
+          name: String(obj?.elvifyEditableTextName || `Text ${index + 1}`),
           text: String(obj?.text || ""),
           xPct: baseWidth > 0 ? (left / baseWidth) * 100 : 0,
           yPct: baseHeight > 0 ? (top / baseHeight) * 100 : 0,
@@ -4331,10 +4331,10 @@ function createShapeForCanvas(shapeType, options = {}) {
 function markUserShapeObject(obj, shapeType) {
   if (!obj || typeof obj.set !== "function") return;
   obj.set({
-    hdpiksUserShape: true,
-    hdpiksShapeType: String(shapeType || "").trim().toLowerCase() || "shape",
-    hdpiksTemplateObject: false,
-    hdpiksTemplateTextObject: false,
+    elvifyUserShape: true,
+    elvifyShapeType: String(shapeType || "").trim().toLowerCase() || "shape",
+    elvifyTemplateObject: false,
+    elvifyTemplateTextObject: false,
   });
 }
 
@@ -4374,11 +4374,11 @@ function isFabricTextObject(obj) {
 }
 
 function isEditableOverlayTextObject(obj) {
-  return Boolean(obj?.hdpiksEditableText || obj?.hdpiksEditableTextId);
+  return Boolean(obj?.elvifyEditableText || obj?.elvifyEditableTextId);
 }
 
 function isTemplateCanvasObject(obj) {
-  return Boolean(obj?.hdpiksTemplateObject);
+  return Boolean(obj?.elvifyTemplateObject);
 }
 
 function isBuiltInTemplateTextObject(obj) {
@@ -4400,24 +4400,24 @@ function tagLoadedTemplateObjects(canvas) {
     if (!obj || typeof obj.set !== "function") return;
     if (isEditableOverlayTextObject(obj)) return;
     obj.set({
-      hdpiksTemplateObject: true,
-      hdpiksTemplateTextObject: isFabricTextObject(obj),
+      elvifyTemplateObject: true,
+      elvifyTemplateTextObject: isFabricTextObject(obj),
     });
   });
 }
 
 function getFabricTextRuntimeId(obj, index = 0) {
   if (!obj || !isFabricTextObject(obj)) return "";
-  const explicitId = String(obj?.hdpiksEditableTextId || "").trim();
+  const explicitId = String(obj?.elvifyEditableTextId || "").trim();
   if (explicitId) return explicitId;
 
-  const existing = String(obj?.hdpiksRuntimeTextId || "").trim();
+  const existing = String(obj?.elvifyRuntimeTextId || "").trim();
   if (existing) return existing;
 
   const sourceId = String(obj?.__uid || obj?.id || "").trim();
   const runtimeId = sourceId ? `fabric-text-${sourceId}` : `fabric-text-${index + 1}`;
   try {
-    obj.hdpiksRuntimeTextId = runtimeId;
+    obj.elvifyRuntimeTextId = runtimeId;
   } catch {
     // Ignore assignment failures for non-extensible Fabric objects.
   }
@@ -4429,7 +4429,7 @@ function getFabricEditableTextItems(canvas) {
   if (!allTextObjects.length) return [];
 
   const placeholderTextObjects = allTextObjects.filter(
-    (obj) => Boolean(obj?.hdpiksEditableText || obj?.hdpiksEditableTextId)
+    (obj) => Boolean(obj?.elvifyEditableText || obj?.elvifyEditableTextId)
   );
   const textObjects = placeholderTextObjects.length ? placeholderTextObjects : allTextObjects;
 
@@ -4449,7 +4449,7 @@ function getFabricEditableTextItems(canvas) {
       : "(empty)";
     const fallbackName = `Text ${items.length + 1}`;
     const name =
-      String(obj?.hdpiksEditableTextName || "").trim() ||
+      String(obj?.elvifyEditableTextName || "").trim() ||
       (rawText ? rawText.slice(0, 28) : fallbackName);
 
     items.push({
@@ -4457,7 +4457,7 @@ function getFabricEditableTextItems(canvas) {
       name,
       textPreview,
       fontFamily: String(obj?.fontFamily || "Segoe UI"),
-      isPlaceholder: Boolean(obj?.hdpiksEditableText || obj?.hdpiksEditableTextId),
+      isPlaceholder: Boolean(obj?.elvifyEditableText || obj?.elvifyEditableTextId),
     });
   });
 
@@ -4951,7 +4951,7 @@ async function uploadBlobToImageKit({ blob, fileName, authData }) {
   formData.append("signature", authData.authenticationParameters.signature);
   formData.append("expire", String(authData.authenticationParameters.expire));
   formData.append("useUniqueFileName", "true");
-  formData.append("folder", "/hdpiks/edited");
+  formData.append("folder", "/elvify/edited");
 
   const response = await fetch("https://upload.imagekit.io/api/v1/files/upload", {
     method: "POST",
@@ -5047,4 +5047,4 @@ function Control({ label, value, min, max, onChange }) {
   );
 }
 
-export default DesignHdpiks;
+export default DesignElvify;

@@ -5,7 +5,7 @@ import './HomeFaqBeforeDownload.css';
 const FAQS = [
   {
     tag: 'Images',
-    question: 'How can I download images from HDPiks?',
+    question: 'How can I download images from Elvify?',
     answer:
       'Create an account, sign in, open the image page you want, and use the download button to save it.',
   },
@@ -17,24 +17,24 @@ const FAQS = [
   },
   {
     tag: 'Account',
-    question: 'Do I need an account to download images from HDPiks?',
-    answer: 'Yes. Users need an HDPiks account before they can download assets from the platform.',
+    question: 'Do I need an account to download images from Elvify?',
+    answer: 'Yes. Users need an Elvify account before they can download assets from the platform.',
   },
   {
     tag: 'Video',
     question: 'Can I download videos on mobile devices?',
-    answer: 'Yes. HDPiks supports video downloads on mobile phones, tablets, and desktop devices.',
+    answer: 'Yes. Elvify supports video downloads on mobile phones, tablets, and desktop devices.',
   },
   {
     tag: 'Pricing',
-    question: 'Are all images on HDPiks free?',
+    question: 'Are all images on Elvify free?',
     answer:
-      'No. HDPiks offers both free and premium images. Premium assets require purchase or an active plan.',
+      'No. Elvify offers both free and premium images. Premium assets require purchase or an active plan.',
   },
   {
     tag: 'Quality',
-    question: 'Are HDPiks videos high quality?',
-    answer: 'Yes. HDPiks provides high-quality videos suitable for digital, content, and marketing projects.',
+    question: 'Are Elvify videos high quality?',
+    answer: 'Yes. Elvify provides high-quality videos suitable for digital, content, and marketing projects.',
   },
 ];
 
@@ -54,7 +54,7 @@ export default function HomeFaqBeforeDownload() {
               <span className="home-faq__kicker">Quick Answers</span>
               <h2 className="home-faq__title">FAQs Before You Download</h2>
               <p className="home-faq__desc">
-                Get the most common HDPiks download, account, and video questions answered in one place.
+                Get the most common Elvify download, account, and video questions answered in one place.
               </p>
             </div>
             <Link to="/company/help-center" className="home-faq__help-btn">

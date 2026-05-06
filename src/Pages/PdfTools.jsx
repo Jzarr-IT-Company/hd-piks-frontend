@@ -34,7 +34,7 @@ import {
 } from "../Services/pdfTools.js";
 import "./PdfTools.css";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `${pdfWorker}${pdfWorker.includes("?") ? "&" : "?"}v=hdpiks-pdf-worker-2`;
+pdfjs.GlobalWorkerOptions.workerSrc = `${pdfWorker}${pdfWorker.includes("?") ? "&" : "?"}v=elvify-pdf-worker-2`;
 
 const tools = [
     {
@@ -126,7 +126,7 @@ function PdfTools() {
                         <div className="pdf-tools-brand-mark">PDF</div>
                         <div>
                             <strong>PDF Tools</strong>
-                            <span>HDPiks workspace</span>
+                            <span>Elvify workspace</span>
                         </div>
                     </div>
                     <nav className="pdf-tools-nav">

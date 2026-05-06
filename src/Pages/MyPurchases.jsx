@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import { getMyPurchaseDetail, getMyPurchases } from '../Services/payment.js';
 import { getMediaVariantUrl } from '../utils/mediaVariants.js';
+import { getAssetDisplayName, getAssetUrlSlug } from '../utils/assetName.js';
 
 const normalizeName = (value) => {
     if (!value) return '';
@@ -41,7 +42,7 @@ const buildAssetPath = (asset = {}) => {
     if (!asset?._id) return null;
     const categorySlug = slugify(asset?.category?.name || asset?.category) || 'image';
     const subSlug = slugify(asset?.subcategory?.name || asset?.subcategory) || 'all';
-    return `/asset/${categorySlug}/${subSlug}/${asset._id}`;
+    return `/asset/${categorySlug}/${subSlug}/${getAssetUrlSlug(asset)}`;
 };
 
 const getPreviewUrl = (asset = {}) =>
@@ -154,13 +155,13 @@ function MyPurchases() {
                                         {previewUrl ? (
                                             <img
                                                 src={previewUrl}
-                                                alt={asset?.title || 'Purchased asset'}
+                                                alt={getAssetDisplayName(asset, 'Purchased asset')}
                                                 className="card-img-top"
                                                 style={{ height: 180, objectFit: 'cover' }}
                                             />
                                         ) : null}
                                         <div className="card-body d-flex flex-column">
-                                            <h6 className="fw-semibold mb-1">{asset?.title || 'Asset unavailable'}</h6>
+                                            <h6 className="fw-semibold mb-1">{getAssetDisplayName(asset, 'Asset unavailable')}</h6>
                                             <div className="small text-muted mb-2">
                                                 Creator: {entry?.creator?.displayName || 'Creator'}
                                             </div>

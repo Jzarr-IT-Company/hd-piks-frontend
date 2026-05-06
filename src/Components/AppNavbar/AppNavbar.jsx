@@ -30,7 +30,7 @@ function AppNavbar() {
                             <div className="d-flex align-items-center">
                                 <AppNavbarOffcanvas />
                                 <Link to="/" onClick={handleLogoClick} style={{ display: 'inline-flex', alignItems: 'center', marginRight: 18 }}>
-                                    <img src={logo} alt="HDpiks" style={{ height: 40, width: 150, objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
+                                    <img src={logo} alt="Elvify" style={{ height: 43, width: 105, objectFit: 'contain', display: 'block' }} />
                                 </Link>
                             </div>
                         </div>

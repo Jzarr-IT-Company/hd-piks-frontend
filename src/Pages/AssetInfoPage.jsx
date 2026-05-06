@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import api from "../Services/api";
 import { API_ENDPOINTS } from "../config/api.config";
+import { getAssetDisplayName } from "../utils/assetName";
 
 const formatBytes = (bytes) => {
   const value = Number(bytes);
@@ -78,13 +79,14 @@ function AssetInfoPage() {
   const height = asset?.fileMetadata?.dimensions?.height;
   const dimensions = width && height ? `${width} x ${height}` : "N/A";
   const uploader = asset?.uploader || {};
+  const assetDisplayName = getAssetDisplayName(asset, "Asset info");
 
   return (
     <div className="container py-4">
       <div className="card border-0 shadow-sm rounded-4 p-4">
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
           <div>
-            <h3 className="mb-1">{asset?.title || "Asset info"}</h3>
+            <h3 className="mb-1">{assetDisplayName}</h3>
             <div className="text-muted small">Asset ID: {asset?._id}</div>
           </div>
           <div className="d-flex gap-2">

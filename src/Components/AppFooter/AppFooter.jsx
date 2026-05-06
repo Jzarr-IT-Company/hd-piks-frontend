@@ -192,8 +192,8 @@ function AppFooter() {
               <div className="row">
                 <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
                   <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <img src={logo} alt="Hdpiks" style={{ height: 40, width: 150, objectFit: 'cover', objectPosition: 'left center', display: 'block' }} />
-                    <h5 className="text-uppercase mb-0">GadgetHub Gallery</h5>
+                    <img src={logo} alt="Elvify" style={{ height: 43, width: 105, objectFit: 'contain', display: 'block' }} />
+                    <h5 className="text-uppercase mb-0">Elvify</h5>
                   </Link>
                   <p className="mt-3">
                     Your go-to platform for high-quality images and videos, ready for use
@@ -247,11 +247,11 @@ function AppFooter() {
                   <section className="mb-4 text-center">
                     <a
                       className="btn btn-outline-light btn-floating m-1"
-                      href="https://www.facebook.com/thehdpiks"
+                      href="https://www.facebook.com/elvifyofficial"
                       role="button"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="Follow HDpiks on Facebook"
+                      aria-label="Follow Elvify on Facebook"
                       style={{ backgroundColor: "#4267B2", color: "#fff" }}
                     >
                       <i className="fab fa-facebook-f" />
@@ -262,7 +262,7 @@ function AppFooter() {
                       role="button"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="Follow HDpiks on Instagram"
+                      aria-label="Follow Elvify on Instagram"
                       style={{ backgroundColor: "#E1306C", color: "#fff" }}
                     >
                       <i className="fab fa-instagram" />
@@ -273,7 +273,7 @@ function AppFooter() {
                       role="button"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="Follow HDpiks on Pinterest"
+                      aria-label="Follow Elvify on Pinterest"
                       style={{ backgroundColor: "#BD081C", color: "#fff" }}
                     >
                       <i className="fab fa-pinterest-p" />
@@ -284,7 +284,7 @@ function AppFooter() {
                       role="button"
                       target="_blank"
                       rel="noopener noreferrer"
-                      aria-label="Follow HDpiks on LinkedIn"
+                      aria-label="Follow Elvify on LinkedIn"
                       style={{ backgroundColor: "#0077B5", color: "#fff" }}
                     >
                       <i className="fab fa-linkedin-in" />
@@ -312,7 +312,7 @@ function AppFooter() {
             className="text-center p-3"
             style={{ backgroundColor: "rgba(0, 0, 0, 0.2)" }}
           >
-            © 2026 HDpicks - Powered by <Link className='text-decoration-underline text-white' to={'/'}>JZARR IT COMPANY</Link>
+            © 2026 Elvify - Powered by <Link className='text-decoration-underline text-white' to={'/'}>JZARRTECH</Link>
           </div>
         </footer>
       </div>

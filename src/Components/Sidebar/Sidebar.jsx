@@ -4,6 +4,7 @@ import FilterationImages from '../FilterationImages/FilterationImages';
 import HomeBannerSearchFilterationCompo2 from '../HomeBannerSearchFilterationCompo2/HomeBannerSearchFilterationCompo2';
 import { useParams, useSearchParams } from 'react-router-dom';
 import TopNavOnly from '../AppNavbar/TopNavOnly';
+import SeoHead from '../SeoHead/SeoHead.jsx';
 import './Sidebar.css';
 import api from '../../Services/api';
 import { API_ENDPOINTS } from '../../config/api.config';
@@ -18,8 +19,10 @@ function Sidebar() {
     const [categoryname, setCategoryName] = useState('');
     const [subcategories, setSubcategories] = useState([]);
     const [presetSubcategory, setPresetSubcategory] = useState('all');
+    const [presetSubSubcategory, setPresetSubSubcategory] = useState('all');
     const [collectionAssetIds, setCollectionAssetIds] = useState(null);
-    const { name, parentSlug, subSlug } = useParams();
+    const [currentCategoryNode, setCurrentCategoryNode] = useState(null);
+    const { name, parentSlug, subSlug, subSubSlug } = useParams();
     const [searchParams] = useSearchParams();
     const collectionSlug = searchParams.get('collection');             // NEW
     const discoverMode = searchParams.get('discover') === '1' && !collectionSlug;
@@ -36,6 +39,8 @@ function Sidebar() {
             if (categoriesQuery.isError) {
                 setCategoryName(routeCategory);
                 setPresetSubcategory('all');
+                setPresetSubSubcategory('all');
+                setCurrentCategoryNode(null);
             }
             return;
         }
@@ -44,12 +49,25 @@ function Sidebar() {
             const parentResolved = resolveCategoryFromSlug(tree, parentSlug);
             const parentCategory = parentResolved.category;
             setCategoryName(parentResolved.label);
+            setCurrentCategoryNode(parentCategory || null);
 
             if (subSlug) {
                 const subcategory = resolveSubcategoryFromSlug(parentCategory, subSlug);
                 setPresetSubcategory(subcategory?.name || subSlug);
+                setCurrentCategoryNode(subcategory || parentCategory || null);
+
+                if (subSubSlug) {
+                    const subsubcategory = (subcategory?.children || []).find(
+                        (item) => slugifyCategory(item?.slug || item?.name) === slugifyCategory(subSubSlug)
+                    );
+                    setPresetSubSubcategory(subsubcategory?.name || subSubSlug);
+                    setCurrentCategoryNode(subsubcategory || subcategory || parentCategory || null);
+                } else {
+                    setPresetSubSubcategory('all');
+                }
             } else {
                 setPresetSubcategory('all');
+                setPresetSubSubcategory('all');
             }
             return;
         }
@@ -59,6 +77,8 @@ function Sidebar() {
         if (parentMatch) {
             setCategoryName(parentMatch.name);
             setPresetSubcategory('all');
+            setPresetSubSubcategory('all');
+            setCurrentCategoryNode(parentMatch);
             return;
         }
 
@@ -68,13 +88,17 @@ function Sidebar() {
             if (child) {
                 setCategoryName(parent.name);
                 setPresetSubcategory(child.name);
+                setPresetSubSubcategory('all');
+                setCurrentCategoryNode(child);
                 return;
             }
         }
 
         setCategoryName(name);
         setPresetSubcategory('all');
-    }, [name, parentSlug, subSlug, categoriesQuery.data, categoriesQuery.isError]);
+        setPresetSubSubcategory('all');
+        setCurrentCategoryNode(null);
+    }, [name, parentSlug, subSlug, subSubSlug, categoriesQuery.data, categoriesQuery.isError]);
 
     // When a collection slug is present, load that collection and
     // restrict results to its assetIds.
@@ -102,6 +126,7 @@ function Sidebar() {
                 if (col.subcategory?.name) {
                     setPresetSubcategory(col.subcategory.name);
                 }
+                setPresetSubSubcategory('all');
 
                 const ids = Array.isArray(col.assetIds)
                     ? col.assetIds.map((a) => (a._id || a).toString())
@@ -139,8 +164,23 @@ function Sidebar() {
         setCategoryName(category);
     };
 
+    const currentPageUrl = typeof window !== 'undefined'
+        ? window.location.href
+        : '';
+    const seoTitle = currentCategoryNode?.name
+        ? `${currentCategoryNode.name} | Elvify`
+        : (categoryname ? `${categoryname} | Elvify` : 'Elvify');
+    const seoDescription = currentCategoryNode?.description || `Browse ${currentCategoryNode?.name || categoryname || 'creative assets'} on Elvify.`;
+
     return (
         <>
+            <SeoHead
+                title={seoTitle}
+                description={seoDescription}
+                canonicalUrl={currentPageUrl}
+                metaTagsHtml={currentCategoryNode?.seo?.metaTagsHtml || ''}
+                schemaScriptHtml={currentCategoryNode?.seo?.schemaScriptHtml || ''}
+            />
             <TopNavOnly />
             <div className="container top-nav-content sidebar-searchbar-wrap">
                 <HomeBannerSearchFilterationCompo2 showOnDesktop hideSearchBarMargin hideWrapperPadding hideSuggestions />
@@ -162,6 +202,7 @@ function Sidebar() {
                     <FilterationImages
                         name={categoryname}
                         presetSubcategory={presetSubcategory}
+                        presetSubSubcategory={presetSubSubcategory}
                         collectionAssetIds={collectionAssetIds}
                         searchSubcategory={discoverMode ? discoverSubcategory : undefined}
                         searchSubSubcategory={discoverMode ? discoverSubSubcategory : undefined}

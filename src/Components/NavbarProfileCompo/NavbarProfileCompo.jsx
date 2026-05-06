@@ -100,7 +100,7 @@ function NavbarProfileCompo() {
                     </Box> : (
                     <Box className="hdp-profile-actions">
                             <Link className='btn text-white signin-link' to={'/login'}>Signin</Link>
-                            <Link className='btn start-creating-btn' to={'/design-hdpiks'}>Start Creating</Link>
+                            <Link className='btn start-creating-btn' to={'/design-elvify'}>Start Creating</Link>
                         </Box>
                     )
             }

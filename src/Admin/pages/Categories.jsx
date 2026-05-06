@@ -41,6 +41,8 @@ export default function CategoriesPage() {
   const [zipAllowedMimeTypesInput, setZipAllowedMimeTypesInput] = useState('');
   const [zipMinFileSizeBytes, setZipMinFileSizeBytes] = useState('');
   const [zipMaxFileSizeBytes, setZipMaxFileSizeBytes] = useState('');
+  const [seoMetaTagsHtml, setSeoMetaTagsHtml] = useState('');
+  const [seoSchemaScriptHtml, setSeoSchemaScriptHtml] = useState('');
 
   const parseMimeTypesInput = (raw = '') =>
     [...new Set(
@@ -100,6 +102,8 @@ export default function CategoriesPage() {
         ? String(cat.zipMaxFileSizeBytes)
         : ''
     );
+    setSeoMetaTagsHtml(cat?.seo?.metaTagsHtml || '');
+    setSeoSchemaScriptHtml(cat?.seo?.schemaScriptHtml || '');
     setParentSearch('');
     setConfirmExitOpen(false);
     setOpen(true);
@@ -119,6 +123,8 @@ export default function CategoriesPage() {
     setZipAllowedMimeTypesInput('');
     setZipMinFileSizeBytes('');
     setZipMaxFileSizeBytes('');
+    setSeoMetaTagsHtml('');
+    setSeoSchemaScriptHtml('');
     setError('');
   };
   const handleModalAttemptClose = (_event, reason) => {
@@ -185,6 +191,10 @@ export default function CategoriesPage() {
       zipAllowedMimeTypes: parseMimeTypesInput(zipAllowedMimeTypesInput),
       zipMinFileSizeBytes: parsedZipMin,
       zipMaxFileSizeBytes: parsedZipMax,
+      seo: {
+        metaTagsHtml: seoMetaTagsHtml,
+        schemaScriptHtml: seoSchemaScriptHtml,
+      },
     };
     try {
       let newCategory = null;
@@ -490,6 +500,26 @@ export default function CategoriesPage() {
               ) : null}
             </Select>
           </FormControl>
+          <TextField
+            margin="dense"
+            label="SEO Meta Tags HTML"
+            fullWidth
+            multiline
+            minRows={5}
+            value={seoMetaTagsHtml}
+            onChange={e => setSeoMetaTagsHtml(e.target.value)}
+            placeholder={'<meta name="robots" content="index, follow" />\n<meta name="author" content="HDPiks Team" />'}
+          />
+          <TextField
+            margin="dense"
+            label="SEO Schema Script HTML"
+            fullWidth
+            multiline
+            minRows={8}
+            value={seoSchemaScriptHtml}
+            onChange={e => setSeoSchemaScriptHtml(e.target.value)}
+            placeholder={'<script type="application/ld+json">\n{\n  "@context": "https://schema.org"\n}\n</script>'}
+          />
           {error && <Typography color="error" variant="body2">{error}</Typography>}
         </DialogContent>
         <DialogActions>

@@ -6,7 +6,10 @@ import api from "../Services/api.js";
 import { API_ENDPOINTS } from "../config/api.config.js";
 import { useCreatorPublicProfileQuery } from "../query/creatorDetailQueries.js";
 import { useAuth } from "../Context/AuthContext.jsx";
+import TopNavOnly from "../Components/AppNavbar/TopNavOnly";
+import AppFooter from "../Components/AppFooter/AppFooter";
 import { getMediaVariantUrl } from "../utils/mediaVariants.js";
+import { getAssetDisplayName, getAssetUrlSlug } from "../utils/assetName.js";
 
 function CreatorDetail() {
     const { creatorId } = useParams();
@@ -55,7 +58,7 @@ function CreatorDetail() {
         if (categorySlug) segments.push(categorySlug);
         if (subSlug) segments.push(subSlug);
         if (subSubSlug) segments.push(subSubSlug);
-        if (asset?._id) segments.push(asset._id);
+        segments.push(getAssetUrlSlug(asset));
         return segments.join("/");
     }, [slugify]);
 
@@ -156,7 +159,9 @@ function CreatorDetail() {
     }
 
     return (
-        <div className="container py-4">
+        <>
+            <TopNavOnly />
+            <div className="container py-4">
             <div className="card border-0 shadow-sm mb-4">
                 <div className="card-body p-4">
                     <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
@@ -262,12 +267,12 @@ function CreatorDetail() {
                                         <Link to={buildAssetUrl(asset)}>
                                             <img
                                                 src={getMediaVariantUrl(asset, ["small", "medium", "thumbnail", "original"]) || asset.imageUrl}
-                                                alt={asset.title || "Asset"}
+                                                alt={getAssetDisplayName(asset, "Asset")}
                                                 style={{ width: "100%", height: 220, objectFit: "cover" }}
                                             />
                                         </Link>
                                         <div className="card-body">
-                                            <h6 className="mb-2 text-truncate">{asset.title || "Untitled"}</h6>
+                                            <h6 className="mb-2 text-truncate">{getAssetDisplayName(asset)}</h6>
                                             <p className="mb-2 text-muted small">
                                                 {[asset.category, asset.subcategory].filter(Boolean).join(" / ") || "Uncategorized"}
                                             </p>
@@ -307,7 +312,9 @@ function CreatorDetail() {
                     )}
                 </>
             )}
-        </div>
+            </div>
+            <AppFooter />
+        </>
     );
 }
 

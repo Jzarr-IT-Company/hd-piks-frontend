@@ -85,7 +85,7 @@ function SidebarCompo() {
       <li className="nav-item">
         <a
           className="nav-link fw-semibold text-white active"
-          href="https://www.hdpiks.com/blog/"
+          href="https://www.elvify.com/blog/"
           target="_self"
           rel="noopener noreferrer"
         >

@@ -58,7 +58,7 @@ function HelpCenter() {
             <h1 className="help-hero__title">Find answers fast.</h1>
             <p className="help-hero__subtitle">
               Get help with downloads, licensing, subscriptions, payments, refunds, and account
-              access on HDPiks.
+              access on Elvify.
             </p>
 
             <div className="help-hero__controls">

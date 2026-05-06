@@ -914,7 +914,7 @@ function AiToolPage() {
 		const ext = extensionFromAudioMime(voiceoverAudioMeta?.mimeType || "audio/mpeg");
 		const link = document.createElement("a");
 		link.href = href;
-		link.download = `hdpiks-voiceover-${Date.now()}.${ext}`;
+		link.download = `elvify-voiceover-${Date.now()}.${ext}`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -1016,7 +1016,7 @@ function AiToolPage() {
 		const ext = extensionFromMime(mimeType);
 		const link = document.createElement("a");
 		link.href = href;
-		link.download = `hdpiks-ai-${Date.now()}-${index + 1}.${ext}`;
+		link.download = `elvify-ai-${Date.now()}-${index + 1}.${ext}`;
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -2005,7 +2005,7 @@ function AiToolPage() {
 										</div>
 										<div className="ai-bg-step-list">
 											{[
-												{ key: "upload", label: "Upload to HDPiks" },
+												{ key: "upload", label: "Upload to Elvify" },
 												{ key: "process", label: bgRemoveMode === "hd" ? "HD edge refinement" : "AI background remove" },
 												{ key: "final", label: "Ready to download" },
 											].map((step) => {

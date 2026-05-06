@@ -26,7 +26,8 @@ import {
 } from '@mui/material';
 import { Delete, CheckCircle, Cancel, Visibility, Search as SearchIcon, Download as DownloadIcon } from '@mui/icons-material';
 import api from '../../Services/api';
-import API_BASE_URL from '../../config/api.config.js';
+import API_BASE_URL, { API_ENDPOINTS } from '../../config/api.config.js';
+import { getAssetDisplayName } from '../../utils/assetName.js';
 
 export default function ImagesPage() {
   const [images, setImages] = useState([]);
@@ -42,6 +43,9 @@ export default function ImagesPage() {
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [viewTarget, setViewTarget] = useState(null);
+  const [seoMetaTagsHtml, setSeoMetaTagsHtml] = useState('');
+  const [seoSchemaScriptHtml, setSeoSchemaScriptHtml] = useState('');
+  const [seoSaving, setSeoSaving] = useState(false);
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [uploaderFilter, setUploaderFilter] = useState('all');
@@ -198,6 +202,39 @@ export default function ImagesPage() {
     setConfirmAction('delete');
     setConfirmTarget(img);
     setConfirmDialogOpen(true);
+  };
+
+  const openAssetDetails = (img) => {
+    setViewTarget(img);
+    setSeoMetaTagsHtml(img?.seo?.metaTagsHtml || '');
+    setSeoSchemaScriptHtml(img?.seo?.schemaScriptHtml || '');
+    setViewDialogOpen(true);
+  };
+
+  const handleSaveSeo = async () => {
+    if (!viewTarget?._id) return;
+    setSeoSaving(true);
+    try {
+      const response = await api.patch(API_ENDPOINTS.ADMIN_IMAGE_SEO(viewTarget._id), {
+        seo: {
+          metaTagsHtml: seoMetaTagsHtml,
+          schemaScriptHtml: seoSchemaScriptHtml,
+        },
+      });
+      const updatedAsset = response?.data?.data || null;
+      setImages((current) =>
+        current.map((item) => (String(item._id) === String(viewTarget._id) ? { ...item, ...(updatedAsset || {}), seo: updatedAsset?.seo || { metaTagsHtml: seoMetaTagsHtml, schemaScriptHtml: seoSchemaScriptHtml } } : item))
+      );
+      setViewTarget((current) =>
+        current ? { ...current, ...(updatedAsset || {}), seo: updatedAsset?.seo || { metaTagsHtml: seoMetaTagsHtml, schemaScriptHtml: seoSchemaScriptHtml } } : current
+      );
+      setError('');
+    } catch (err) {
+      const apiMessage = String(err?.response?.data?.errors?.[0] || err?.response?.data?.message || '').trim();
+      setError(apiMessage || 'Failed to save asset SEO');
+    } finally {
+      setSeoSaving(false);
+    }
   };
 
   const handleConfirmProceed = async () => {
@@ -402,7 +439,7 @@ export default function ImagesPage() {
       const type = getFileType(img);
       const category = resolveCategoryName(img?.category);
       const categoryPath = getCategoryPath(img);
-      const title = (img.title || img.name || img._id || '').toLowerCase();
+      const title = getAssetDisplayName(img, img.name || img._id || '').toLowerCase();
 
       const matchesQuery = !q
         || title.includes(q)
@@ -550,9 +587,9 @@ export default function ImagesPage() {
               {pagedImages.map((img) => (
                 <TableRow key={img._id}>
                   <TableCell>
-                    <Avatar variant="rounded" src={img.imageUrl || img.url || img.thumbnailUrl || ''} alt={img.title || 'Image'} />
+                    <Avatar variant="rounded" src={img.imageUrl || img.url || img.thumbnailUrl || ''} alt={getAssetDisplayName(img, 'Image')} />
                   </TableCell>
-                  <TableCell>{img.title || img.name || img._id}</TableCell>
+                  <TableCell>{getAssetDisplayName(img, img.name || img._id)}</TableCell>
                   <TableCell>{getCategoryPath(img)}</TableCell>
                   <TableCell>
                     <Typography variant="body2" color={isZipRequiredCategory(img) && !getZipUrl(img) ? 'error.main' : 'text.primary'}>
@@ -612,7 +649,7 @@ export default function ImagesPage() {
                     {getCreatorName(img.creatorId)}
                   </TableCell>
                   <TableCell align="right">
-                    <IconButton color="info" onClick={() => { setViewTarget(img); setViewDialogOpen(true); }} title="View details">
+                    <IconButton color="info" onClick={() => openAssetDetails(img)} title="View details">
                       <Visibility />
                     </IconButton>
                     <IconButton color="success" onClick={() => handleApproveClick(img)} title="Approve"><CheckCircle /></IconButton>
@@ -762,11 +799,32 @@ export default function ImagesPage() {
                 </Typography>
                 <Typography variant="body2"><strong>Uploaded At:</strong> {viewTarget.createdAt ? new Date(viewTarget.createdAt).toLocaleString() : '-'}</Typography>
                 <Typography variant="body2"><strong>Updated At:</strong> {viewTarget.updatedAt ? new Date(viewTarget.updatedAt).toLocaleString() : '-'}</Typography>
+                <TextField
+                  label="SEO Meta Tags HTML"
+                  fullWidth
+                  multiline
+                  minRows={5}
+                  value={seoMetaTagsHtml}
+                  onChange={(e) => setSeoMetaTagsHtml(e.target.value)}
+                  placeholder={'<meta name="robots" content="index, follow" />\n<meta name="author" content="HDPiks Team" />'}
+                />
+                <TextField
+                  label="SEO Schema Script HTML"
+                  fullWidth
+                  multiline
+                  minRows={8}
+                  value={seoSchemaScriptHtml}
+                  onChange={(e) => setSeoSchemaScriptHtml(e.target.value)}
+                  placeholder={'<script type="application/ld+json">\n{\n  "@context": "https://schema.org"\n}\n</script>'}
+                />
               </Stack>
             </Box>
           )}
         </DialogContent>
         <DialogActions>
+          <Button onClick={handleSaveSeo} variant="contained" disabled={seoSaving || !viewTarget?._id}>
+            {seoSaving ? 'Saving...' : 'Save SEO'}
+          </Button>
           <Button onClick={() => setViewDialogOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>

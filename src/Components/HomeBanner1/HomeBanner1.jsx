@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, BriefcaseBusiness, FileText, GraduationCap, ShoppingCart } from 'lucide-react';
+import { ArrowRight, BriefcaseBusiness, GraduationCap, ShoppingCart } from 'lucide-react';
 import './HomeBanner1.css';
 
 function HomeBanner1() {
@@ -31,18 +31,30 @@ function HomeBanner1() {
             route: '/ai/ai-commerce',
             icon: ShoppingCart,
         },
-        {
-            id: 'pdf-tools',
-            title: 'PDF Tools',
-            description: 'Edit, merge, compress, and convert files to PDF using your HDPiks workspace.',
-            action: 'Open Tool',
-            route: '/pdf-tools',
-            icon: FileText,
-        },
     ];
 
     return (
         <div className="container py-4 mt-4 home-banner1-section">
+            <div className="home-banner1-pdf-strip">
+                <div className="home-banner1-pdf-strip__content">
+                    <h3 className="home-banner1-pdf-strip__title">PDF Tools</h3>
+                    <p className="home-banner1-pdf-strip__desc">
+                        Edit, merge, compress, and convert files in your Elvify workspace.
+                    </p>
+                    <button
+                        type="button"
+                        className="home-banner1-pdf-strip__btn"
+                        onClick={() => {
+                            navigate('/pdf-tools');
+                            window.scrollTo(0, 0);
+                        }}
+                    >
+                        Open Tool
+                        <ArrowRight size={18} />
+                    </button>
+                </div>
+            </div>
+
             <div className="mb-4 text-center text-md-start">
                 <h3 className="fw-bold display-5 mb-1">Exclusive Tools</h3>
                 <p className="fw-semibold text-muted mb-0">

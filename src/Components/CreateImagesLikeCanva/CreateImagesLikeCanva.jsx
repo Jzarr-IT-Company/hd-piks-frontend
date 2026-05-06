@@ -12,7 +12,7 @@ function CreateImagesLikeCanva() {
                         (
                             <>
                                 <Link className='text-white pricing-link' to={'/pricing'}>Pricing</Link>
-                                <Link className='btn start-creating-btn' to={'/design-hdpiks'}>Start Creating</Link>
+                                <Link className='btn start-creating-btn' to={'/design-elvify'}>Start Creating</Link>
                             </>
                         ) : <Link className='text-white pricing-link' to={'/pricing'}>Pricing</Link>
                 }

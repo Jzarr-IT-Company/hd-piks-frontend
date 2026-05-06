@@ -2,7 +2,7 @@
 // API Configuration for Development and Production
 const API_CONFIG = {
     development: 'http://localhost:4000',
-    production: 'https://hd-piks-backend.onrender.com', // no trailing slash
+    production: 'https://api.elvify.com', // no trailing slash
 };
 
 const APP_ENV = import.meta.env.VITE_APP_ENV || import.meta.env.MODE; // 'development' or 'production'
@@ -137,6 +137,7 @@ export const API_ENDPOINTS = {
     // Admin Categories CRUD
     ADMIN_CATEGORIES: '/admin/categories',
     ADMIN_CATEGORY: id => `/admin/categories/${id}`,
+    ADMIN_IMAGE_SEO: id => `/admin/images/${id}/seo`,
     ADMIN_PRICING_RULES: '/admin/pricing-rules',
     ADMIN_PRICING_RULE: id => `/admin/pricing-rules/${id}`,
     ADMIN_SUBSCRIPTION_PLANS: '/admin/subscription-plans',

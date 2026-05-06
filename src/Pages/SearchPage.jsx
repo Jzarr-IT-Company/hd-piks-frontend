@@ -121,7 +121,7 @@ function SearchPage() {
             >
               <h2 className="h4 fw-bold mb-2">No assets found for "{keyword}"</h2>
               <p className="text-muted mb-4">
-                We could not find a clear match in {resolvedCategory || routeCategory}. Try a broader keyword or explore related HDPiks collections.
+                We could not find a clear match in {resolvedCategory || routeCategory}. Try a broader keyword or explore related Elvify collections.
               </p>
               <div className="d-flex justify-content-center flex-wrap gap-2">
                 {emptySuggestions.map((item) => (

@@ -42,7 +42,7 @@ function HelpCenterTopic() {
   return (
     <>
       <Helmet>
-        <title>{topic.title} | HDPiks Help Center</title>
+        <title>{topic.title} | Elvify Help Center</title>
         <meta name="description" content={topic.summary} />
         <link rel="canonical" href={pageUrl} />
         {schema ? (

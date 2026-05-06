@@ -580,16 +580,28 @@ function Routing() {
       element: <Signup />,
     },
     {
-      path: "/design-hdpiks",
+      path: "/design-elvify",
       element: <DesignHdpiks />,
     },
     {
       path: "/pdf-tools",
-      element: (
-        <ProtectedRoute>
-          <PdfTools />
-        </ProtectedRoute>
-      ),
+      element: <PdfTools />,
+    },
+    {
+      path: "/collection/:parentSlug/:subSlug/:subSubSlug/Page/:collectionPage",
+      element: <Sidebar />,
+    },
+    {
+      path: "/collection/:parentSlug/:subSlug/Page/:collectionPage",
+      element: <Sidebar />,
+    },
+    {
+      path: "/collection/:name/Page/:collectionPage",
+      element: <Sidebar />,
+    },
+    {
+      path: "/collection/:parentSlug/:subSlug/:subSubSlug",
+      element: <Sidebar />,
     },
     {
       path: "/collection/:parentSlug/:subSlug",
@@ -597,10 +609,6 @@ function Routing() {
     },
     {
       path: "/collection/:name",
-      element: <Sidebar />,
-    },
-    {
-      path: "/collection/:name/Page/:collectionPage",
       element: <Sidebar />,
     },
     {

@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import DashboardShell from '../Components/DashboardShell/DashboardShell';
 import { getMyOrders } from '../Services/payment.js';
+import { getAssetDisplayName, getAssetUrlSlug } from '../utils/assetName.js';
 
 const normalizeName = (value) => {
     if (!value) return '';
@@ -40,7 +41,7 @@ const buildAssetPath = (asset = {}) => {
     const categorySlug = slugify(asset.categoryName) || 'image';
     const subSlug = slugify(asset.subcategoryName) || 'all';
     if (!asset?._id) return null;
-    return `/asset/${categorySlug}/${subSlug}/${asset._id}`;
+    return `/asset/${categorySlug}/${subSlug}/${getAssetUrlSlug(asset)}`;
 };
 
 const getStatusBadgeClass = (status) => {
@@ -169,7 +170,7 @@ function MyOrders() {
                                                     <div className="small text-muted">{order?._id || ''}</div>
                                                 </td>
                                                 <td>
-                                                    <div className="fw-semibold">{order?.asset?.title || 'Untitled asset'}</div>
+                                                    <div className="fw-semibold">{getAssetDisplayName(order?.asset)}</div>
                                                     {assetPath && (
                                                         <Link to={assetPath} className="small">
                                                             View asset

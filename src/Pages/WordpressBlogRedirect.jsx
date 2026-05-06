@@ -5,7 +5,7 @@ export default function WordpressBlogRedirect() {
   useEffect(() => {
      if (!openedRef.current) {
         
-         window.location.replace('https://hdpiks.com/blog/');
+         window.location.replace('https://www.elvify.com/blog/');
      }
         // openedRef.current = true;
   }, []);

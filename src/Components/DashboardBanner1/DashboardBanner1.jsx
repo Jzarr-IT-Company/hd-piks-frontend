@@ -15,7 +15,7 @@ function DashboardBanner1() {
 
     return (
         <div className="container pt-5 pb-4 ">
-            <p className='text-center fw-semibold'>Copyrighted content is not allowed to be uploaded on HDPiks. Your account may be suspended if you upload copyrighted material.</p>
+            <p className='text-center fw-semibold'>Copyrighted content is not allowed to be uploaded on Elvify. Your account may be suspended if you upload copyrighted material.</p>
             <div className="row d-flex justify-content-center">
                 <div className="col-12">
                     <div className="text-center d-flex flex-column align-items-center">

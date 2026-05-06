@@ -84,7 +84,7 @@ function AppNavbarOffcanvasContentCompo({ handleClose }) {
             </Link>
             <a
                 className="mobile-nav-menu__plain-link"
-                href="https://www.hdpiks.com/blog/"
+                href="https://www.elvify.com/blog/"
                 target="_self"
                 rel="noopener noreferrer"
                 onClick={closeMenu}

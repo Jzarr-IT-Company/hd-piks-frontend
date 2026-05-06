@@ -21,7 +21,7 @@ function AppNavbarOffcanvas() {
                 <Offcanvas show={show} onHide={handleClose} className="hdp-mobile-offcanvas" style={{ zIndex: 1055 }}>
                     <Offcanvas.Header closeButton className="hdp-mobile-offcanvas__header">
                         <Offcanvas.Title>
-                            <img src={logo} className='img-fluid hdp-mobile-offcanvas__logo' width={150} alt="HDpiks" />
+                            <img src={logo} className='img-fluid hdp-mobile-offcanvas__logo' width={105} alt="Elvify" />
                         </Offcanvas.Title>
                     </Offcanvas.Header>
                     <Offcanvas.Body className="hdp-mobile-offcanvas__body">

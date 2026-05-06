@@ -3,25 +3,25 @@
         "slug":  "ai-products-terms-and-conditions",
         "title":  "AI Products Terms and Conditions",
         "effectiveDate":  "1st March 2026",
-        "intro":  "These terms (the “AI Products Terms”) govern the use of the artificial intelligence-powered products and tools offered by HDPiks (the “Company”, “HDPiks”, “we”, “us”, “our”), including but not limited to the AI tools made available through the HDPiks website and/or applications (the “AI Products”). HDPiks reserves the right to update these terms periodically. HDPiks may provide translations of these Terms for convenience. However, the English version is the only legally binding version. In the event of any discrepancy, the English version shall prevail.",
+        "intro":  "These terms (the “AI Products Terms”) govern the use of the artificial intelligence-powered products and tools offered by Elvify (the “Company”, “Elvify”, “we”, “us”, “our”), including but not limited to the AI tools made available through the Elvify website and/or applications (the “AI Products”). Elvify reserves the right to update these terms periodically. Elvify may provide translations of these Terms for convenience. However, the English version is the only legally binding version. In the event of any discrepancy, the English version shall prevail.",
         "sections":  [
                          {
-                             "heading":  "1. Relationship with HDPiks General Terms",
+                             "heading":  "1. Relationship with Elvify General Terms",
                              "paragraphs":  [
-                                                "These AI Products Terms complement and are governed by HDPiks general Terms of Use (the “Terms”), available at: [Insert Terms of Use URL]. Any terms not defined herein shall have the meaning assigned to them in the Terms."
+                                                "These AI Products Terms complement and are governed by Elvify general Terms of Use (the “Terms”), available at: [Insert Terms of Use URL]. Any terms not defined herein shall have the meaning assigned to them in the Terms."
                                             ]
                          },
                          {
                              "heading":  "2. Description of AI Products",
                              "paragraphs":  [
-                                                "The AI Products allow users to generate and edit graphic resources using artificial intelligence tools provided by HDPiks. Users can upload text, images, video, audio, or other materials (“Input”), which the AI Products process to generate images, videos, audio files, presentations, or other outputs (the “Output”)."
+                                                "The AI Products allow users to generate and edit graphic resources using artificial intelligence tools provided by Elvify. Users can upload text, images, video, audio, or other materials (“Input”), which the AI Products process to generate images, videos, audio files, presentations, or other outputs (the “Output”)."
                                             ]
                          },
                          {
                              "heading":  "2.1 Credit-based system",
                              "paragraphs":  [
                                                 "User access to AI Products may be governed by a credit-based system. Each action performed using AI Products may deduct a predefined number of credits from the User’s account. The use of AI Products may be limited to the number of usage credits available to each User according to the plan or subscription purchased.",
-                                                "HDPiks will inform the User about:",
+                                                "Elvify will inform the User about:",
                                                 "the number of available usage credits, and",
                                                 "the usage credit cost of each AI Product.",
                                                 "Usage credits may reset at the beginning of each subscription period."
@@ -30,22 +30,22 @@
                          {
                              "heading":  "2.2 Limits and availability",
                              "paragraphs":  [
-                                                "HDPiks may impose limits on the number of Outputs the User can create. HDPiks will notify the User when they have consumed the credits available for their account. AI Products may not be available in all languages."
+                                                "Elvify may impose limits on the number of Outputs the User can create. Elvify will notify the User when they have consumed the credits available for their account. AI Products may not be available in all languages."
                                             ]
                          },
                          {
                              "heading":  "3. Use of Third-Party Technology",
                              "paragraphs":  [
                                                 "Our AI Products may incorporate artificial intelligence models developed by third parties. The terms and conditions and/or license agreements of those third-party providers may apply and are incorporated by reference where relevant, and the User is responsible for complying with them.",
-                                                "Additionally, where content is offered under a special license (e.g., open-source licenses requiring attribution or license inclusion), HDPiks will provide the license copy on its website or upon User request, as required."
+                                                "Additionally, where content is offered under a special license (e.g., open-source licenses requiring attribution or license inclusion), Elvify will provide the license copy on its website or upon User request, as required."
                                             ]
                          },
                          {
                              "heading":  "4. User Responsibility",
                              "paragraphs":  [
                                                 "The User is responsible for the Input uploaded and the Outputs generated. The User must ensure that their Inputs and Outputs comply with these Terms before uploading, using, or sharing them. The User must also ensure compliance with our Acceptable Use Policy.",
-                                                "HDPiks does not select, screen, control, guarantee, endorse, sponsor, or identify with Outputs.",
-                                                "The User may use the Output for any legal purpose, provided they comply with these AI Products Terms. Any use of Outputs is at the User’s own risk. HDPiks does not guarantee the legality, accuracy, completeness, or reliability of Outputs and accepts no liability arising from User use of Outputs or any omission/error contained in Outputs. The User is responsible for obtaining independent professional advice before relying on Outputs."
+                                                "Elvify does not select, screen, control, guarantee, endorse, sponsor, or identify with Outputs.",
+                                                "The User may use the Output for any legal purpose, provided they comply with these AI Products Terms. Any use of Outputs is at the User’s own risk. Elvify does not guarantee the legality, accuracy, completeness, or reliability of Outputs and accepts no liability arising from User use of Outputs or any omission/error contained in Outputs. The User is responsible for obtaining independent professional advice before relying on Outputs."
                                             ]
                          },
                          {
@@ -55,7 +55,7 @@
                                                 "They are the creator or rights holder of the Input or have a legally valid license/authorization for its use in the AI Products.",
                                                 "They have obtained all necessary authorizations from any person whose image, voice, identity, or other personal data appears in the Input.",
                                                 "The Input does not infringe IP rights, privacy, image/publicity, or other rights of third parties and complies with applicable laws.",
-                                                "The User assumes full responsibility for claims arising from the use of Input and Output and agrees to hold HDPiks harmless from related liability to the extent permitted by law."
+                                                "The User assumes full responsibility for claims arising from the use of Input and Output and agrees to hold Elvify harmless from related liability to the extent permitted by law."
                                             ]
                          },
                          {
@@ -74,67 +74,67 @@
                                                 "Engage in fully automated decision-making that negatively affects legal rights or creates/modifies binding legal obligations.",
                                                 "Provide medical advice and interpretation of medical results.",
                                                 "Generate or disseminate information for use in administration of justice, law enforcement, immigration, or asylum processes (e.g., predicting fraud/crime via profiling, or arbitrary targeting).",
-                                                "If Inputs or Outputs are apparently illegal or violate these AI Products Terms, the User acknowledges HDPiks may disclose such content to competent authorities where required by law or court order. Non-compliance may result in suspension or termination of the User’s account."
+                                                "If Inputs or Outputs are apparently illegal or violate these AI Products Terms, the User acknowledges Elvify may disclose such content to competent authorities where required by law or court order. Non-compliance may result in suspension or termination of the User’s account."
                                             ]
                          },
                          {
                              "heading":  "7. Ownership of Inputs and Outputs",
                              "paragraphs":  [
-                                                "As between the User and HDPiks, the User remains the owner of all right, title, and interest in and to the Inputs."
+                                                "As between the User and Elvify, the User remains the owner of all right, title, and interest in and to the Inputs."
                                             ]
                          },
                          {
                              "heading":  "7.1 Output ownership (Subscribers)",
                              "paragraphs":  [
-                                                "Between HDPiks and Users who have purchased a paid plan/subscription (“Subscribers”), HDPiks assigns to Subscribers any rights it may have in the Output, to the fullest extent permitted by law, provided the subscription is active at the time of generation and subject to compliance with these AI Products Terms."
+                                                "Between Elvify and Users who have purchased a paid plan/subscription (“Subscribers”), Elvify assigns to Subscribers any rights it may have in the Output, to the fullest extent permitted by law, provided the subscription is active at the time of generation and subject to compliance with these AI Products Terms."
                                             ]
                          },
                          {
                              "heading":  "7.2 Output license (Free users)",
                              "paragraphs":  [
-                                                "Between HDPiks and users with free accounts (“Free Users”), HDPiks grants Free Users a personal, non-exclusive, non-transferable, revocable license to use Outputs exclusively for personal and non-commercial purposes, unless otherwise stated.",
-                                                "HDPiks may specify permitted uses of Outputs generated by certain AI tools (e.g., personal use, editorial use). Where restrictions apply, Users must comply."
+                                                "Between Elvify and users with free accounts (“Free Users”), Elvify grants Free Users a personal, non-exclusive, non-transferable, revocable license to use Outputs exclusively for personal and non-commercial purposes, unless otherwise stated.",
+                                                "Elvify may specify permitted uses of Outputs generated by certain AI tools (e.g., personal use, editorial use). Where restrictions apply, Users must comply."
                                             ]
                          },
                          {
                              "heading":  "8. Nature of AI-Generated Content and IP",
                              "paragraphs":  [
-                                                "The User acknowledges Outputs are produced using AI models and similar outputs may be generated for different users. HDPiks does not guarantee exclusivity of any Output.",
+                                                "The User acknowledges Outputs are produced using AI models and similar outputs may be generated for different users. Elvify does not guarantee exclusivity of any Output.",
                                                 "The User further agrees that under laws of certain jurisdictions, Outputs may not be protected by intellectual property rights."
                                             ]
                          },
                          {
-                             "heading":  "9. License Granted to HDPiks",
+                             "heading":  "9. License Granted to Elvify",
                              "paragraphs":  [
-                                                "By using the AI Products, the User grants HDPiks the right to host Inputs and Outputs on platforms managed by HDPiks or its service providers and to use them for security purposes and to improve HDPiks products and services.",
-                                                "Important: HDPiks will not use Inputs (including the User’s image captured in certain tools) or Outputs to train its own AI models unless explicitly stated otherwise in the relevant tool’s terms or with the User’s explicit consent."
+                                                "By using the AI Products, the User grants Elvify the right to host Inputs and Outputs on platforms managed by Elvify or its service providers and to use them for security purposes and to improve Elvify products and services.",
+                                                "Important: Elvify will not use Inputs (including the User’s image captured in certain tools) or Outputs to train its own AI models unless explicitly stated otherwise in the relevant tool’s terms or with the User’s explicit consent."
                                             ]
                          },
                          {
                              "heading":  "10. Confidentiality",
                              "paragraphs":  [
-                                                "Inputs and Outputs generated through AI Products will be treated as confidential unless the User chooses to share them publicly through HDPiks community features or other platforms.",
-                                                "HDPiks will not disclose such information to third parties except:",
+                                                "Inputs and Outputs generated through AI Products will be treated as confidential unless the User chooses to share them publicly through Elvify community features or other platforms.",
+                                                "Elvify will not disclose such information to third parties except:",
                                                 "to provide the service (via processors/service providers),",
                                                 "when the User makes content public, or",
                                                 "when required by law.",
-                                                "If the User publishes an Output publicly, it may be accessed and used by others according to applicable platform terms, and HDPiks is not responsible for third-party use or redistribution."
+                                                "If the User publishes an Output publicly, it may be accessed and used by others according to applicable platform terms, and Elvify is not responsible for third-party use or redistribution."
                                             ]
                          },
                          {
                              "heading":  "11. Service Availability and Quality",
                              "paragraphs":  [
-                                                "HDPiks makes reasonable efforts to ensure stable access. However, the User agrees that:",
+                                                "Elvify makes reasonable efforts to ensure stable access. However, the User agrees that:",
                                                 "AI Products may change functionality, algorithms, interfaces, or performance without notice.",
-                                                "HDPiks does not guarantee quality, stability, uptime, accuracy, or reliability.",
+                                                "Elvify does not guarantee quality, stability, uptime, accuracy, or reliability.",
                                                 "Service interruptions may occur due to maintenance, updates, or external factors.",
-                                                "HDPiks may modify, suspend, or discontinue AI Products in whole or part."
+                                                "Elvify may modify, suspend, or discontinue AI Products in whole or part."
                                             ]
                          },
                          {
                              "heading":  "12. Reporting Undesired Outputs and Contact",
                              "paragraphs":  [
-                                                "If AI Products generate undesired Outputs, Users may contact HDPiks support via: [Insert Support URL / Email]. If in doubt whether an Output violates these AI Products Terms, the User should refrain from using it."
+                                                "If AI Products generate undesired Outputs, Users may contact Elvify support via: [Insert Support URL / Email]. If in doubt whether an Output violates these AI Products Terms, the User should refrain from using it."
                                             ]
                          },
                          {
@@ -146,7 +146,7 @@
                          {
                              "heading":  "13.1 Music Generator (Third-Party Provider)",
                              "paragraphs":  [
-                                                "If HDPiks offers a Music Generator powered by a third-party provider (e.g., Evenlabs), use of this tool is subject to these AI Products Terms and the provider’s terms.",
+                                                "If Elvify offers a Music Generator powered by a third-party provider (e.g., Evenlabs), use of this tool is subject to these AI Products Terms and the provider’s terms.",
                                                 "The User acknowledges and agrees that:",
                                                 "Outputs may not be shared/distributed on music streaming platforms (Spotify, Apple Music, etc.) nor commercially exploited as standalone audio files, sound libraries, samples, or collections, unless the provider terms allow it explicitly.",
                                                 "Inputs may not include real/stage names of singers/songwriters (living or deceased), song/album titles, publishers/labels’ names, or substantial portions of existing lyrics.",
@@ -161,20 +161,20 @@
         "slug":  "api-services-terms-and-conditions",
         "title":  "API Services Terms and Conditions",
         "effectiveDate":  "1st March 2026",
-        "intro":  "These API Services Terms and Conditions (“API Terms”) govern access to and use of the HDPiks API services (the “API Services”) by the customer (“Customer”, “you”, “your”). By accessing or using the API Services, you confirm that you have read and accepted these API Terms. We recommend reviewing them periodically, as they may be updated. The API Services are provided by HDPiks (“HDPiks”, “Company”, “we”, “us”, “our”).Company details: [Insert Legal Entity Name, Registration Details, and Address] By using the API Services, you agree to comply with the Company’s Acceptable Use Policy, which forms part of these API Terms by reference.",
+        "intro":  "These API Services Terms and Conditions (“API Terms”) govern access to and use of the Elvify API services (the “API Services”) by the customer (“Customer”, “you”, “your”). By accessing or using the API Services, you confirm that you have read and accepted these API Terms. We recommend reviewing them periodically, as they may be updated. The API Services are provided by Elvify (“Elvify”, “Company”, “we”, “us”, “our”).Company details: [Insert Legal Entity Name, Registration Details, and Address] By using the API Services, you agree to comply with the Company’s Acceptable Use Policy, which forms part of these API Terms by reference.",
         "sections":  [
                          {
                              "heading":  "1. Definitions",
                              "paragraphs":  [
-                                                "API Services: (i) access to and use of HDPiks APIs, endpoints, SDKs, and related services; (ii) any documentation, materials, code samples, and tools provided by HDPiks; (iii) any data, content, outputs, or responses provided through the API (“API Data”); and (iv) credentials issued by HDPiks (e.g., API keys, tokens).",
+                                                "API Services: (i) access to and use of Elvify APIs, endpoints, SDKs, and related services; (ii) any documentation, materials, code samples, and tools provided by Elvify; (iii) any data, content, outputs, or responses provided through the API (“API Data”); and (iv) credentials issued by Elvify (e.g., API keys, tokens).",
                                                 "API Client: any website, software, or application (including mobile apps) developed by Customer that calls or uses the API Services.",
-                                                "Developer Website / Docs: HDPiks developer documentation and related portals: [Insert docs URL].",
+                                                "Developer Website / Docs: Elvify developer documentation and related portals: [Insert docs URL].",
                                                 "Developer Policies: the API documentation, usage guides, rate limits, security requirements, and other policies posted on the Developer Website, as updated.",
                                                 "End User: an individual who uses the API Client and benefits from features powered by API Services but does not directly hold or use Customer’s API keys.",
-                                                "HDPiks Content: any content made available through API Services that is owned by or licensed to HDPiks.",
+                                                "Elvify Content: any content made available through API Services that is owned by or licensed to Elvify.",
                                                 "AI Products: any AI-powered tools or models accessible via the API Services, governed by separate AI terms (see Section 2.2).",
                                                 "AI Generated Content / Outputs: results generated via AI Products according to the AI Terms.",
-                                                "Confidential Information: non-public information disclosed by HDPiks to Customer relating to the API Services, excluding information independently developed, lawfully obtained, or made public without Customer’s fault.",
+                                                "Confidential Information: non-public information disclosed by Elvify to Customer relating to the API Services, excluding information independently developed, lawfully obtained, or made public without Customer’s fault.",
                                                 "Personal Data: has the meaning under applicable data protection laws (e.g., GDPR or local equivalents)."
                                             ]
                          },
@@ -182,8 +182,8 @@
                              "heading":  "2.1 Object",
                              "paragraphs":  [
                                                 "These API Terms set forth the conditions for Customer’s access to and use of the API Services.",
-                                                "Subject to these API Terms, HDPiks grants Customer a limited, non-exclusive, revocable, personal, non-transferable, non-sublicensable license to access and use the API Services solely to develop, test, and operate the Customer’s API Client.",
-                                                "HDPiks reserves all rights not expressly granted."
+                                                "Subject to these API Terms, Elvify grants Customer a limited, non-exclusive, revocable, personal, non-transferable, non-sublicensable license to access and use the API Services solely to develop, test, and operate the Customer’s API Client.",
+                                                "Elvify reserves all rights not expressly granted."
                                             ]
                          },
                          {
@@ -192,17 +192,17 @@
                                                 "These API Terms include and incorporate by reference (as applicable):",
                                                 "These API Terms",
                                                 "Developer Policies",
-                                                "HDPiks Privacy Policy",
-                                                "HDPiks Terms of Use (if applicable)",
+                                                "Elvify Privacy Policy",
+                                                "Elvify Terms of Use (if applicable)",
                                                 "AI Products Terms and Conditions (for AI endpoints, if used)",
                                                 "Acceptable Use Policy",
-                                                "Any third-party terms required for optional integrations [only if HDPiks integrates third-party services]"
+                                                "Any third-party terms required for optional integrations [only if Elvify integrates third-party services]"
                                             ]
                          },
                          {
                              "heading":  "2.3 Updates",
                              "paragraphs":  [
-                                                "HDPiks may update these API Terms and Developer Policies. Where practicable, we may provide notice (e.g., email or developer portal notice) before changes take effect. Continued use after the effective date means acceptance. If you disagree, you must stop using the API Services and may terminate your account."
+                                                "Elvify may update these API Terms and Developer Policies. Where practicable, we may provide notice (e.g., email or developer portal notice) before changes take effect. Continued use after the effective date means acceptance. If you disagree, you must stop using the API Services and may terminate your account."
                                             ]
                          },
                          {
@@ -213,7 +213,7 @@
                                                 "use the API Services only for lawful purposes and in good faith;",
                                                 "ensure the API Client does not mislead End Users or infringe rights;",
                                                 "maintain appropriate security controls for API keys and implementations.",
-                                                "HDPiks may suspend or restrict access (including credentials) if Customer breaches these API Terms or if we detect misuse, excessive requests, security risks, performance issues, or non-compliance.",
+                                                "Elvify may suspend or restrict access (including credentials) if Customer breaches these API Terms or if we detect misuse, excessive requests, security risks, performance issues, or non-compliance.",
                                                 "Customer must not:",
                                                 "use the API Services fraudulently or unlawfully;",
                                                 "reverse engineer, decompile, or attempt to derive source code or underlying algorithms (except where law explicitly allows);",
@@ -224,13 +224,13 @@
                          {
                              "heading":  "4. Registration and Credentials (API Keys)",
                              "paragraphs":  [
-                                                "Customer must create an account to access the API Services. HDPiks issues credentials (API keys/tokens) to Customer.",
+                                                "Customer must create an account to access the API Services. Elvify issues credentials (API keys/tokens) to Customer.",
                                                 "Customer agrees:",
                                                 "API keys are confidential and must not be sold, transferred, shared, sublicensed, or disclosed;",
-                                                "End Users must not be required to provide their own HDPiks API keys to use Customer’s API Client (unless HDPiks explicitly allows this in writing);",
+                                                "End Users must not be required to provide their own Elvify API keys to use Customer’s API Client (unless Elvify explicitly allows this in writing);",
                                                 "API keys may be used only for the API Client(s) registered/declared in the Customer account;",
                                                 "Customer is fully responsible for all activity performed using its API keys, even if performed by a third party due to Customer’s failure to secure keys.",
-                                                "If HDPiks suspects keys are compromised or misused, HDPiks may revoke or rotate keys and suspend access."
+                                                "If Elvify suspects keys are compromised or misused, Elvify may revoke or rotate keys and suspend access."
                                             ]
                          },
                          {
@@ -240,8 +240,8 @@
                                                 "Use only for permitted purposesUse the API Services solely for the functionality described in the Developer Policies and in compliance with applicable law.",
                                                 "Caching / Storage rulesCustomer must follow the caching/storage rules in the Developer Policies. Where required, Customer must call the designated endpoints as instructed (e.g., download/usage tracking endpoints) and implement safeguards to prevent unauthorized caching or bulk storage that defeats licensing or tracking.",
                                                 "No unlawful or infringing useCustomer must ensure the API Client, Customer content, prompts, and workflows do not infringe third-party rights, including IP, confidentiality, privacy, publicity, or data protection.",
-                                                "No misleading behaviorCustomer must not misrepresent affiliation, certification, sponsorship, or endorsement by HDPiks.",
-                                                "Competitive use restrictionsThe API Services must not be used to build a standalone product that directly replicates or competes with HDPiks core products or services. The API must be a supporting feature within a broader application with substantially different primary purpose/functionality.Any competitive, benchmarking, replicative, or model-training use requires prior written permission from HDPiks (“Ad Hoc License”).",
+                                                "No misleading behaviorCustomer must not misrepresent affiliation, certification, sponsorship, or endorsement by Elvify.",
+                                                "Competitive use restrictionsThe API Services must not be used to build a standalone product that directly replicates or competes with Elvify core products or services. The API must be a supporting feature within a broader application with substantially different primary purpose/functionality.Any competitive, benchmarking, replicative, or model-training use requires prior written permission from Elvify (“Ad Hoc License”).",
                                                 "End User termsCustomer must maintain binding End User terms and privacy policy for its API Client consistent with these API Terms and applicable law.",
                                                 "Customer is solely responsible for operation of its API Client and its relationship with End Users."
                                             ]
@@ -249,7 +249,7 @@
                          {
                              "heading":  "6. API Client Review and Audit",
                              "paragraphs":  [
-                                                "HDPiks may review the API Client and audit API usage (e.g., call volume, logs, downloads, attribution compliance, competitive-use compliance) to ensure compliance, quality, and protection of our systems and licensing.",
+                                                "Elvify may review the API Client and audit API usage (e.g., call volume, logs, downloads, attribution compliance, competitive-use compliance) to ensure compliance, quality, and protection of our systems and licensing.",
                                                 "If an audit is requested, Customer must reasonably cooperate. Failure to provide reasonable access to usage analytics/logs may be treated as a material breach."
                                             ]
                          },
@@ -257,29 +257,29 @@
                              "heading":  "7. Intellectual Property and Attribution",
                              "paragraphs":  [
                                                 "Customer must not violate third-party rights.",
-                                                "Nothing in these API Terms grants Customer rights to HDPiks trademarks except as expressly permitted.",
-                                                "Subject to compliance, HDPiks grants Customer a limited license to use HDPiks trademarks solely to accurately indicate that the API Client uses HDPiks API Services, in accordance with brand guidelines (if any). Customer must not imply sponsorship, certification, or endorsement."
+                                                "Nothing in these API Terms grants Customer rights to Elvify trademarks except as expressly permitted.",
+                                                "Subject to compliance, Elvify grants Customer a limited license to use Elvify trademarks solely to accurately indicate that the API Client uses Elvify API Services, in accordance with brand guidelines (if any). Customer must not imply sponsorship, certification, or endorsement."
                                             ]
                          },
                          {
                              "heading":  "7.1 Attribution (if required)",
                              "paragraphs":  [
-                                                "If required by the Developer Policies or a specific endpoint (especially for proprietary AI models), Customer must display a clear notice such as:“Powered by HDPiks” or “Powered by [Model Name]”Placement, format, and size requirements (if any) must be followed.",
-                                                "Customer must not remove or obscure any proprietary notices included in outputs, documentation, or UI elements as required by HDPiks policies."
+                                                "If required by the Developer Policies or a specific endpoint (especially for proprietary AI models), Customer must display a clear notice such as:“Powered by Elvify” or “Powered by [Model Name]”Placement, format, and size requirements (if any) must be followed.",
+                                                "Customer must not remove or obscure any proprietary notices included in outputs, documentation, or UI elements as required by Elvify policies."
                                             ]
                          },
                          {
                              "heading":  "8. Publicity",
                              "paragraphs":  [
-                                                "Unless Customer opts out in writing (where allowed), HDPiks may list Customer (name/logo) as an API customer, including in marketing materials and case studies, and may include incidental screenshots/videos of the API Client. Customer grants HDPiks a non-exclusive, worldwide, royalty-free license to use Customer’s name/logo for these purposes.",
-                                                "Customer must not make public statements suggesting HDPiks endorsement without prior written approval."
+                                                "Unless Customer opts out in writing (where allowed), Elvify may list Customer (name/logo) as an API customer, including in marketing materials and case studies, and may include incidental screenshots/videos of the API Client. Customer grants Elvify a non-exclusive, worldwide, royalty-free license to use Customer’s name/logo for these purposes.",
+                                                "Customer must not make public statements suggesting Elvify endorsement without prior written approval."
                                             ]
                          },
                          {
                              "heading":  "9. Modification of the API Services",
                              "paragraphs":  [
-                                                "HDPiks may modify, update, or discontinue any part of API Services at any time. We may announce changes on the Developer Website and, where practicable, provide advance notice for breaking changes.",
-                                                "Where older versions are deprecated, HDPiks may maintain them for a limited period as described in the Developer Policies."
+                                                "Elvify may modify, update, or discontinue any part of API Services at any time. We may announce changes on the Developer Website and, where practicable, provide advance notice for breaking changes.",
+                                                "Where older versions are deprecated, Elvify may maintain them for a limited period as described in the Developer Policies."
                                             ]
                          },
                          {
@@ -290,7 +290,7 @@
                                                 "Customer authorizes recurring billing where applicable.",
                                                 "Late payment beyond 5 days may result in suspension until resolved.",
                                                 "Fees are non-refundable except where required by law.",
-                                                "Taxes are Customer’s responsibility (except taxes on HDPiks income)."
+                                                "Taxes are Customer’s responsibility (except taxes on Elvify income)."
                                             ]
                          },
                          {
@@ -318,27 +318,27 @@
                          {
                              "heading":  "12. Confidentiality",
                              "paragraphs":  [
-                                                "Customer must protect HDPiks Confidential Information with at least reasonable care and use it only as necessary for permitted API use. Disclosure is allowed only where required by law (with notice where legally permitted)."
+                                                "Customer must protect Elvify Confidential Information with at least reasonable care and use it only as necessary for permitted API use. Disclosure is allowed only where required by law (with notice where legally permitted)."
                                             ]
                          },
                          {
                              "heading":  "13. Warranties and Disclaimer",
                              "paragraphs":  [
-                                                "API Services are provided “AS IS” and “AS AVAILABLE” without warranties. HDPiks does not guarantee uninterrupted, error-free service, or suitability for a particular purpose."
+                                                "API Services are provided “AS IS” and “AS AVAILABLE” without warranties. Elvify does not guarantee uninterrupted, error-free service, or suitability for a particular purpose."
                                             ]
                          },
                          {
                              "heading":  "14. Limitation of Liability",
                              "paragraphs":  [
                                                 "To the maximum extent permitted by law:",
-                                                "HDPiks is not liable for indirect, special, incidental, consequential, punitive damages, or loss of profits/revenue/data.",
-                                                "HDPiks total liability is limited to the fees paid by Customer for API Services in the 12 months prior to the event giving rise to liability."
+                                                "Elvify is not liable for indirect, special, incidental, consequential, punitive damages, or loss of profits/revenue/data.",
+                                                "Elvify total liability is limited to the fees paid by Customer for API Services in the 12 months prior to the event giving rise to liability."
                                             ]
                          },
                          {
                              "heading":  "15. Indemnity",
                              "paragraphs":  [
-                                                "Customer will indemnify HDPiks against third-party claims arising from:",
+                                                "Customer will indemnify Elvify against third-party claims arising from:",
                                                 "Customer’s or End Users’ use of the API Client;",
                                                 "Customer breach of these API Terms;",
                                                 "Customer content/prompts/uploads and resulting infringement;",
@@ -351,7 +351,7 @@
                                                 "Entire Agreement: These API Terms + incorporated documents are the complete agreement for API Services.",
                                                 "Severability: if any clause is invalid, the remainder remains effective.",
                                                 "Notices: notices may be sent by email to account email.",
-                                                "Assignment: HDPiks may assign; Customer may not without written consent.",
+                                                "Assignment: Elvify may assign; Customer may not without written consent.",
                                                 "Independent Parties: no partnership/agency created."
                                             ]
                          },
@@ -367,7 +367,7 @@
         "slug":  "business-subscription-specific-terms",
         "title":  "Business Subscription - Specific Terms",
         "effectiveDate":  "1st March 2026",
-        "intro":  "These Business Subscription Specific Terms (“Business Subscription Terms”) govern the purchase and use of the HDPiks Business subscription offered by HDPiks.com (“HDPiks”, “Company”, “we”, “us”) through our website and related services (the “Website” and “Services”). By completing the purchase of a Business subscription, you (“Business Customer”, “you”, “your”) confirm that you have read, understood, and accepted these Business Subscription Terms without reservation. These Business Subscription Terms apply in addition to the general HDPiks Terms of Use and other incorporated policies and product terms (collectively, the “Additional Terms”). Together, the Terms of Use + these Business Subscription Terms + incorporated documents form the “Agreement”.",
+        "intro":  "These Business Subscription Specific Terms (“Business Subscription Terms”) govern the purchase and use of the Elvify Business subscription offered by Elvify.com (“Elvify”, “Company”, “we”, “us”) through our website and related services (the “Website” and “Services”). By completing the purchase of a Business subscription, you (“Business Customer”, “you”, “your”) confirm that you have read, understood, and accepted these Business Subscription Terms without reservation. These Business Subscription Terms apply in addition to the general Elvify Terms of Use and other incorporated policies and product terms (collectively, the “Additional Terms”). Together, the Terms of Use + these Business Subscription Terms + incorporated documents form the “Agreement”.",
         "sections":  [
                          {
                              "heading":  "1.1 Business Subscription Scope",
@@ -384,7 +384,7 @@
                                             ]
                          },
                          {
-                             "heading":  "(a) Content Libraries made available through HDPiks Services, subject to applicable license rules in the Additional Terms;(b) AI-powered tools available in the Services (the “AI Products”), including generation/editing outputs, subject to usage credits, limits, and the separate AI Terms;(c) Ability to download/generate/edit content without attribution, where attribution is not required by the applicable license;(d) Any other Business features listed on the Website, including shared workspace/team tools, export formats, or workflow capabilities, subject to stated limits.",
+                             "heading":  "(a) Content Libraries made available through Elvify Services, subject to applicable license rules in the Additional Terms;(b) AI-powered tools available in the Services (the “AI Products”), including generation/editing outputs, subject to usage credits, limits, and the separate AI Terms;(c) Ability to download/generate/edit content without attribution, where attribution is not required by the applicable license;(d) Any other Business features listed on the Website, including shared workspace/team tools, export formats, or workflow capabilities, subject to stated limits.",
                              "paragraphs":  [
                                                 "Availability and conditions of the above benefits can change over time and are governed by the Website + Additional Terms."
                                             ]
@@ -392,8 +392,8 @@
                          {
                              "heading":  "1.3 Changes to the Services",
                              "paragraphs":  [
-                                                "You acknowledge the Services evolve continuously. HDPiks may modify, enhance, update, replace, suspend, limit, or discontinue any part of the Services at any time.",
-                                                "Except where pricing notice is required for renewals (see Section 3), HDPiks has no obligation to maintain any feature or function and is not liable for changes or removal of features."
+                                                "You acknowledge the Services evolve continuously. Elvify may modify, enhance, update, replace, suspend, limit, or discontinue any part of the Services at any time.",
+                                                "Except where pricing notice is required for renewals (see Section 3), Elvify has no obligation to maintain any feature or function and is not liable for changes or removal of features."
                                             ]
                          },
                          {
@@ -402,7 +402,7 @@
                                                 "Business access is provided through a single organizational account (“Business Account”).",
                                                 "Roles may include: Account Owner, Admins, and Members (or similar role labels shown inside the product).",
                                                 "Account Owner: primary authority for billing, subscription settings, seat assignments, and acceptance of updated terms.",
-                                                "Admins/Members: authorized users with limited permissions. They cannot legally bind HDPiks or amend these Terms.",
+                                                "Admins/Members: authorized users with limited permissions. They cannot legally bind Elvify or amend these Terms.",
                                                 "All actions taken through the Business Account are considered actions of the Business Customer."
                                             ]
                          },
@@ -438,7 +438,7 @@
                              "heading":  "2.5 Responsibility and Control",
                              "paragraphs":  [
                                                 "The Business Customer is responsible for its Authorized Users’ actions. If an Authorized User violates the Agreement, it is treated as the Business Customer’s breach.",
-                                                "HDPiks may suspend or restrict any Authorized User if we reasonably believe their activity violates the Agreement or applicable law."
+                                                "Elvify may suspend or restrict any Authorized User if we reasonably believe their activity violates the Agreement or applicable law."
                                             ]
                          },
                          {
@@ -446,15 +446,15 @@
                              "paragraphs":  [
                                                 "The Business subscription is offered on a seat-based model as described on the Website. Fees, billing frequency, seat count, included credits, and add-on prices are the amounts shown at checkout or inside your Business Account.",
                                                 "Prices exclude taxes unless otherwise stated. Applicable taxes may be added.",
-                                                "Credit consumption may change. HDPiks may adjust credit costs for tools/features at any time. The binding credit cost is the one shown at the time of use.",
-                                                "HDPiks may change subscription prices, but the price applied to your current order is the one shown at purchase. If renewal pricing changes, we will notify you at least 30 days before renewal by email to the account email on file (where required or where reasonably practicable)."
+                                                "Credit consumption may change. Elvify may adjust credit costs for tools/features at any time. The binding credit cost is the one shown at the time of use.",
+                                                "Elvify may change subscription prices, but the price applied to your current order is the one shown at purchase. If renewal pricing changes, we will notify you at least 30 days before renewal by email to the account email on file (where required or where reasonably practicable)."
                                             ]
                          },
                          {
                              "heading":  "3.2 Billing, Payment, and Renewal",
                              "paragraphs":  [
                                                 "Subscriptions are billed monthly or annually as selected at purchase.",
-                                                "By purchasing, you authorize HDPiks to charge your payment method on a recurring basis until cancellation.",
+                                                "By purchasing, you authorize Elvify to charge your payment method on a recurring basis until cancellation.",
                                                 "Unless stated otherwise, subscriptions automatically renew for the same term length at then-current pricing unless canceled before renewal.",
                                                 "Except where required by law, fees are non-refundable and we do not provide refunds/credits for partial periods, unused seats, unused services, or unused credits."
                                             ]
@@ -497,9 +497,9 @@
                                             ]
                          },
                          {
-                             "heading":  "4.2 Suspension/Termination by HDPiks",
+                             "heading":  "4.2 Suspension/Termination by Elvify",
                              "paragraphs":  [
-                                                "HDPiks may suspend or terminate access if we reasonably believe:(a) you or an Authorized User materially breaches the Agreement;(b) continued service would violate law or a binding order;(c) your use creates security risk, legal risk, or material harm.",
+                                                "Elvify may suspend or terminate access if we reasonably believe:(a) you or an Authorized User materially breaches the Agreement;(b) continued service would violate law or a binding order;(c) your use creates security risk, legal risk, or material harm.",
                                                 "Where reasonable, we may provide notice and a chance to cure, but we may act immediately if required."
                                             ]
                          },
@@ -513,17 +513,17 @@
                          {
                              "heading":  "5. Indemnification",
                              "paragraphs":  [
-                                                "Except as specifically provided in these Terms or other Additional Terms, HDPiks does not provide indemnities."
+                                                "Except as specifically provided in these Terms or other Additional Terms, Elvify does not provide indemnities."
                                             ]
                          },
                          {
                              "heading":  "5.1 Limited IP Indemnity for AI Outputs (If Offered)",
                              "paragraphs":  [
-                                                "If HDPiks explicitly offers Output IP indemnity to Business Customers on the Website, then subject to the conditions below HDPiks will indemnify Business Customers against third-party claims alleging the Output infringes intellectual property rights.",
+                                                "If Elvify explicitly offers Output IP indemnity to Business Customers on the Website, then subject to the conditions below Elvify will indemnify Business Customers against third-party claims alleging the Output infringes intellectual property rights.",
                                                 "This indemnity does not apply to claims arising from:",
                                                 "Trademarks/patents/registered rights where you could reasonably check registries before use;",
                                                 "Knowing or reckless use of infringing output;",
-                                                "Use after notice to stop (from HDPiks or a formal third-party notice);",
+                                                "Use after notice to stop (from Elvify or a formal third-party notice);",
                                                 "Your Inputs/uploads/prompts that infringe third-party rights or lack permissions;",
                                                 "Modifying output or combining it with third-party content/tech in a way that creates infringement.",
                                                 "This indemnity is your sole remedy for covered Output claims and is subject to Section 6 limits.",
@@ -533,13 +533,13 @@
                          {
                              "heading":  "5.2 Indemnity Procedure",
                              "paragraphs":  [
-                                                "To request indemnity:(a) you must notify HDPiks promptly with details;(b) provide Outputs, Inputs, model/version info, usage context, and all correspondence;(c) do not admit liability or settle without written consent;(d) HDPiks may control defense/settlement; you cooperate reasonably."
+                                                "To request indemnity:(a) you must notify Elvify promptly with details;(b) provide Outputs, Inputs, model/version info, usage context, and all correspondence;(c) do not admit liability or settle without written consent;(d) Elvify may control defense/settlement; you cooperate reasonably."
                                             ]
                          },
                          {
-                             "heading":  "5.3 Business Customer Indemnity to HDPiks",
+                             "heading":  "5.3 Business Customer Indemnity to Elvify",
                              "paragraphs":  [
-                                                "You will indemnify HDPiks against claims arising from:",
+                                                "You will indemnify Elvify against claims arising from:",
                                                 "your Inputs/uploads/prompts",
                                                 "your misuse or illegal use",
                                                 "your breach of the Agreement",
@@ -556,8 +556,8 @@
                              "heading":  "6. Limitation of Liability",
                              "paragraphs":  [
                                                 "Nothing excludes liability that cannot be excluded by law (e.g., fraud, willful misconduct, death/personal injury caused by negligence where applicable).",
-                                                "HDPiks is not liable for indirect, special, incidental, punitive, or consequential damages, including loss of profits, revenue, data, or goodwill.",
-                                                "To the maximum extent permitted by law, HDPiks’ total aggregate liability under these Business Subscription Terms shall not exceed the greater of:",
+                                                "Elvify is not liable for indirect, special, incidental, punitive, or consequential damages, including loss of profits, revenue, data, or goodwill.",
+                                                "To the maximum extent permitted by law, Elvify’ total aggregate liability under these Business Subscription Terms shall not exceed the greater of:",
                                                 "fees paid by the Business Customer in the last 12 months for the Business subscription, or",
                                                 "[Insert fixed cap, if you want e.g. USD $50,000]",
                                                 "Business Customer liability is not limited for:(a) breach by Business Customer or its users;(b) claims arising from Inputs/usage not covered by any indemnity;(c) violations of law or third-party rights."
@@ -568,7 +568,7 @@
                              "paragraphs":  [
                                                 "AI Products and AI usage rules are governed by separate AI Terms of Use. These Business Subscription Terms do not replace or restate the AI Terms.",
                                                 "Contact",
-                                                "Support: support@hdpiks.comLegal: legal@hdpiks.comWebsite: HDPiks.com"
+                                                "Support: support@elvify.comLegal: legal@elvify.comWebsite: Elvify.com"
                                             ]
                          }
                      ]
@@ -577,18 +577,18 @@
         "slug":  "online-editor-terms-and-conditions",
         "title":  "Online Editor - Terms \u0026 Conditions",
         "effectiveDate":  "1st March 2026",
-        "intro":  "These Terms and Conditions (“Terms”) govern your access to and use of the HDPiks Online Editor, including all related subdomains, tools, design software, templates, mockup tools, AI design features, and downloadable/exportable content (collectively, the “Editor” or “Service”). By accessing or using the Editor, you confirm that you have read, understood, and agreed to be bound by: These Terms",
+        "intro":  "These Terms and Conditions (“Terms”) govern your access to and use of the Elvify Online Editor, including all related subdomains, tools, design software, templates, mockup tools, AI design features, and downloadable/exportable content (collectively, the “Editor” or “Service”). By accessing or using the Editor, you confirm that you have read, understood, and agreed to be bound by: These Terms",
         "sections":  [
                          {
                              "heading":  "1. Description of the Service",
                              "paragraphs":  [
-                                                "HDPiks Online Editor is a browser-based design platform that allows users to:",
+                                                "Elvify Online Editor is a browser-based design platform that allows users to:",
                                                 "Create and edit visual content",
                                                 "Use templates, graphics, images, fonts, and other assets",
                                                 "Export designs in supported formats (e.g., PNG, JPG, PDF, etc.)",
                                                 "Use AI-powered tools (where available)",
                                                 "The Service may include:",
-                                                "HDPiks-owned content (“HDPiks Content”)",
+                                                "Elvify-owned content (“Elvify Content”)",
                                                 "Third-party licensed content (“Third-Party Content”)",
                                                 "AI-generated content (“AI Content”)",
                                                 "User-uploaded content (“User Content”)"
@@ -597,14 +597,14 @@
                          {
                              "heading":  "2. License to Use the Service",
                              "paragraphs":  [
-                                                "Subject to compliance with these Terms, HDPiks grants you a:",
+                                                "Subject to compliance with these Terms, Elvify grants you a:",
                                                 "Non-exclusive",
                                                 "Limited",
                                                 "Personal",
                                                 "Non-transferable",
                                                 "Revocable",
                                                 "license to access and use the Editor solely for lawful purposes and within the functionality provided.",
-                                                "All rights not expressly granted remain reserved by HDPiks.",
+                                                "All rights not expressly granted remain reserved by Elvify.",
                                                 "We may suspend or terminate this license if you violate these Terms."
                                             ]
                          },
@@ -628,7 +628,7 @@
                                                 "Upload malware, viruses, or harmful code",
                                                 "Impersonate others or misrepresent affiliation",
                                                 "Circumvent security measures",
-                                                "Use HDPiks trademarks in misleading ways",
+                                                "Use Elvify trademarks in misleading ways",
                                                 "Use the Service for illegal, fraudulent, or harmful activities",
                                                 "Upload illegal, defamatory, obscene, or infringing content",
                                                 "Upload content involving child exploitation or unlawful material",
@@ -644,24 +644,24 @@
                              "paragraphs":  [
                                                 "You may create designs (“Editor Designs”) using:",
                                                 "Your own uploaded content",
-                                                "HDPiks Content",
+                                                "Elvify Content",
                                                 "Third-Party Content",
                                                 "AI-generated elements",
                                                 "You may export designs subject to applicable licensing rules."
                                             ]
                          },
                          {
-                             "heading":  "5.2 Licensing of HDPiks Content",
+                             "heading":  "5.2 Licensing of Elvify Content",
                              "paragraphs":  [
-                                                "If your exported design includes HDPiks Content, you must comply with the licensing terms applicable to that content (Free, Premium, Commercial, etc.).",
-                                                "Exporting does not transfer ownership of HDPiks Content."
+                                                "If your exported design includes Elvify Content, you must comply with the licensing terms applicable to that content (Free, Premium, Commercial, etc.).",
+                                                "Exporting does not transfer ownership of Elvify Content."
                                             ]
                          },
                          {
                              "heading":  "5.3 Third-Party Content",
                              "paragraphs":  [
                                                 "Some assets may be provided by third parties.",
-                                                "You are responsible for complying with any third-party license terms. HDPiks is not responsible for third-party content accuracy or licensing claims."
+                                                "You are responsible for complying with any third-party license terms. Elvify is not responsible for third-party content accuracy or licensing claims."
                                             ]
                          },
                          {
@@ -678,7 +678,7 @@
                              "heading":  "6.1 Ownership",
                              "paragraphs":  [
                                                 "You retain ownership of the content you upload.",
-                                                "However, by uploading User Content, you grant HDPiks a:",
+                                                "However, by uploading User Content, you grant Elvify a:",
                                                 "Worldwide",
                                                 "Non-exclusive",
                                                 "Royalty-free",
@@ -697,13 +697,13 @@
                                                 "You have model releases where required",
                                                 "Your content complies with laws and these Terms",
                                                 "You are solely responsible for your User Content.",
-                                                "HDPiks may remove content that violates policies."
+                                                "Elvify may remove content that violates policies."
                                             ]
                          },
                          {
                              "heading":  "7. Editor Design License Grant",
                              "paragraphs":  [
-                                                "If you publish or share designs publicly using the Service, you grant HDPiks a limited promotional license to display such designs for marketing and Service-related purposes.",
+                                                "If you publish or share designs publicly using the Service, you grant Elvify a limited promotional license to display such designs for marketing and Service-related purposes.",
                                                 "This does not transfer ownership of your original work."
                                             ]
                          },
@@ -719,7 +719,7 @@
                                                 "Templates",
                                                 "Graphics",
                                                 "Databases",
-                                                "are owned or licensed by HDPiks and protected by intellectual property laws.",
+                                                "are owned or licensed by Elvify and protected by intellectual property laws.",
                                                 "You may not:",
                                                 "Copy the platform design",
                                                 "Reverse engineer the software",
@@ -732,7 +732,7 @@
                              "heading":  "9. Third-Party Links",
                              "paragraphs":  [
                                                 "The Service may contain links to external websites or integrations.",
-                                                "HDPiks is not responsible for:",
+                                                "Elvify is not responsible for:",
                                                 "Third-party content",
                                                 "Third-party policies",
                                                 "Third-party transactions",
@@ -742,7 +742,7 @@
                          {
                              "heading":  "10. Indemnification",
                              "paragraphs":  [
-                                                "You agree to defend and indemnify HDPiks and its affiliates against claims arising from:",
+                                                "You agree to defend and indemnify Elvify and its affiliates against claims arising from:",
                                                 "Your use of the Service",
                                                 "Your violation of these Terms",
                                                 "Your infringement of third-party rights",
@@ -764,7 +764,7 @@
                          {
                              "heading":  "12. Limitation of Liability",
                              "paragraphs":  [
-                                                "To the maximum extent permitted by law, HDPiks shall not be liable for:",
+                                                "To the maximum extent permitted by law, Elvify shall not be liable for:",
                                                 "Indirect or consequential damages",
                                                 "Loss of profits or data",
                                                 "Service interruptions",
@@ -798,7 +798,7 @@
                              "heading":  "15. Contact",
                              "paragraphs":  [
                                                 "For questions or complaints:",
-                                                "HDPiks.comEmail: support@hdpiks.comLegal/Compliance: legal@hdpiks.com"
+                                                "Elvify.comEmail: support@elvify.comLegal/Compliance: legal@elvify.com"
                                             ]
                          }
                      ]
@@ -807,13 +807,13 @@
         "slug":  "privacy-policy",
         "title":  "Privacy Policy",
         "effectiveDate":  "1st March 2026",
-        "intro":  "This Privacy Policy explains how HDPiks.com (“Company”, “we”, “us”, “our”) collects, uses, shares, and protects personal data when you use our websites, apps, tools, and related services (collectively, the “Services”), including any subdomains and sections. If you are a California resident, please review the “Additional Information for California Residents” section for information about your rights under applicable California privacy laws. We may update this Privacy Policy from time to time. The “Last Updated” date above indicates when this Policy was most recently revised. Your continued use of the Services after changes means you accept the updated Policy.",
+        "intro":  "This Privacy Policy explains how Elvify.com (“Company”, “we”, “us”, “our”) collects, uses, shares, and protects personal data when you use our websites, apps, tools, and related services (collectively, the “Services”), including any subdomains and sections. If you are a California resident, please review the “Additional Information for California Residents” section for information about your rights under applicable California privacy laws. We may update this Privacy Policy from time to time. The “Last Updated” date above indicates when this Policy was most recently revised. Your continued use of the Services after changes means you accept the updated Policy.",
         "sections":  [
                          {
                              "heading":  "1) Data Controller (Who is responsible)",
                              "paragraphs":  [
-                                                "HDPiks.com is the data controller for the personal data processed through the Services, unless otherwise stated.",
-                                                "Company / Legal Entity Name: [Insert legal company name]Registered Address: [Insert legal address]Email (Privacy): [privacy@hdpiks.com] (recommended)Support Contact: [support@hdpiks.com]Data Protection Officer (if applicable): [Insert DPO name/company + email]",
+                                                "Elvify.com is the data controller for the personal data processed through the Services, unless otherwise stated.",
+                                                "Company / Legal Entity Name: [Insert legal company name]Registered Address: [Insert legal address]Email (Privacy): [privacy@elvify.com] (recommended)Support Contact: [support@elvify.com]Data Protection Officer (if applicable): [Insert DPO name/company + email]",
                                                 "If you have questions, requests, or want to exercise your rights, contact us using the details above."
                                             ]
                          },
@@ -860,11 +860,11 @@
                                                 "If you choose sign-in via a third-party provider (e.g., Google), we may receive limited profile data such as:",
                                                 "name/username, email, profile image (depending on your settings)",
                                                 "Purposes: authentication and account setup.Legal basis: contract (to provide login) + consent/your action choosing the login method.",
-                                                "Note: Updating/deleting data in your HDPiks account does not automatically update the third-party provider account."
+                                                "Note: Updating/deleting data in your Elvify account does not automatically update the third-party provider account."
                                             ]
                          },
                          {
-                             "heading":  "3.4 Creators / contributors (if you distribute content with HDPiks)",
+                             "heading":  "3.4 Creators / contributors (if you distribute content with Elvify)",
                              "paragraphs":  [
                                                 "If you sign a creator or contributor agreement, we may process:",
                                                 "identity and contact info",
@@ -950,7 +950,7 @@
                          {
                              "heading":  "3.14 Enterprise / professional plans (if offered)",
                              "paragraphs":  [
-                                                "If a business customer uses HDPiks tools for their team, HDPiks may act as a processor for certain inputs under a Data Processing Agreement (DPA), and the customer may be the controller."
+                                                "If a business customer uses Elvify tools for their team, Elvify may act as a processor for certain inputs under a Data Processing Agreement (DPA), and the customer may be the controller."
                                             ]
                          },
                          {
@@ -995,7 +995,7 @@
                                                 "data portability (in certain cases)",
                                                 "objection to processing (especially for legitimate interests/marketing)",
                                                 "withdraw consent at any time (where processing is based on consent)",
-                                                "To exercise rights, contact us at [privacy@hdpiks.com] or via your account settings.We may need to verify your identity before fulfilling requests."
+                                                "To exercise rights, contact us at [privacy@elvify.com] or via your account settings.We may need to verify your identity before fulfilling requests."
                                             ]
                          },
                          {
@@ -1013,7 +1013,7 @@
                          {
                              "heading":  "10) Complaints",
                              "paragraphs":  [
-                                                "If you have concerns about our privacy practices, contact us at [privacy@hdpiks.com].Where applicable, you may also complain to your local data protection authority."
+                                                "If you have concerns about our privacy practices, contact us at [privacy@elvify.com].Where applicable, you may also complain to your local data protection authority."
                                             ]
                          },
                          {
@@ -1051,7 +1051,7 @@
                                                 "correct inaccurate data",
                                                 "opt out of sale/sharing",
                                                 "non-discrimination for exercising rights",
-                                                "How to exercise:Email: [privacy@hdpiks.com]Phone: [Insert toll-free number if you will offer it]Form: [Insert URL for privacy request form]",
+                                                "How to exercise:Email: [privacy@elvify.com]Phone: [Insert toll-free number if you will offer it]Form: [Insert URL for privacy request form]",
                                                 "We will verify requests before responding."
                                             ]
                          }
@@ -1061,7 +1061,7 @@
         "slug":  "cookies-policy",
         "title":  "Cookies Policy",
         "effectiveDate":  "1st March 2026",
-        "intro":  "This Cookies Policy explains how HDPiks.com (“Company”, “we”, “our”, or “us”) uses cookies and similar technologies on our websites, applications, and services (collectively, the “Website” or “Service”). We may provide translations of this Cookies Policy for convenience. The English version is the only legally binding version. If there is any difference between translations and the English version, the English version will prevail. This policy should be read together with our Privacy Policy and any relevant legal notices shown on the Website.",
+        "intro":  "This Cookies Policy explains how Elvify.com (“Company”, “we”, “our”, or “us”) uses cookies and similar technologies on our websites, applications, and services (collectively, the “Website” or “Service”). We may provide translations of this Cookies Policy for convenience. The English version is the only legally binding version. If there is any difference between translations and the English version, the English version will prevail. This policy should be read together with our Privacy Policy and any relevant legal notices shown on the Website.",
         "sections":  [
                          {
                              "heading":  "1) What are cookies and similar technologies?",
@@ -1128,7 +1128,7 @@
                          {
                              "heading":  "4) First-party vs third-party cookies",
                              "paragraphs":  [
-                                                "First-party cookies are set by HDPiks.com domains and are used to operate the Service.",
+                                                "First-party cookies are set by Elvify.com domains and are used to operate the Service.",
                                                 "Third-party cookies are set by service providers (e.g., analytics, advertising, support tools). These third parties may process data for their own purposes under their policies, where applicable.",
                                                 "We recommend reviewing third-party privacy/cookie policies if you choose to enable those categories in the cookie settings panel."
                                             ]
@@ -1156,7 +1156,7 @@
                                                 "If you consent to advertising/targeting cookies, we (and our partners) may:",
                                                 "measure ad conversions (e.g., sign-ups, purchases)",
                                                 "understand campaign performance in aggregated form",
-                                                "show ads to visitors who previously visited HDPiks.com (retargeting)",
+                                                "show ads to visitors who previously visited Elvify.com (retargeting)",
                                                 "We generally do not receive your identity from ad platforms unless you create an account or provide information directly to us. Advertising partners may use their own identifiers and profiles under their policies."
                                             ]
                          },
@@ -1176,7 +1176,7 @@
                          {
                              "heading":  "9) Contact",
                              "paragraphs":  [
-                                                "For questions about this Cookies Policy or how we use cookies, contact us through the official support channel available on HDPiks.com, or via:legal@hdpiks.com"
+                                                "For questions about this Cookies Policy or how we use cookies, contact us through the official support channel available on Elvify.com, or via:legal@elvify.com"
                                             ]
                          }
                      ]
@@ -1185,7 +1185,7 @@
         "slug":  "acceptable-use-policy",
         "title":  "Acceptable Use Policy",
         "effectiveDate":  "1st March 2026",
-        "intro":  "At HDPiks.com, our mission is to empower creativity by providing tools and resources that help users express ideas and create high-quality designs faster and more effectively. While we support creative freedom, certain activities are incompatible with our mission and values. This Acceptable Use Policy (“AUP”) describes activities that are prohibited in connection with your use of HDPiks.com and its services, tools, and features (collectively, the “Products”). All users of HDPiks.com must comply with this AUP.",
+        "intro":  "At Elvify.com, our mission is to empower creativity by providing tools and resources that help users express ideas and create high-quality designs faster and more effectively. While we support creative freedom, certain activities are incompatible with our mission and values. This Acceptable Use Policy (“AUP”) describes activities that are prohibited in connection with your use of Elvify.com and its services, tools, and features (collectively, the “Products”). All users of Elvify.com must comply with this AUP.",
         "sections":  [
                          {
                              "heading":  "1. Non-Acceptable Use of the Products",
@@ -1249,7 +1249,7 @@
                          {
                              "heading":  "2. Fair Use \u0026 Account Integrity",
                              "paragraphs":  [
-                                                "HDPiks.com Products are intended for personal, human use only.",
+                                                "Elvify.com Products are intended for personal, human use only.",
                                                 "Each subscription and account is strictly personal and may only be used by the individual or entity to whom it has been assigned (subject to plan rules described in the Terms of Use).",
                                                 "You may not:",
                                                 "Share, sell, rent, sublicense, or transfer access to your account;",
@@ -1260,7 +1260,7 @@
                                                 "Circumvent technical safeguards or subscription limits;",
                                                 "Artificially inflate usage, credits, downloads, or outputs.",
                                                 "Any form of mass generation, scraping, automated extraction, or usage manipulation is strictly prohibited.",
-                                                "HDPiks.com reserves the right to monitor usage patterns to ensure compliance with this Fair Use Policy. If abnormal, excessive, suspicious, or automated activity is detected, we may:",
+                                                "Elvify.com reserves the right to monitor usage patterns to ensure compliance with this Fair Use Policy. If abnormal, excessive, suspicious, or automated activity is detected, we may:",
                                                 "Temporarily restrict certain features;",
                                                 "Suspend access to AI tools;",
                                                 "Place usage limits;",
@@ -1271,7 +1271,7 @@
                          {
                              "heading":  "3. AI Tools \u0026 Responsible Usage",
                              "paragraphs":  [
-                                                "If you use AI-powered tools provided by HDPiks.com:",
+                                                "If you use AI-powered tools provided by Elvify.com:",
                                                 "You must comply with the separate AI Terms of Use;",
                                                 "You must not attempt to bypass AI credit limits or “unlimited” model safeguards;",
                                                 "You must not use AI tools to generate prohibited content listed in this AUP;",
@@ -1282,7 +1282,7 @@
                          {
                              "heading":  "4. Enforcement \u0026 Cooperation",
                              "paragraphs":  [
-                                                "HDPiks.com may investigate suspected violations and cooperate with legal authorities where required by law.",
+                                                "Elvify.com may investigate suspected violations and cooperate with legal authorities where required by law.",
                                                 "If your account is suspended or terminated due to violation of this AUP:",
                                                 "You may lose access to content, credits, or subscription benefits;",
                                                 "No refund may be issued where permitted by law;",
@@ -1293,7 +1293,7 @@
                          {
                              "heading":  "5. Reporting Violations",
                              "paragraphs":  [
-                                                "If you believe a user has violated this AUP, please contact HDPiks.com through the official support channel provided on the Website."
+                                                "If you believe a user has violated this AUP, please contact Elvify.com through the official support channel provided on the Website."
                                             ]
                          }
                      ]
@@ -1302,7 +1302,7 @@
         "slug":  "intellectual-property-policy",
         "title":  "Intellectual Property Policy",
         "effectiveDate":  "1st March 2026",
-        "intro":  "This Intellectual Property Policy explains how HDPiks.com (“Company”, “we”, “our”, or “us”) handles intellectual property infringement claims on our website, applications, tools, and services (collectively, the “HDPiks Service”). We may provide translations of this Intellectual Property Policy for informational purposes only. However, the English version is the only legally binding version. In the event of any discrepancy between the English version and a translated version, the English version shall prevail. At HDPiks.com, we respect intellectual property rights and expect the same respect from our users, contributors, and partners.",
+        "intro":  "This Intellectual Property Policy explains how Elvify.com (“Company”, “we”, “our”, or “us”) handles intellectual property infringement claims on our website, applications, tools, and services (collectively, the “Elvify Service”). We may provide translations of this Intellectual Property Policy for informational purposes only. However, the English version is the only legally binding version. In the event of any discrepancy between the English version and a translated version, the English version shall prevail. At Elvify.com, we respect intellectual property rights and expect the same respect from our users, contributors, and partners.",
         "sections":  [
                          {
                              "heading":  "1. Copyrights and Trademarks",
@@ -1326,13 +1326,13 @@
                          {
                              "heading":  "2. Reporting Copyright or Trademark Infringement",
                              "paragraphs":  [
-                                                "If you are a copyright or trademark owner, or an authorized representative, and believe that content available through HDPiks.com infringes your intellectual property rights, you may submit a formal notice of infringement.",
+                                                "If you are a copyright or trademark owner, or an authorized representative, and believe that content available through Elvify.com infringes your intellectual property rights, you may submit a formal notice of infringement.",
                                                 "You must include the following information in your notice:",
                                                 "Identification of the copyrighted or trademarked work",
                                                 "A clear description of the protected work.",
                                                 "Evidence of ownership (such as registration details, original publication link, or other proof).",
                                                 "Identification of the allegedly infringing material",
-                                                "The exact URL or specific location of the material on HDPiks.com.",
+                                                "The exact URL or specific location of the material on Elvify.com.",
                                                 "A detailed description sufficient for us to locate the content.",
                                                 "Your contact information",
                                                 "Full legal name",
@@ -1343,22 +1343,22 @@
                                                 "Accuracy statementA statement that the information provided is accurate and, under penalty of perjury (where applicable), that you are the owner of the intellectual property or authorized to act on behalf of the owner.",
                                                 "SignatureA physical or electronic signature of the rights holder or authorized representative.",
                                                 "Acknowledgment statementA statement confirming that you understand your contact information may be shared with the alleged infringer for legal purposes.",
-                                                "Without the required information, HDPiks.com may not be able to process your claim."
+                                                "Without the required information, Elvify.com may not be able to process your claim."
                                             ]
                          },
                          {
                              "heading":  "3. Where to Send Infringement Notices",
                              "paragraphs":  [
-                                                "All intellectual property claims must be submitted through the official support or legal contact channel provided on the HDPiks.com website.",
+                                                "All intellectual property claims must be submitted through the official support or legal contact channel provided on the Elvify.com website.",
                                                 "The designated department handling such reports is:",
-                                                "HDPiks.comAttn: Legal Department[Insert Legal Address Here][Insert Official Legal Email Address Here]",
+                                                "Elvify.comAttn: Legal Department[Insert Legal Address Here][Insert Official Legal Email Address Here]",
                                                 "(You should replace the placeholders above with your company’s actual legal address and official legal email.)"
                                             ]
                          },
                          {
                              "heading":  "4. What Happens After a Claim Is Submitted",
                              "paragraphs":  [
-                                                "Upon receiving a properly submitted claim, HDPiks.com will:",
+                                                "Upon receiving a properly submitted claim, Elvify.com will:",
                                                 "Review the complaint;",
                                                 "Evaluate the validity and completeness of the information provided;",
                                                 "Take appropriate action where necessary.",
@@ -1380,17 +1380,17 @@
                                                 "Your contact details;",
                                                 "A statement of good faith;",
                                                 "Your physical or electronic signature.",
-                                                "HDPiks.com will review the response and may restore the content if appropriate."
+                                                "Elvify.com will review the response and may restore the content if appropriate."
                                             ]
                          },
                          {
                              "heading":  "6. Repeat Infringer Policy",
                              "paragraphs":  [
-                                                "HDPiks.com maintains a policy to terminate, under appropriate circumstances, the accounts of users or contributors who repeatedly infringe intellectual property rights.",
+                                                "Elvify.com maintains a policy to terminate, under appropriate circumstances, the accounts of users or contributors who repeatedly infringe intellectual property rights.",
                                                 "Repeat infringement may result in:",
                                                 "Permanent account suspension;",
                                                 "Removal of all uploaded content;",
-                                                "Restriction from future use of the HDPiks Service."
+                                                "Restriction from future use of the Elvify Service."
                                             ]
                          },
                          {
@@ -1406,7 +1406,7 @@
                          {
                              "heading":  "8. Proactive Protection Measures",
                              "paragraphs":  [
-                                                "In addition to responding to reports from users and rights holders, HDPiks.com uses a combination of:",
+                                                "In addition to responding to reports from users and rights holders, Elvify.com uses a combination of:",
                                                 "Manual review processes;",
                                                 "Automated detection tools;",
                                                 "Content moderation systems;",
@@ -1420,13 +1420,13 @@
         "slug":  "terms-of-use",
         "title":  "Terms Of Use",
         "effectiveDate":  "1st March 2026",
-        "intro":  "This website is operated by HDPiks.com (the “Company”). These terms of use (“Terms”) govern access to and use of the Company’s website, including any subdomains and sections (the “Website”), and the services provided through the Website (the “Services”), including the download, editing and use of content and related tools. By accessing or using the Website, the user (“User” or “Users”) accepts these Terms in full and agrees to be bound by the Company’s Acceptable Use Policy, which forms part of these Terms by reference. If the User does not accept these Terms, the User must not use the Website. The Company may modify these Terms at any time. The date shown at the beginning indicates the latest update and the updated Terms apply from the date of publication.",
+        "intro":  "This website is operated by Elvify.com (the “Company”). These terms of use (“Terms”) govern access to and use of the Company’s website, including any subdomains and sections (the “Website”), and the services provided through the Website (the “Services”), including the download, editing and use of content and related tools. By accessing or using the Website, the user (“User” or “Users”) accepts these Terms in full and agrees to be bound by the Company’s Acceptable Use Policy, which forms part of these Terms by reference. If the User does not accept these Terms, the User must not use the Website. The Company may modify these Terms at any time. The date shown at the beginning indicates the latest update and the updated Terms apply from the date of publication.",
         "sections":  [
                          {
                              "heading":  "1. Services Offered",
                              "paragraphs":  [
                                                 "Through the Website, the Company offers access to visual and creative content such as vectors and illustrations, photos and images, PSD/design files, icons, video content and recordings (including audio), and related information.",
-                                                "The Services may include (i) content owned by the Company (“Company Content”), (ii) content owned by third parties offered through the Website (“Contributor Content”), and (iii) third-party content presented as sponsored results (“Sponsored Content”). Company Content and Contributor Content may be referred to collectively as “HDPiks Content”, subject to these Terms.",
+                                                "The Services may include (i) content owned by the Company (“Company Content”), (ii) content owned by third parties offered through the Website (“Contributor Content”), and (iii) third-party content presented as sponsored results (“Sponsored Content”). Company Content and Contributor Content may be referred to collectively as “Elvify Content”, subject to these Terms.",
                                                 "The Services may also include online editing tools (the “Online Editors”) and other features available on the Website.",
                                                 "If the Website provides AI tools or AI-related features, their use may be governed by separate AI terms (“AI Terms”). The AI Terms, where applicable, form part of the contractual framework between the User and the Company by reference."
                                             ]
@@ -1453,7 +1453,7 @@
                          {
                              "heading":  "4. Content",
                              "paragraphs":  [
-                                                "Users may search and download HDPiks Content and may see Sponsored Content in some results. If the User believes content infringes rights or violates these Terms, the User may report it through the Website’s reporting/support process."
+                                                "Users may search and download Elvify Content and may see Sponsored Content in some results. If the User believes content infringes rights or violates these Terms, the User may report it through the Website’s reporting/support process."
                                             ]
                          },
                          {
@@ -1508,7 +1508,7 @@
                          {
                              "heading":  "7. Intellectual Property",
                              "paragraphs":  [
-                                                "All intellectual property in the Website, Services, and HDPiks Content (including design, code, databases, logos, trademarks, text, images, videos, and other materials) is owned by or licensed to the Company.",
+                                                "All intellectual property in the Website, Services, and Elvify Content (including design, code, databases, logos, trademarks, text, images, videos, and other materials) is owned by or licensed to the Company.",
                                                 "Except as expressly permitted, reproduction, distribution, public communication, extraction, reuse, resale, sublicensing, or other exploitation is prohibited.",
                                                 "Sponsored Content and Contributor Content belong to their respective owners and may require separate permissions under third-party terms."
                                             ]
@@ -1516,13 +1516,13 @@
                          {
                              "heading":  "8.1 General License",
                              "paragraphs":  [
-                                                "Subject to compliance with these Terms (and any plan-specific rules), the Company grants the User a limited, revocable, non-exclusive, non-transferable, worldwide license to download, use, and modify HDPiks Content on devices owned/controlled by the User, only for permitted purposes.",
+                                                "Subject to compliance with these Terms (and any plan-specific rules), the Company grants the User a limited, revocable, non-exclusive, non-transferable, worldwide license to download, use, and modify Elvify Content on devices owned/controlled by the User, only for permitted purposes.",
                                                 "The User must not:",
-                                                "resell, sublicense, assign, transfer, or distribute HDPiks Content as standalone assets;",
-                                                "compile HDPiks Content into a stock library, database, or collection for redistribution/resale;",
-                                                "use HDPiks Content in a way that implies Company endorsement/association;",
+                                                "resell, sublicense, assign, transfer, or distribute Elvify Content as standalone assets;",
+                                                "compile Elvify Content into a stock library, database, or collection for redistribution/resale;",
+                                                "use Elvify Content in a way that implies Company endorsement/association;",
                                                 "use “editorial-only” content for commercial advertising/marketing (where labeled);",
-                                                "use HDPiks Content in unlawful, defamatory, or harmful contexts.",
+                                                "use Elvify Content in unlawful, defamatory, or harmful contexts.",
                                                 "If attribution is required for certain content, the User must follow the attribution instructions shown on the Website (unless their subscription explicitly allows use without attribution).",
                                                 "Upon breach, the license ends automatically and the User must stop using the content and destroy copies.",
                                                 "The Company may offer specific content under a different “Specific License,” which will prevail for that content."
@@ -1540,7 +1540,7 @@
                          {
                              "heading":  "9.2 Available Plans (Monthly)",
                              "paragraphs":  [
-                                                "The following plans are offered on HDPiks.com (as displayed on the Website):"
+                                                "The following plans are offered on Elvify.com (as displayed on the Website):"
                                             ]
                          },
                          {
@@ -1638,12 +1638,12 @@
         "slug":  "creator-community-terms-and-conditions",
         "title":  "Creator Community Terms and Conditions",
         "effectiveDate":  "1st March 2026",
-        "intro":  "Welcome to the HDPiks.com Creator Community! This platform is operated by HDPiks.com (“Company”, “we”, “our”, or “us”). These Terms and Conditions (“Terms”) govern your access to and use of the Creator Community website, services, applications, AI tools, and related technologies (collectively, the “Service”). By creating an account, publishing content, or using the Service, you agree to be bound by these Terms. If you do not agree, you must not use the Service.",
+        "intro":  "Welcome to the Elvify.com Creator Community! This platform is operated by Elvify.com (“Company”, “we”, “our”, or “us”). These Terms and Conditions (“Terms”) govern your access to and use of the Creator Community website, services, applications, AI tools, and related technologies (collectively, the “Service”). By creating an account, publishing content, or using the Service, you agree to be bound by these Terms. If you do not agree, you must not use the Service.",
         "sections":  [
                          {
                              "heading":  "1. Service Description",
                              "paragraphs":  [
-                                                "The HDPiks Creator Community is a collaborative platform designed to empower creativity and connection.",
+                                                "The Elvify Creator Community is a collaborative platform designed to empower creativity and connection.",
                                                 "The Service allows Users to:",
                                                 "Create and publish content",
                                                 "Share AI-generated works",
@@ -1656,7 +1656,7 @@
                              "heading":  "2.1 User Content Ownership",
                              "paragraphs":  [
                                                 "You retain ownership of the content you create and publish on the Creator Community (“User Content”).",
-                                                "By uploading or publishing User Content, you grant HDPiks.com a:",
+                                                "By uploading or publishing User Content, you grant Elvify.com a:",
                                                 "Non-exclusive",
                                                 "Worldwide",
                                                 "Royalty-free",
@@ -1666,7 +1666,7 @@
                                                 "Operating the platform",
                                                 "Improving services",
                                                 "Marketing and promotional purposes",
-                                                "Displaying your content on HDPiks platforms and official channels",
+                                                "Displaying your content on Elvify platforms and official channels",
                                                 "Your content will be linked to your username, and you will be credited as the creator where applicable."
                                             ]
                          },
@@ -1677,14 +1677,14 @@
                                             ]
                          },
                          {
-                             "heading":  "2.3 HDPiks Rights",
+                             "heading":  "2.3 Elvify Rights",
                              "paragraphs":  [
-                                                "HDPiks.com retains all rights, title, and interest in:",
+                                                "Elvify.com retains all rights, title, and interest in:",
                                                 "The Creator Community platform",
                                                 "Software, tools, algorithms, AI systems",
                                                 "Platform design, interfaces, branding",
                                                 "Databases, graphics, code, and technology",
-                                                "All intellectual property associated with the Service remains owned by or licensed to HDPiks.com.",
+                                                "All intellectual property associated with the Service remains owned by or licensed to Elvify.com.",
                                                 "Except where expressly permitted, reproduction, redistribution, scraping, reverse engineering, extraction, resale, or commercial exploitation of the platform or its content is strictly prohibited."
                                             ]
                          },
@@ -1734,14 +1734,14 @@
                          {
                              "heading":  "(F) Acceptable Use Compliance",
                              "paragraphs":  [
-                                                "You must comply with the HDPiks Acceptable Use Policy, which applies fully to Creator Community usage.",
+                                                "You must comply with the Elvify Acceptable Use Policy, which applies fully to Creator Community usage.",
                                                 "Violation of these obligations may result in content removal, suspension, or termination."
                                             ]
                          },
                          {
                              "heading":  "4. Content Moderation",
                              "paragraphs":  [
-                                                "HDPiks.com reserves the right to:",
+                                                "Elvify.com reserves the right to:",
                                                 "Review content",
                                                 "Remove content that violates policies",
                                                 "Restrict visibility of content",
@@ -1752,7 +1752,7 @@
                          {
                              "heading":  "5. Consequences of Breach",
                              "paragraphs":  [
-                                                "If you violate these Terms, HDPiks.com may take actions including but not limited to:",
+                                                "If you violate these Terms, Elvify.com may take actions including but not limited to:",
                                                 "Issuing warnings",
                                                 "Removing content",
                                                 "Temporarily suspending account access",
@@ -1764,7 +1764,7 @@
                          {
                              "heading":  "6. Indemnification",
                              "paragraphs":  [
-                                                "You agree to indemnify and hold harmless HDPiks.com, its affiliates, directors, employees, agents, and partners from any third-party claims, damages, losses, liabilities, and expenses (including reasonable legal fees) arising from:",
+                                                "You agree to indemnify and hold harmless Elvify.com, its affiliates, directors, employees, agents, and partners from any third-party claims, damages, losses, liabilities, and expenses (including reasonable legal fees) arising from:",
                                                 "Your use of the Service",
                                                 "Your violation of these Terms",
                                                 "Your infringement of intellectual property or other rights",
@@ -1775,7 +1775,7 @@
                          {
                              "heading":  "7. Changes to the Service",
                              "paragraphs":  [
-                                                "HDPiks.com may:",
+                                                "Elvify.com may:",
                                                 "Modify features",
                                                 "Add or remove functionalities",
                                                 "Suspend or discontinue parts of the Service",
@@ -1788,7 +1788,7 @@
                              "paragraphs":  [
                                                 "Your use of the Creator Community is at your own risk.",
                                                 "The Service is provided on an “AS IS” and “AS AVAILABLE” basis.",
-                                                "HDPiks.com disclaims all warranties, express or implied, including:",
+                                                "Elvify.com disclaims all warranties, express or implied, including:",
                                                 "Merchantability",
                                                 "Fitness for a particular purpose",
                                                 "Non-infringement",
@@ -1799,32 +1799,32 @@
                          {
                              "heading":  "9. Limitation of Liability",
                              "paragraphs":  [
-                                                "To the maximum extent permitted by applicable law, HDPiks.com shall not be liable for:",
+                                                "To the maximum extent permitted by applicable law, Elvify.com shall not be liable for:",
                                                 "Indirect or consequential damages",
                                                 "Loss of profits or goodwill",
                                                 "Data loss",
                                                 "Service interruptions",
                                                 "Unauthorized access",
                                                 "Third-party conduct",
-                                                "Our total liability shall not exceed the amount paid by you to HDPiks.com in the preceding subscription period (if applicable)."
+                                                "Our total liability shall not exceed the amount paid by you to Elvify.com in the preceding subscription period (if applicable)."
                                             ]
                          },
                          {
                              "heading":  "10. Data Processing \u0026 Privacy",
                              "paragraphs":  [
-                                                "Use of the Creator Community is subject to the HDPiks Privacy Policy, which governs collection, storage, and processing of personal data."
+                                                "Use of the Creator Community is subject to the Elvify Privacy Policy, which governs collection, storage, and processing of personal data."
                                             ]
                          },
                          {
                              "heading":  "11. Third-Party Links",
                              "paragraphs":  [
-                                                "The Service may contain links to third-party websites. HDPiks.com does not control and is not responsible for their content, policies, or practices."
+                                                "The Service may contain links to third-party websites. Elvify.com does not control and is not responsible for their content, policies, or practices."
                                             ]
                          },
                          {
                              "heading":  "12. Dispute Resolution \u0026 Governing Law",
                              "paragraphs":  [
-                                                "These Terms shall be governed by the laws applicable to HDPiks.com’s principal place of business, unless mandatory consumer protection laws apply.",
+                                                "These Terms shall be governed by the laws applicable to Elvify.com’s principal place of business, unless mandatory consumer protection laws apply.",
                                                 "Any disputes shall be resolved in the courts of competent jurisdiction as determined by applicable law.",
                                                 "If any provision is found invalid, the remaining provisions remain in full force and effect."
                                             ]
@@ -1832,7 +1832,7 @@
                          {
                              "heading":  "13. Entire Agreement",
                              "paragraphs":  [
-                                                "These Terms constitute the entire agreement between you and HDPiks.com regarding the Creator Community and supersede any prior agreements.",
+                                                "These Terms constitute the entire agreement between you and Elvify.com regarding the Creator Community and supersede any prior agreements.",
                                                 "Failure to enforce any provision does not constitute waiver."
                                             ]
                          }

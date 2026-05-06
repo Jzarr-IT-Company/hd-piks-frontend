@@ -94,7 +94,7 @@ function ArticlesSection() {
       <div className="container">
         <div className="articles-card">
           <div className="articles-header">
-            <h2 className="articles-title">HDPiks Articles</h2>
+            <h2 className="articles-title">Elvify Articles</h2>
           </div>
 
           <div className="articles-grid">

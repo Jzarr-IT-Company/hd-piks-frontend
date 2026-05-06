@@ -21,10 +21,12 @@ import { getMediaVariantUrl, getResponsiveImageProps } from '../../utils/mediaVa
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { loadStripeJs } from '../../utils/stripeClient.js';
 import { loadPayPalJs } from '../../utils/paypalClient.js';
+import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug } from '../../utils/assetName.js';
 import { useAssetDetailQuery, useRelatedAssetsQuery } from '../../query/assetDetailQueries.js';
 import { useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import LikeBttnSm from '../LikeBttnSm/LikeBttnSm.jsx';
 import AppFooter from '../AppFooter/AppFooter.jsx';
+import SeoHead from '../SeoHead/SeoHead.jsx';
 import watermarkLogo from '../../assets/watermark-logo.png';
 import './AssetDetailView.css';
 
@@ -96,7 +98,7 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
                         sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
                     })}
                     className="related-media-el"
-                    alt={item.title || getSubcategoryName(item.subcategory) || getCategoryName(item.category)}
+                    alt={getAssetDisplayName(item, getSubcategoryName(item.subcategory) || getCategoryName(item.category) || 'Asset')}
                 />
             )}
             {isVideoAsset && durationLabel && (
@@ -228,7 +230,7 @@ function AssetDetailView() {
             if (categorySlug) segments.push(categorySlug);
             if (subSlug) segments.push(subSlug);
             if (subSubSlug) segments.push(subSubSlug);
-            if (item._id) segments.push(item._id);
+            segments.push(getAssetUrlSlug(item));
             return segments.join('/');
         },
         [slugify, getCategoryName, getSubcategoryName, getSubSubcategoryName]
@@ -282,8 +284,11 @@ function AssetDetailView() {
 
     const assetQuery = useAssetDetailQuery(id);
     const asset = assetQuery.data || null;
+    const assetId = getObjectId(asset?._id);
+    const assetDisplayName = getAssetDisplayName(asset);
+    const assetSeo = asset?.seo || {};
     const creatorId = getObjectId(asset?.creatorId);
-    const relatedQuery = useRelatedAssetsQuery(id, Boolean(asset));
+    const relatedQuery = useRelatedAssetsQuery(assetId, Boolean(assetId));
     const creatorsMapQuery = useCreatorsMapQuery(creatorId ? [creatorId] : []);
     const owner = creatorsMapQuery.data?.[creatorId] || null;
     const ownerUserId = getObjectId(owner?.userId);
@@ -307,9 +312,9 @@ function AssetDetailView() {
         if (!shouldUseCreatorFallback) return [];
         const source = creatorFallbackQuery.data || [];
         return source
-            .filter((item) => item.approved === true && item.rejected !== true && item._id !== id)
+            .filter((item) => item.approved === true && item.rejected !== true && String(item._id) !== String(assetId))
             .slice(0, 12);
-    }, [shouldUseCreatorFallback, creatorFallbackQuery.data, id]);
+    }, [shouldUseCreatorFallback, creatorFallbackQuery.data, assetId]);
     const creatorAssets = creatorFromApi.length ? creatorFromApi : creatorFallback;
 
     const loading = assetQuery.isLoading
@@ -415,12 +420,12 @@ function AssetDetailView() {
 
     const refreshPurchaseStatus = useCallback(
         async ({ withRetry = false } = {}) => {
-            if (!id) return null;
+            if (!assetId) return null;
             setPurchaseStatusLoading(true);
             setPurchaseStatusError('');
             try {
                 const attemptFetch = async () => {
-                    const nextStatus = await getAssetPurchaseStatus(id);
+                    const nextStatus = await getAssetPurchaseStatus(assetId);
                     setPurchaseStatus(nextStatus || null);
                     return nextStatus || null;
                 };
@@ -441,7 +446,7 @@ function AssetDetailView() {
                 setPurchaseStatusError(message);
                 setPurchaseStatus((prev) => (
                     prev || {
-                        assetId: id,
+                        assetId,
                         isFree: !inferredMainAssetPremium,
                         isPremium: inferredMainAssetPremium,
                         canDownload: !inferredMainAssetPremium,
@@ -458,20 +463,20 @@ function AssetDetailView() {
                 setPurchaseStatusLoading(false);
             }
         },
-        [id, inferredMainAssetPremium]
+        [assetId, inferredMainAssetPremium]
     );
 
     useEffect(() => {
         let mounted = true;
         const loadStatus = async () => {
-            if (!mounted || !id) return;
+            if (!mounted || !assetId) return;
             await refreshPurchaseStatus();
         };
         loadStatus();
         return () => {
             mounted = false;
         };
-    }, [id, refreshPurchaseStatus]);
+    }, [assetId, refreshPurchaseStatus]);
 
     useEffect(() => {
         setCheckoutError('');
@@ -483,7 +488,7 @@ function AssetDetailView() {
         setPaymentIntentMeta(null);
         setShowPayPalCheckoutModal(false);
         setPayPalOrderMeta(null);
-    }, [id]);
+    }, [assetId]);
 
     useEffect(() => {
         if (typeof owner?.followersCount === 'number') {
@@ -494,11 +499,11 @@ function AssetDetailView() {
     useEffect(() => {
         let mounted = true;
         const fetchAssetInfo = async () => {
-            if (!isInfoRoute || !id) return;
+            if (!isInfoRoute || !assetId) return;
             setAssetInfoLoading(true);
             setAssetInfoError('');
             try {
-                const response = await api.get(API_ENDPOINTS.GET_PUBLIC_ASSET_INFO(id));
+                const response = await api.get(API_ENDPOINTS.GET_PUBLIC_ASSET_INFO(assetId));
                 if (!mounted) return;
                 setAssetInfo(response?.data?.data || null);
             } catch (err) {
@@ -513,7 +518,7 @@ function AssetDetailView() {
         return () => {
             mounted = false;
         };
-    }, [isInfoRoute, id]);
+    }, [isInfoRoute, assetId]);
 
     useEffect(() => {
         setFollowError('');
@@ -991,7 +996,7 @@ function AssetDetailView() {
             : asset?.imageUrl || window.location.href;
         try {
             if (navigator.share) {
-                await navigator.share({ title: asset?.title || 'Asset', url: detailUrl });
+                await navigator.share({ title: assetDisplayName || 'Asset', url: detailUrl });
                 return;
             }
             if (navigator.clipboard?.writeText) {
@@ -1033,8 +1038,8 @@ function AssetDetailView() {
         const params = new URLSearchParams();
         params.set('assetId', asset._id);
         if (asset.imageUrl) params.set('assetUrl', asset.imageUrl);
-        if (asset.title) params.set('title', asset.title);
-        navigate(`/design-hdpiks?${params.toString()}`);
+        params.set('title', assetDisplayName);
+        navigate(`/design-elvify?${params.toString()}`);
     };
 
     const handleMoreInfo = () => {
@@ -1070,7 +1075,7 @@ function AssetDetailView() {
             : item.imageUrl || window.location.href;
         try {
             if (navigator.share) {
-                await navigator.share({ title: item.title || 'Asset', url: detailUrl });
+                await navigator.share({ title: getAssetDisplayName(item, 'Asset'), url: detailUrl });
                 return;
             }
             if (navigator.clipboard?.writeText) {
@@ -1101,8 +1106,8 @@ function AssetDetailView() {
         const params = new URLSearchParams();
         params.set('assetId', item._id);
         if (item.imageUrl) params.set('assetUrl', item.imageUrl);
-        if (item.title) params.set('title', item.title);
-        navigate(`/design-hdpiks?${params.toString()}`);
+        params.set('title', getAssetDisplayName(item, 'Asset'));
+        navigate(`/design-elvify?${params.toString()}`);
     };
 
     // NEW: perform actual variant download through backend proxy
@@ -1117,7 +1122,7 @@ function AssetDetailView() {
             const w = variant.dimensions?.width;
             const h = variant.dimensions?.height;
             const sizeSuffix = w && h ? `-${w}x${h}px` : '';
-            const baseTitle = (item?.title || 'asset').toString().replace(/[^\w.-]+/g, '-');
+            const baseTitle = getAssetDownloadBaseName(item);
             const ext = getExtensionFromUrl(variant.url) || '';
             const fileName = `${baseTitle}-${label}${sizeSuffix}${ext}`;
 
@@ -1196,8 +1201,19 @@ function AssetDetailView() {
         );
     }
 
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const seoTitle = assetDisplayName ? `${assetDisplayName} | Elvify` : 'Asset | Elvify';
+    const seoDescription = asset?.description || `Download ${assetDisplayName || 'creative assets'} on Elvify.`;
+
     return (
         <>
+        <SeoHead
+            title={seoTitle}
+            description={seoDescription}
+            canonicalUrl={canonicalUrl}
+            metaTagsHtml={assetSeo.metaTagsHtml || ''}
+            schemaScriptHtml={assetSeo.schemaScriptHtml || ''}
+        />
         <div className="container top-nav-content py-4">
             <BackBtnCompo />
 
@@ -1212,7 +1228,7 @@ function AssetDetailView() {
                                     src={heroMedia.src || asset.imageUrl}
                                     srcSet={heroMedia.srcSet || undefined}
                                     sizes={heroMedia.sizes || undefined}
-                                    alt={asset.title || getSubcategoryName(asset.subcategory) || 'Asset'}
+                                    alt={assetDisplayName || getSubcategoryName(asset.subcategory) || 'Asset'}
                                     className="asset-hero__media-el"
                                 />
                             )}
@@ -1407,7 +1423,7 @@ function AssetDetailView() {
                     <div className="asset-hero__meta-layout">
                         <div className="asset-hero__meta-main">
                             <div className="asset-hero__heading mb-3">
-                                <h4 className="mb-1 fw-semibold">{asset?.title || 'Untitled asset'}</h4>
+                                <h4 className="mb-1 fw-semibold">{assetDisplayName}</h4>
                                 <div className="asset-hero__facts">
                                     {assetLicenseLabel && <span className="asset-hero__fact">{assetLicenseLabel}</span>}
                                     {assetMimeType && <span className="asset-hero__fact">{assetMimeType}</span>}
@@ -1692,7 +1708,7 @@ function AssetDetailView() {
                             <div className="d-flex align-items-center justify-content-between mb-3">
                                 <div>
                                     <h5 className="mb-1">Asset info</h5>
-                                    <div className="small text-muted">{asset?.title || assetInfo?.title || 'Asset'}</div>
+                                    <div className="small text-muted">{getAssetDisplayName(assetInfo || asset, 'Asset')}</div>
                                 </div>
                                 <button type="button" className="btn btn-outline-secondary btn-sm" onClick={handleCloseInfoModal}>
                                     Close
@@ -1979,7 +1995,7 @@ function AssetDetailView() {
                     >
                         <h5 className="mb-2">Complete purchase</h5>
                         <div className="small text-muted mb-3">
-                            {asset?.title || 'Asset'} via PayPal
+                            {assetDisplayName || 'Asset'} via PayPal
                         </div>
                         <div className="asset-payment-modal__amount">
                             {(payPalOrderMeta?.currency || resolvedPurchaseStatus.currency || 'USD').toUpperCase()} {formatPriceUsd(payPalOrderMeta?.amountCents || resolvedPurchaseStatus.priceCents)?.replace('$', '')}
@@ -2027,7 +2043,7 @@ function AssetDetailView() {
                     >
                         <h5 className="mb-2">Complete purchase</h5>
                         <div className="small text-muted mb-3">
-                            {asset?.title || 'Asset'}
+                            {assetDisplayName || 'Asset'}
                         </div>
                         <div className="asset-payment-modal__amount">
                             {(paymentIntentMeta?.currency || resolvedPurchaseStatus.currency || 'USD').toUpperCase()} {formatPriceUsd(paymentIntentMeta?.amountCents || resolvedPurchaseStatus.priceCents)?.replace('$', '')}

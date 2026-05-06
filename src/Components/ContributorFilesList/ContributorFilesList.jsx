@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Modal, message } from 'antd';
 import api from '../../Services/api.js';
+import { getAssetDisplayName, getAssetUrlSlug, slugifyAssetValue } from '../../utils/assetName.js';
 import './ContributorFilesList.css';
 
 const statusMeta = {
@@ -25,6 +26,11 @@ const formatDate = (value) => {
 
 function ContributorFilesList({ items = [], loading, error, emptyTitle, emptyBody }) {
   const navigate = useNavigate();
+  const buildAssetPath = (item) => {
+    const category = item?.category?.name || item?.category || 'image';
+    const subcategory = item?.subcategory?.name || item?.subcategory || 'all';
+    return `/asset/${slugifyAssetValue(category) || 'image'}/${slugifyAssetValue(subcategory) || 'all'}/${getAssetUrlSlug(item)}`;
+  };
 
   if (loading) {
     return (
@@ -63,6 +69,7 @@ function ContributorFilesList({ items = [], loading, error, emptyTitle, emptyBod
         const statusKey = resolveStatus(item);
         const status = statusMeta[statusKey];
         const uploadDate = item.createdAt || item.fileMetadata?.uploadedAt;
+        const displayName = getAssetDisplayName(item, item.subcategory || 'Untitled');
         return (
           <article key={item._id} className="file-card">
             <div className="file-card__thumb">
@@ -72,7 +79,7 @@ function ContributorFilesList({ items = [], loading, error, emptyTitle, emptyBod
                     Your browser does not support the video tag.
                   </video>
                 ) : (
-                  <img src={item.imageUrl} alt={item.title || item.subcategory || 'Uploaded file'} loading="lazy" />
+                  <img src={item.imageUrl} alt={displayName || 'Uploaded file'} loading="lazy" />
                 )
               ) : (
                 <div className="file-card__placeholder">No preview</div>
@@ -80,8 +87,8 @@ function ContributorFilesList({ items = [], loading, error, emptyTitle, emptyBod
               <span className={`file-card__status file-card__status--${status.tone}`}>{status.label}</span>
             </div>
             <div className="file-card__meta">
-              <div className="file-card__title" title={item.title || item.subcategory || 'Untitled'}>
-                {item.title || item.subcategory || 'Untitled'}
+              <div className="file-card__title" title={displayName}>
+                {displayName}
               </div>
               <div className="file-card__sub">
                 {(item.category || 'Uncategorized')}{item.subcategory ? ` · ${item.subcategory}` : ''}
@@ -90,7 +97,7 @@ function ContributorFilesList({ items = [], loading, error, emptyTitle, emptyBod
                 <span className="file-card__date">Uploaded {formatDate(uploadDate)}</span>
                 {item._id && (
                   <>
-                    <button type="button" className="file-card__action" onClick={() => navigate(`/asset/${item._id}`)}>
+                    <button type="button" className="file-card__action" onClick={() => navigate(buildAssetPath(item))}>
                       View
                     </button>
                     <button

@@ -11,7 +11,7 @@ const publicExactPaths = new Set([
     '/contactus',
     '/login',
     '/signup',
-    '/design-hdpiks',
+    '/design-elvify',
     '/collections',
     '/termsandcondition',
     '/blog',
@@ -24,6 +24,7 @@ const publicExactPaths = new Set([
     '/company/contact-us',
     '/company/help-center',
     '/company/legal',
+    '/pdf-tools',
 ]);
 
 const publicRegexPaths = [
