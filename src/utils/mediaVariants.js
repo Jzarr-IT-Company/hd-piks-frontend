@@ -17,17 +17,23 @@ const isVideoAsset = (asset) => {
 };
 
 export const getMediaVariantUrl = (asset, preferredOrder = null) => {
+    const variant = getMediaVariantEntry(asset, preferredOrder);
+    return variant?.url || "";
+};
+
+export const getMediaVariantEntry = (asset, preferredOrder = null) => {
     if (!asset || typeof asset !== "object") return "";
     const original = toStr(asset.imageUrl);
     const variants = Array.isArray(asset.mediaVariants) ? asset.mediaVariants : [];
-    if (!variants.length) return original;
+    if (!variants.length) {
+        return original ? { variant: "original", url: original, isWatermarked: false } : null;
+    }
 
     const variantMap = new Map();
     variants.forEach((entry) => {
         const key = toStr(entry?.variant).toLowerCase();
-        const url = toStr(entry?.url);
-        if (key && url && !variantMap.has(key)) {
-            variantMap.set(key, url);
+        if (key && entry?.url && !variantMap.has(key)) {
+            variantMap.set(key, entry);
         }
     });
 
@@ -40,16 +46,19 @@ export const getMediaVariantUrl = (asset, preferredOrder = null) => {
     }
 
     if (variantMap.has("original")) return variantMap.get("original");
-    return original || variants.find((x) => toStr(x?.url))?.url || "";
+    const firstVariant = variants.find((x) => toStr(x?.url));
+    if (firstVariant) return firstVariant;
+    return original ? { variant: "original", url: original, isWatermarked: false } : null;
 };
 
-const getImageVariantCandidates = (asset) => {
+const getImageVariantCandidates = (asset, { publicOnly = false } = {}) => {
     const variants = Array.isArray(asset?.mediaVariants) ? asset.mediaVariants : [];
     return variants
         .map((entry) => {
             const variant = toStr(entry?.variant).toLowerCase();
             const url = toStr(entry?.url);
             if (!variant || !url) return null;
+            if (publicOnly && entry?.publicPreview === false) return null;
             const width = Number(entry?.dimensions?.width) || IMAGE_VARIANT_WIDTHS[variant] || 0;
             return { variant, url, width };
         })
@@ -61,6 +70,7 @@ export const getResponsiveImageProps = (
     {
         preferredOrder = ["small", "medium", "thumbnail", "large", "original"],
         sizes = "(max-width: 576px) 95vw, (max-width: 992px) 50vw, 33vw",
+        publicOnly = false,
     } = {}
 ) => {
     const src = getMediaVariantUrl(asset, preferredOrder);
@@ -69,7 +79,7 @@ export const getResponsiveImageProps = (
         return { src, srcSet: "", sizes: "" };
     }
 
-    const candidates = getImageVariantCandidates(asset);
+    const candidates = getImageVariantCandidates(asset, { publicOnly });
     if (!candidates.length) {
         return { src, srcSet: "", sizes };
     }

@@ -530,15 +530,15 @@ function HomeGallery() {
         <section className="py-5 home-gallery-section">
             <div className="container">
                 {/* Heading */}
-                <h3 className="fw-bold display-5 mb-2 text-center text-md-start">
+                <h3 className="home-gallery-heading mb-2 text-center">
                     Inspiration Gallery
                 </h3>
-                <p className="text-muted fw-semibold mb-4 text-center text-md-start">
+                <p className="home-gallery-subtitle mb-4 text-center">
                     Discover fresh stock content from our creators across all categories.
                 </p>
 
                 {/* Tabs */}
-                <div className="d-flex flex-wrap gap-2 mb-4 justify-content-center justify-content-md-start">
+                <div className="d-flex flex-wrap gap-2 mb-4 justify-content-center">
                     {tabOptions.map((tab) => (
                         <button
                             key={tab.value}

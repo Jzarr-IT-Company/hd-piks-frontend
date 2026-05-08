@@ -1,5 +1,21 @@
 .home-gallery{max-width:1200px;margin:40px auto;padding:0 16px;display:flex;flex-direction:column;gap:16px;}
 .home-gallery-section{position:relative;z-index:1;clear:both;}
+.home-gallery-heading{
+  color:#0e2332;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:36px;
+  line-height:45px;
+  font-weight:700;
+  letter-spacing:0;
+}
+.home-gallery-subtitle{
+  color:#4b5563;
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:16px;
+  line-height:26px;
+  font-weight:600;
+  letter-spacing:0;
+}
 .home-gallery__head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .home-gallery__eyebrow{text-transform:uppercase;letter-spacing:0.6px;color:#2563eb;font-weight:700;margin:0;font-size:12px;}
 .home-gallery__title{margin:4px 0 6px;font-weight:800;font-size:24px;color:#0f172a;}
@@ -83,5 +99,6 @@
     padding-top: 6px !important;
   }
   .home-gallery{margin:18px auto;}
+  .home-gallery-heading{font-size:30px;line-height:38px;}
   .home-gallery__title{font-size:20px;}
 }

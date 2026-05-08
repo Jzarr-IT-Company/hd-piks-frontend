@@ -439,10 +439,16 @@ export default function ImagesPage() {
       const type = getFileType(img);
       const category = resolveCategoryName(img?.category);
       const categoryPath = getCategoryPath(img);
-      const title = getAssetDisplayName(img, img.name || img._id || '').toLowerCase();
+      const displayTitle = getAssetDisplayName(img, img.name || img._id || '').toLowerCase();
+      const rawTitle = String(img?.title || '').trim().toLowerCase();
+      const description = String(img?.description || '').trim().toLowerCase();
+      const keywordText = Array.isArray(img?.keywords) ? img.keywords.join(' ').toLowerCase() : '';
 
       const matchesQuery = !q
-        || title.includes(q)
+        || displayTitle.includes(q)
+        || rawTitle.includes(q)
+        || description.includes(q)
+        || keywordText.includes(q)
         || uploader.toLowerCase().includes(q)
         || type.toLowerCase().includes(q)
         || category.toLowerCase().includes(q)

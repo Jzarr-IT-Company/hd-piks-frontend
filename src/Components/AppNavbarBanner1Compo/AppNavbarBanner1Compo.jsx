@@ -31,7 +31,7 @@ function AppNavbarBanner1Compo() {
         window.scroll(0, 0);
     };
 
-    const renderCard = (card, imageHeight = 160) => (
+    const renderCard = (card, imageHeight = 132) => (
         <div
             className="asset-type-card"
             onClick={() => handleClick(card)}
@@ -112,7 +112,7 @@ function AppNavbarBanner1Compo() {
                         ref={(el) => (mobileCardRefs.current[index] = el)}
                         style={{ minWidth: '78%', maxWidth: 320, flexShrink: 0, scrollSnapAlign: 'center' }}
                     >
-                        {renderCard(card, 150)}
+                        {renderCard(card, 136)}
                     </div>
                 ))}
             </div>

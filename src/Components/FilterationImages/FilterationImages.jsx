@@ -11,7 +11,7 @@ import CollectionSelectModal from '../CollectionSelectModal';
 import { QueryErrorRetry } from '../QueryState/QueryState.jsx';
 import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '../../query/imageQueries.js';
 import { useAssetLikeStatusBatchQuery } from '../../query/likeQueries.js';
-import { getMediaVariantUrl } from '../../utils/mediaVariants.js';
+import { getMediaVariantEntry, getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
 import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug } from '../../utils/assetName.js';
@@ -48,8 +48,12 @@ const slugifyCollectionSegment = (value) =>
 const getBrowseMediaUrl = (asset) => {
     const mime = String(asset?.fileMetadata?.mimeType || asset?.imagetype || '').toLowerCase();
     const fallback = asset?.imageUrl || asset?.s3Url || asset?.imageData?.[0]?.url || '';
+    const isPremiumAsset = isPremiumByLicense(asset?.freePremium);
     if (mime.startsWith('video/') || /\\.mp4$|\\.mov$|\\.m4v$|\\.webm$/i.test(fallback)) {
         return getMediaVariantUrl(asset, ['360p', '720p', '1080p', 'original']) || fallback;
+    }
+    if (isPremiumAsset) {
+        return getMediaVariantUrl(asset, ['original', 'large', 'medium', 'small', 'thumbnail']) || fallback;
     }
     return getMediaVariantUrl(asset, ['thumbnail', 'small', 'medium', 'large', 'original']) || fallback;
 };
@@ -64,6 +68,11 @@ function FilterationMedia({ img, src, alt, priority = false }) {
         || /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(src || '')
     );
     const isPremiumAsset = isPremiumByLicense(img?.freePremium);
+    const previewVariant = useMemo(
+        () => getMediaVariantEntry(img, isVideoAsset ? ['360p', '720p', '1080p', 'original'] : ['thumbnail', 'small', 'medium', 'large', 'original']),
+        [img, isVideoAsset]
+    );
+    const shouldShowOverlayWatermark = isPremiumAsset && (!isVideoAsset || !previewVariant?.isWatermarked);
 
     const formatDuration = useCallback((durationSeconds) => {
         const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
@@ -124,7 +133,7 @@ function FilterationMedia({ img, src, alt, priority = false }) {
                     {durationLabel}
                 </div>
             )}
-            {isPremiumAsset && (
+            {shouldShowOverlayWatermark && (
                 <img
                     src={watermarkLogo}
                     alt=""

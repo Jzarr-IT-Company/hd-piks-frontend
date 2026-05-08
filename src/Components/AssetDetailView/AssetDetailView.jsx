@@ -17,7 +17,7 @@ import {
 import LazyLoadImage2 from '../LazyLoadImage2/LazyLoadImage2';
 import BackBtnCompo from '../BackBtnCompo/BackBtnCompo';
 import CollectionSelectModal from '../CollectionSelectModal';
-import { getMediaVariantUrl, getResponsiveImageProps } from '../../utils/mediaVariants.js';
+import { getMediaVariantEntry, getMediaVariantUrl, getResponsiveImageProps } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
 import { loadStripeJs } from '../../utils/stripeClient.js';
 import { loadPayPalJs } from '../../utils/paypalClient.js';
@@ -43,6 +43,11 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
         const url = item?.imageUrl || '';
         return /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(url);
     }, [item, getCategoryName]);
+    const previewVariant = useMemo(
+        () => getMediaVariantEntry(item, isVideoAsset ? ['360p', '720p', '1080p', 'original'] : ['thumbnail', 'small', 'medium', 'large', 'original']),
+        [item, isVideoAsset]
+    );
+    const shouldShowOverlayWatermark = isPremiumItem && !previewVariant?.isWatermarked;
 
     const formatDuration = useCallback((durationSeconds) => {
         const total = Math.max(0, Math.floor(Number(durationSeconds) || 0));
@@ -96,6 +101,7 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
                     {...getResponsiveImageProps(item, {
                         preferredOrder: ['thumbnail', 'small', 'medium', 'large', 'original'],
                         sizes: '(max-width: 576px) 95vw, (max-width: 992px) 45vw, 30vw',
+                        publicOnly: isPremiumItem,
                     })}
                     className="related-media-el"
                     alt={getAssetDisplayName(item, getSubcategoryName(item.subcategory) || getCategoryName(item.category) || 'Asset')}
@@ -106,7 +112,7 @@ function RelatedCardMedia({ item, getCategoryName, getSubcategoryName, getRespon
                     {durationLabel}
                 </div>
             )}
-            {isPremiumItem && (
+            {shouldShowOverlayWatermark && (
                 <img
                     src={watermarkLogo}
                     alt=""
@@ -360,6 +366,11 @@ function AssetDetailView() {
         return /\.mp4$|\.mov$|\.m4v$|\.webm$/i.test(url);
     }, [asset, normalize, getCategoryName]);
 
+    const inferredMainAssetPremium = useMemo(
+        () => isPremiumLicense(asset?.freePremium),
+        [asset?.freePremium]
+    );
+
     const heroMedia = useMemo(() => {
         if (!asset) return { src: '', srcSet: '', sizes: '' };
         if (isVideo) {
@@ -372,8 +383,13 @@ function AssetDetailView() {
         return getResponsiveImageProps(asset, {
             preferredOrder: ['medium', 'large', 'small', 'thumbnail'],
             sizes: '(max-width: 992px) 100vw, 70vw',
+            publicOnly: inferredMainAssetPremium,
         });
-    }, [asset, isVideo]);
+    }, [asset, isVideo, inferredMainAssetPremium]);
+    const heroVariant = useMemo(
+        () => (asset ? getMediaVariantEntry(asset, isVideo ? ['720p', '360p', '1080p', 'original'] : ['medium', 'large', 'small', 'thumbnail', 'original']) : null),
+        [asset, isVideo]
+    );
 
     const assetMimeType = useMemo(() => {
         return asset?.imagetype || asset?.fileMetadata?.mimeType || '';
@@ -391,11 +407,6 @@ function AssetDetailView() {
     const hasPayPalCheckout = Boolean(payPalClientId);
     const showDesktopPurchasePanel = !isTablet;
     const showToolbarPurchaseActions = !showDesktopPurchasePanel;
-
-    const inferredMainAssetPremium = useMemo(
-        () => isPremiumLicense(asset?.freePremium),
-        [asset?.freePremium]
-    );
 
     const assetDimensions = useMemo(() => {
         const width = asset?.fileMetadata?.dimensions?.width;
@@ -600,6 +611,7 @@ function AssetDetailView() {
             currency: String(status.currency || 'USD').toUpperCase(),
         };
     }, [purchaseStatus, inferredMainAssetPremium]);
+    const shouldShowHeroWatermarkOverlay = resolvedPurchaseStatus.isPremium && !heroVariant?.isWatermarked;
 
     const purchasePriceLabel = useMemo(
         () => formatPriceUsd(resolvedPurchaseStatus.priceCents),
@@ -1232,7 +1244,7 @@ function AssetDetailView() {
                                     className="asset-hero__media-el"
                                 />
                             )}
-                            {resolvedPurchaseStatus.isPremium && (
+                            {shouldShowHeroWatermarkOverlay && (
                                 <img
                                     src={watermarkLogo}
                                     alt=""
