@@ -13,6 +13,7 @@ import { useAllImagesQuery, useCreatorImagesQuery, useCreatorsMapQuery } from '.
 import { useAssetLikeStatusBatchQuery } from '../../query/likeQueries.js';
 import { getMediaVariantEntry, getMediaVariantUrl } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import { downloadZipAttachment, getZipAttachmentInfo } from '../../utils/zipAttachment.js';
 import { usePublicCategoriesQuery } from '../../query/categoryQueries.js';
 import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug } from '../../utils/assetName.js';
 import {
@@ -634,6 +635,18 @@ function FilterationImages({
             alert(error?.message || 'Error downloading file');
         }
     }, [getExtensionFromUrl]);
+
+    const handleZipDownload = useCallback(async (img) => {
+        if (!img) return;
+        try {
+            await downloadZipAttachment({ asset: img });
+            setShowDownloadModal(false);
+            setDownloadTarget(null);
+        } catch (error) {
+            console.error('Error downloading ZIP file:', error);
+            alert(error?.message || 'Error downloading ZIP file');
+        }
+    }, []);
 
     const handleSaveToCollection = useCallback((event, img) => {
         event.stopPropagation();
@@ -1397,6 +1410,19 @@ function FilterationImages({
                             <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
                                 FILE SIZE
                             </div>
+                        {(() => {
+                            const zipInfo = getZipAttachmentInfo(downloadTarget);
+                            if (!zipInfo.hasAttachment) return null;
+                            return (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary mb-2 w-100"
+                                    onClick={() => handleZipDownload(downloadTarget)}
+                                >
+                                    Download ZIP
+                                </button>
+                            );
+                        })()}
                         {getVariantsForImage(downloadTarget).map((v) => {
                             const label = v.variant.charAt(0).toUpperCase() + v.variant.slice(1);
                             const w = v.dimensions?.width;
@@ -1445,16 +1471,3 @@ function FilterationImages({
 }
 
 export default React.memo(FilterationImages);
-
-
-
-
-
-
-
-
-
-
-
-
-

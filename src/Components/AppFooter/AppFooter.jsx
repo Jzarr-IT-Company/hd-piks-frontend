@@ -193,7 +193,6 @@ function AppFooter() {
                 <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
                   <Link to="/" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <img src={logo} alt="Elvify" style={{ height: 43, width: 105, objectFit: 'contain', display: 'block' }} />
-                    <h5 className="text-uppercase mb-0">Elvify</h5>
                   </Link>
                   <p className="mt-3">
                     Your go-to platform for high-quality images and videos, ready for use

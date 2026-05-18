@@ -19,6 +19,7 @@ import BackBtnCompo from '../BackBtnCompo/BackBtnCompo';
 import CollectionSelectModal from '../CollectionSelectModal';
 import { getMediaVariantEntry, getMediaVariantUrl, getResponsiveImageProps } from '../../utils/mediaVariants.js';
 import { trackAssetDownloadEvent } from '../../utils/downloadTracking.js';
+import { downloadZipAttachment, getZipAttachmentInfo } from '../../utils/zipAttachment.js';
 import { loadStripeJs } from '../../utils/stripeClient.js';
 import { loadPayPalJs } from '../../utils/paypalClient.js';
 import { getAssetDisplayName, getAssetDownloadBaseName, getAssetUrlSlug } from '../../utils/assetName.js';
@@ -1169,6 +1170,18 @@ function AssetDetailView() {
         }
     };
 
+    const handleZipDownload = async (item) => {
+        if (!item) return;
+        try {
+            await downloadZipAttachment({ asset: item });
+            setShowDownloadModal(false);
+            setDownloadTarget(null);
+        } catch (error) {
+            console.error('Error downloading ZIP file:', error);
+            alert(error?.message || 'Error downloading ZIP file');
+        }
+    };
+
     const formatBytes = (bytes) => {
         const size = Number(bytes);
         if (!Number.isFinite(size) || size <= 0) return 'N/A';
@@ -1853,6 +1866,19 @@ function AssetDetailView() {
                             <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: '#555' }}>
                                 FILE SIZE
                             </div>
+                        {(() => {
+                            const zipInfo = getZipAttachmentInfo(downloadTarget);
+                            if (!zipInfo.hasAttachment) return null;
+                            return (
+                                <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary mb-2 w-100"
+                                    onClick={() => handleZipDownload(downloadTarget)}
+                                >
+                                    Download ZIP
+                                </button>
+                            );
+                        })()}
                         {getVariantsForItem(downloadTarget).map((v) => {
                             const label = v.variant.charAt(0).toUpperCase() + v.variant.slice(1);
                             const w = v.dimensions?.width;

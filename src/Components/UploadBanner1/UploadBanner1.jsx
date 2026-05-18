@@ -230,6 +230,8 @@ function UploadBanner1() {
             if (typeof first === 'object' && first?.url) return first.url;
         } else if (zipFolder?.url) {
             return zipFolder.url;
+            console.log(zipFolder.url);
+            
         }
         return '';
     }, [zipFolder, zipFolderUrl]);

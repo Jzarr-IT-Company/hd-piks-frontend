@@ -126,6 +126,7 @@ export const API_ENDPOINTS = {
     // S3 Multipart
     S3_MULTIPART_INIT: '/s3/multipart/initiate',
     S3_MULTIPART_PART_URL: '/s3/multipart/part-url',
+    S3_MULTIPART_PART_ETAG: '/s3/multipart/part-etag',
     S3_MULTIPART_COMPLETE: '/s3/multipart/complete',
     S3_MULTIPART_ABORT: '/s3/multipart/abort',
 
@@ -184,6 +185,15 @@ export const API_ENDPOINTS = {
     PDF_TOOLS_JOB: id => `/pdf-tools/jobs/${id}`,
     PDF_TOOLS_JOB_DOWNLOAD: id => `/pdf-tools/jobs/${id}/download`,
     PDF_TOOLS_EDITOR_EXPORT: '/pdf-tools/editor/export',
+
+    // Video editor
+    VIDEO_EDITOR_PROJECTS: '/video-editor/projects',
+    VIDEO_EDITOR_PROJECT: id => `/video-editor/projects/${id}`,
+    VIDEO_EDITOR_DELETE_PROJECT: id => `/video-editor/projects/${id}`,
+    VIDEO_EDITOR_UPLOAD_ASSETS: id => `/video-editor/projects/${id}/assets/upload`,
+    VIDEO_EDITOR_EXPORT: id => `/video-editor/projects/${id}/export`,
+    VIDEO_EDITOR_EXPORT_JOB: id => `/video-editor/exports/${id}`,
+    VIDEO_EDITOR_EXPORT_DOWNLOAD: id => `/video-editor/exports/${id}/download`,
 };
 
 export default API_BASE_URL;

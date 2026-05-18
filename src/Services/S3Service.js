@@ -1,4 +1,17 @@
-﻿// S3 Multipart Upload (for large files, e.g. ZIP)
+import api from './api.js';
+import { API_ENDPOINTS } from '../config/api.config.js';
+
+const getMultipartPartEtagFallback = async ({ key, uploadId, partNumber }) => {
+    const { data } = await api.get(API_ENDPOINTS.S3_MULTIPART_PART_ETAG, {
+        params: { key, uploadId, partNumber }
+    });
+
+    return typeof data?.result?.ETag === 'string'
+        ? data.result.ETag.replaceAll('"', '').trim()
+        : '';
+};
+
+// S3 Multipart Upload (for large files, e.g. ZIP)
 export const multipartUploadToS3 = async (file, category, onProgress) => {
     // 5MB part size (S3 minimum for all but last part)
     const PART_SIZE = 5 * 1024 * 1024;
@@ -41,13 +54,24 @@ export const multipartUploadToS3 = async (file, category, onProgress) => {
             abortReason = `Upload failed while sending ZIP part ${partNumber}.`;
             break;
         }
+
         const rawEtag = response.headers.get('etag') || response.headers.get('ETag');
-        const etag = typeof rawEtag === 'string' ? rawEtag.replaceAll('"', '').trim() : '';
+        let etag = typeof rawEtag === 'string' ? rawEtag.replaceAll('"', '').trim() : '';
+
+        if (!etag) {
+            try {
+                etag = await getMultipartPartEtagFallback({ key, uploadId, partNumber });
+            } catch (etagLookupError) {
+                console.warn('Multipart ETag fallback lookup failed', etagLookupError);
+            }
+        }
+
         if (!etag) {
             abort = true;
-            abortReason = 'ZIP upload completed a part but no ETag header was readable. Add ETag to DigitalOcean Spaces CORS Expose Headers.';
+            abortReason = 'ZIP upload completed a part but no ETag could be resolved from Spaces.';
             break;
         }
+
         etags.push({ ETag: etag, PartNumber: partNumber });
         uploadedBytes += blob.size;
         if (onProgress) {
@@ -84,8 +108,6 @@ export const multipartUploadToS3 = async (file, category, onProgress) => {
         completeData
     };
 };
-import api from './api.js';
-import { API_ENDPOINTS } from '../config/api.config.js';
 
 // Get presigned URL for upload from backend
 export const getPresignedUploadUrl = async (fileName, fileType, fileSize, category, subcategory, subsubcategory) => {
@@ -102,7 +124,6 @@ export const getPresignedUploadUrl = async (fileName, fileType, fileSize, catego
 
 // Upload file directly to S3 using presigned URL (bypasses backend)
 export const uploadFileToS3 = async (presignedUrl, file, onProgress, uploadHeaders = {}) => {
-    // Direct PUT request to S3 - not using our api instance
     const response = await fetch(presignedUrl, {
         method: 'PUT',
         body: file,
@@ -129,7 +150,6 @@ export const deleteFileFromS3 = async (s3Key) => {
 
 // Composite function: Get presigned URL and upload file to S3
 export const uploadImageToS3 = async (file, onProgress, category, subcategory, subsubcategory) => {
-    // Step 1: Get presigned URL from backend
     const { presignedUrl, s3Key, s3Url, uploadHeaders } = await getPresignedUploadUrl(
         file.name,
         file.type,
@@ -139,10 +159,8 @@ export const uploadImageToS3 = async (file, onProgress, category, subcategory, s
         subsubcategory
     );
 
-    // Step 2: Upload file directly to S3 using presigned URL
     await uploadFileToS3(presignedUrl, file, onProgress, uploadHeaders);
 
-    // Return S3 details for storage in database
     return {
         s3Key,
         s3Url,
@@ -153,7 +171,6 @@ export const uploadImageToS3 = async (file, onProgress, category, subcategory, s
     };
 };
 
-// Upload multiple files to S3
 export const uploadMultipleFilesToS3 = async (files, onProgressCallback, category, subcategory, subsubcategory) => {
     const uploadPromises = files.map(async (file, index) => {
         const onProgress = (progress) => {
@@ -168,7 +185,6 @@ export const uploadMultipleFilesToS3 = async (files, onProgressCallback, categor
     return results;
 };
 
-// Get file size formatted
 export const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;

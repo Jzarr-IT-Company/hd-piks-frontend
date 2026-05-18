@@ -32,10 +32,8 @@ function DownloadMockupsPsdFolders({ zipfolderurl, assetId, fileName }) {
             const fallbackName = fileName || (downloadKey.split('/').pop() || 'asset.zip');
             let href = zipfolderurl;
 
-            const tracked = await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
-            if (tracked?.downloadUrl) {
-                href = tracked.downloadUrl;
-            } else if (downloadKey) {
+            await trackAssetDownloadEvent({ assetId, fileName: fallbackName });
+            if (downloadKey) {
                 const params = new URLSearchParams();
                 params.set('key', downloadKey);
                 params.set('filename', fallbackName);

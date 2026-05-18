@@ -437,6 +437,7 @@ import Legal from "../Pages/Company/Legal";
 import HelpCenter from "../Pages/Company/HelpCenter";
 import HelpCenterTopic from "../Pages/Company/HelpCenterTopic";
 import DesignHdpiks from "../Pages/DesignHdpiks";
+import VideoEditor from "../Pages/VideoEditor";
 const PdfTools = React.lazy(() => import("../Pages/PdfTools"));
 
 function ProtectedRoute({ children }) {
@@ -586,6 +587,14 @@ function Routing() {
     {
       path: "/pdf-tools",
       element: <PdfTools />,
+    },
+    {
+      path: "/video-editor",
+      element: (
+        <ProtectedRoute>
+          <VideoEditor />
+        </ProtectedRoute>
+      ),
     },
     {
       path: "/collection/:parentSlug/:subSlug/:subSubSlug/Page/:collectionPage",
